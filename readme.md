@@ -6,7 +6,7 @@ Since on WebSocket there is no differences between client and server except for 
 
 **This do not include a WebSocket implementation** but it's easy to adapt to any WebSocket implementation.  
 For the moment it's only compatible with jetty WebSocket and as you can see on sources the jetty's specific part is only 3 small classes.  
-If you need it to work with a particularly WebSocket implementation create a issue and I'll work on it.
+If you need it to work with a particulary WebSocket implementation just ask and I'll work on it.
 
 This is the very first version so for now it's only meant to be tested, **there is no stable version yet**.
 
