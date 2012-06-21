@@ -112,7 +112,7 @@ Wamp.xml is the easiest way of mapping actions (RPC/Event) to message handlers.
 It's a first shot so it very simple. Here is a example : 
 
 ```xml
-  <jwamp xmlns="http://www.example.org/jwamp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="jwamp.xsd">
+  <jwamp xmlns="https://github.com/ghetolay/jwamp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://github.com/ghetolay/jwamp https://raw.github.com/ghetolay/jwamp/master/jwamp.xsd">
 	<rpc>
 		<action id="Test" class="com.example.TestCallAction"/>
 	</rpc>

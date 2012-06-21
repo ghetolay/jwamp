@@ -1,64 +1,82 @@
-<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/jwamp" xmlns:tns="http://www.example.org/jwamp"
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="https://github.com/ghetolay/jwamp" xmlns:tns="https://github.com/ghetolay/jwamp"
 	elementFormDefault="qualified">
 
-    <element name="jwamp" type="tns:jwampType"></element>
-
-	<element name="rpc" type="tns:rpcType"></element>
-
-	<attribute name="id" type="string"></attribute>
-
-	<attribute name="class" type="string"></attribute>
-
-	<element name="event" type="tns:eventType"></element>
-
-	<element name="action" type="tns:actionType"></element>
-
-	<element name="subscribe" type="string">
-		<annotation>
-			<documentation>A list of topics to subscribe automatically at the connection. The topics must be comma separated.</documentation>
-		</annotation>
-	</element>
-
-
-	<complexType name="jwampType">
-        <annotation>
+    <element name="jwamp">
+    	 <annotation>
         	<documentation>A simple way to specified mapping action for the WebSocket subprotocol WAMP.</documentation>
         </annotation>
-        <all>
-			<element ref="tns:rpc"></element>
-			<element ref="tns:event"></element>
-		</all>
-	</complexType>
+        <complexType>
+        	<all>
+				<element ref="tns:rpc"></element>
+				<element ref="tns:event"></element>
+			</all>
+		</complexType>
+    </element>
 
-	<complexType name="rpcType">
-        <annotation>
-        	<documentation>Specify the list of remote call actions.</documentation>
-        </annotation>
-        <sequence>
-			<element ref="tns:action" maxOccurs="unbounded"
-				minOccurs="1">
-			</element>
+	<element name="rpc">
+		<complexType>
+	        <annotation>
+	        	<documentation>Specify the list of remote call actions.</documentation>
+	        </annotation>
+	        <sequence>
+				<element ref="tns:action" maxOccurs="unbounded"
+					minOccurs="1">
+				</element>
+			</sequence>
+		</complexType>
+		<key name="rpc-action">
+    		 <selector xpath="tns:action"/>
+   			 <field xpath="@id"/>
+  		</key>
+	</element>
+
+	<element name="event">
+		<annotation>
+	    	<documentation>This element can contains action to map(server side) and topics to automatically subscribe at connection (client side). Both can be specified. </documentation>
+	    </annotation>
+		<complexType>
+	    <sequence>
+			<element ref="tns:action" maxOccurs="unbounded" minOccurs="0"/>
+			<element ref="tns:subscribe" maxOccurs="1" minOccurs="0"/>
 		</sequence>
-	</complexType>
+		</complexType>
+		<key name="event-action">
+    		 <selector xpath="tns:action"/>
+   			 <field xpath="@id"/>
+  		</key>
+	</element>
 
-	<complexType name="eventType">
-        <annotation>
-        	<documentation>This element can contains action to map(server side) and topics to automatically subscribe at connection (client side). Both can be specified. </documentation>
-        </annotation>
-        <all>
-			<element ref="tns:action">
-			</element>
-			<element ref="tns:subscribe" maxOccurs="1" minOccurs="0">
-			</element>
-		</all>
-	</complexType>
-
-
-	<complexType name="actionType">
+	<element name="action">
 		<annotation>
     		<documentation>The action to map by its id attribute. The action specified by the class attribute must implements either imbaosft.jwamp.rpc.CallAction or imbasoft.jwamp.event.EventAction depending on the parent element.</documentation>
    		</annotation>
-		<attribute ref="tns:id" use="required"></attribute>
-		<attribute ref="tns:class" use="required"></attribute>
-	</complexType>
+		<complexType>
+			<attribute name="id" type="string">
+				<annotation>
+    				<documentation>A string specifying the Action id. It must be unique for it's kind(rpc or event) but a rpc call can have the same Id as a event action</documentation>
+   				</annotation>
+			</attribute>
+			<attribute name="class" use="required">
+				<annotation>
+    				<documentation>A fully qualified Java class name.</documentation>
+   				</annotation>
+				<simpleType> 
+				    <restriction base="string"> 
+				      <pattern value="([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*"/> 
+				    </restriction> 
+	  			</simpleType> 
+			</attribute>
+		</complexType>
+	</element>
+
+	<element name="subscribe">
+		<annotation>
+			<documentation>A list of topics to subscribe automatically at the connection. The topics must be comma separated.</documentation>
+		</annotation>
+		<simpleType> 
+		    <restriction base="string"> 
+		      <pattern value="([-_\w],?)+"/> 
+		    </restriction> 
+	  	</simpleType> 
+	</element>
 </schema>
