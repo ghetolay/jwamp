@@ -6,10 +6,10 @@
         	<documentation>A simple way to specified mapping action for the WebSocket subprotocol WAMP.</documentation>
         </annotation>
         <complexType>
-        	<all>
-				<element ref="tns:rpc"></element>
-				<element ref="tns:event"></element>
-			</all>
+        	<sequence>
+				<element ref="tns:rpc" maxOccurs="1" minOccurs="0"/>
+				<element ref="tns:event" maxOccurs="1" minOccurs="0"/>
+			</sequence>
 		</complexType>
     </element>
 
@@ -19,9 +19,7 @@
 	        	<documentation>Specify the list of remote call actions.</documentation>
 	        </annotation>
 	        <sequence>
-				<element ref="tns:action" maxOccurs="unbounded"
-					minOccurs="1">
-				</element>
+				<element ref="tns:action" maxOccurs="unbounded" minOccurs="1"/>
 			</sequence>
 		</complexType>
 		<key name="rpc-action">

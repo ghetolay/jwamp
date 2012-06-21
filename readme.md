@@ -114,10 +114,14 @@ It's a first shot so it very simple. Here is a example :
 ```xml
   <jwamp xmlns="https://github.com/ghetolay/jwamp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://github.com/ghetolay/jwamp https://raw.github.com/ghetolay/jwamp/master/jwamp.xsd">
 	<rpc>
-		<action id="Test" class="com.example.TestCallAction"/>
+		<action id="CallAction1" class="com.example.TestCallAction"/>
+		<action id="CallAction2" class="com.example.TestCallAction2"/>
+		<action id="SpecialAction" class="com.example.SpecialAction"/>
 	</rpc>
 	<event>
-		<action id="TestEvent" class="com.example.TestEventAction"/>
+		<action id="Event1" class="com.example.TestEventAction"/>
+		<action id="Event2" class="com.example.TestEventAction2"/>
+		<action id="SpecialAction" class="com.example.SpecialAction"/>
                 <subscribe>Event1,Event2,Event3</subscribe>
 	</event>
   </jwamp>
