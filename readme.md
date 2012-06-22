@@ -133,8 +133,14 @@ Event classes must implements EventAction or extends AbstractEventAction wich is
 
 The subscribe element is optional and is used for Event subscriber, it contains a list of event the connection will automatically subscribe at.  
   
-    
+Test
+----
+
+see [here][test-readme].  
+  
+  
   
 This are my first steps on open project so don't hesitate to send me your feedbacks or questions ! 
 
 [wamp]: http://wamp.ws/
+[test-readme]: tree/master/src/test/resources

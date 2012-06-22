@@ -41,6 +41,8 @@ public class DefaultRPCSender implements WampRPCSender{
 		try {
 			return wr.call();
 		} catch (Exception e) {
+			if(log.isErrorEnabled())
+				log.error("Error waiting call result : ",e);
 			return null;
 		}
 	}
@@ -56,7 +58,7 @@ public class DefaultRPCSender implements WampRPCSender{
 		
 		conn.sendMessage(msg);
 			
-		if(resultListeners != null)
+		if(listener != null)
 			resultListeners.put(callId, listener, timeout);
 			
 		return callId;

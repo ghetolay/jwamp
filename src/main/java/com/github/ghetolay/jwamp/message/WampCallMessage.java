@@ -6,7 +6,7 @@ public class WampCallMessage extends WampMessage{
 
 	private String callId;
 	private String procId;
-	private Object args;
+	private Object[] args;
 	
 	public WampCallMessage(){
 		messageType = CALL;
@@ -31,10 +31,20 @@ public class WampCallMessage extends WampMessage{
 	
 	@Override
 	public Object[] toJSONArray() {
+		int argsLength = 0;
 		if(args != null)
-			return new Object[]{messageType, callId, procId, args};
-		else
-			return new Object[]{messageType, callId, procId};
+			argsLength = args.length;
+		
+		Object[] result = new Object[argsLength + 3];
+		
+		result[0] = messageType;
+		result[1] = callId;
+		result[2] = procId;
+		
+		for(int i = argsLength - 1; i >= 0; i--)
+			result[i + 3] = args[i];
+		
+		return result;
 	}
 
 	public String getCallId() {
@@ -53,12 +63,15 @@ public class WampCallMessage extends WampMessage{
 		this.procId = procId;
 	}
 
-	public Object getArgs() {
+	public Object[] getArgs() {
 		return args;
 	}
 
 	public void setArgs(Object args) {
-		this.args = args;
+		if(args instanceof Object[])
+			this.args = (Object[]) args;
+		else
+			this.args = new Object[]{ args };
 	}
 
 }

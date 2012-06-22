@@ -1,0 +1,9 @@
+<jwamp xmlns="https://github.com/ghetolay/jwamp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://github.com/ghetolay/jwamp https://raw.github.com/ghetolay/jwamp/master/jwamp.xsd">
+	<rpc>
+		<action id="CallTest" class="com.github.ghetolay.jwamp.test.server.TestAction"/>
+		<action id="Manage" class="com.github.ghetolay.jwamp.test.server.ServerManagerAction"/>
+	</rpc>
+	<event>
+		<action id="EventTest" class="com.github.ghetolay.jwamp.test.server.TestAction"/>
+	</event>
+</jwamp>

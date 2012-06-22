@@ -57,28 +57,24 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public void onClose(int closeCode, String message){
 		for(WampMessageHandler h : messageHandlers)
 			h.onClose(sessionId, closeCode);
-		
-		if(autoReconnect == ReconnectPolicy.YES){
-			welcomeListener = new ResultListener<WampConnection>() {
-				public void onResult(WampConnection result) {}
-			};
-			
-			reconnect();		
-		}
 	}
 	
-	protected abstract void reconnect(); 
+	protected void reset(){
+		welcomeListener = new ResultListener<WampConnection>() {
+			public void onResult(WampConnection result) {}
+		};
+	}
 	
 	public void newClientConnection(){
 		try {
 			sendWelcome();
 			
+			initHandlers();
+			
 			if(welcomeListener != null){
 				welcomeListener.onResult(this);
 				welcomeListener = null;
 			}
-			
-			initHandlers();
 		} catch (IOException e) {
 			// TODO log
 			if(log.isErrorEnabled())
@@ -139,10 +135,8 @@ public abstract class AbstractWampConnection implements WampConnection{
 		try {
 			Object[] array = getObjectMapper().readValue(data, Object[].class);
 			
-			if(array == null || array.length < 1){
-				//TODO log error
-				return;
-			}
+			if(array == null || array.length < 2 || array[0] == null)
+				throw new BadMessageFormException("WampMessage must be a not null JSON array with at least 2 elements and first element can't be null");
 			
 			int messageType = (Integer)array[0];
 			
@@ -200,11 +194,11 @@ public abstract class AbstractWampConnection implements WampConnection{
 	
 			sessionId = wampWelcomeMessage.getSessionId();
 			
+			initHandlers();
+			
 			welcomeListener.onResult(this);
 			//save some memory since listener should be used only once
 			welcomeListener=null;
-			
-			initHandlers();
 		}else if(log.isErrorEnabled())
 			//TODO error log
 			log.error("onWelcome called twice on the same connection !!");

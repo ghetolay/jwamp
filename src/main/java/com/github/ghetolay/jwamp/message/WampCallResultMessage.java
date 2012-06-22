@@ -1,6 +1,5 @@
 package com.github.ghetolay.jwamp.message;
 
-import java.util.Arrays;
 
 public class WampCallResultMessage extends WampMessage{
 
@@ -20,7 +19,7 @@ public class WampCallResultMessage extends WampMessage{
 		try{
 			
 			setCallId((String) JSONArray[1]);
-			setResult(Arrays.copyOfRange(JSONArray, 2, JSONArray.length));
+			setResult(JSONArray[2]);
 			
 		} catch(ClassCastException e){
 			throw new BadMessageFormException(e);
@@ -29,11 +28,7 @@ public class WampCallResultMessage extends WampMessage{
 	
 	@Override
 	public Object[] toJSONArray() {
-		if(result != null){
-			return new Object[]{messageType, callId, result};
-		}
-		else 
-			return new Object[]{messageType, callId};
+		return new Object[]{messageType, callId, result};
 	}
 
 	public String getCallId() {

@@ -22,16 +22,17 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	private WampConnection conn;
 	
 	private Set<String> topics;
-	private EventListener listener;
 	
-	private Map<String, ResultListener<WampEventMessage>> resultListeners = new HashMap<String, ResultListener<WampEventMessage>>();
+	private Map<String, ResultListener<Object>> resultListeners = new HashMap<String, ResultListener<Object>>();
+	private ResultListener<EventResult> globalListener;
 	
 	public DefaultEventSubscriber(){
 		topics = new CopyOnWriteArraySet<String>();
 	}
 	
-	public DefaultEventSubscriber(Collection<String> topics){
+	public DefaultEventSubscriber(Collection<String> topics, ResultListener<EventResult> globalListener){
 		this.topics = new CopyOnWriteArraySet<String>(topics);
+		this.globalListener = globalListener;
 	}
 	
 	public void onConnected(WampConnection connection) {
@@ -62,12 +63,12 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		return false;
 	}
 
-	private void onEvent(WampEventMessage msg){
-		if(listener != null)
-			listener.event(conn.getSessionId(), msg.getTopicId(), msg.getEvent());
-		
+	private void onEvent(WampEventMessage msg){	
 		if(resultListeners.containsKey(msg.getTopicId()))
-			resultListeners.get(msg.getTopicId()).onResult(msg);
+			resultListeners.get(msg.getTopicId()).onResult(msg.getEvent());
+		else if(globalListener != null)
+			globalListener.onResult(new EventResult(msg.getTopicId(), msg.getEvent()));
+			
 	}
 	
 	public void subscribe(String topicId) throws IOException {
@@ -77,7 +78,14 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			topics.add(topicId);
 		}
 	}
-
+	
+	public void subscribe(String topicId, ResultListener<Object> resultListener) throws IOException {
+		subscribe(topicId);
+		
+		if(resultListener != null)
+			resultListeners.put(topicId, resultListener);
+	}
+	
 	public void unsubscribe(String topicId) throws IOException {
 		if(topics.contains(topicId)){
 			conn.sendMessage(new WampSubscribeMessage(WampMessage.UNSUBSCRIBE, topicId));
@@ -133,12 +141,30 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		
 		conn.sendMessage(msg);
 	}
-
-	public EventListener getListener() {
-		return listener;
+	
+	public ResultListener<EventResult> getGlobalListener(){
+		return globalListener;
 	}
-
-	public void setListener(EventListener listener) {
-		this.listener = listener;
+	
+	public void setGlobalListener(ResultListener<EventResult> listener){
+		globalListener = listener;
+	}
+	
+	public class EventResult{
+		private String topicId;
+		private Object event;
+		
+		private EventResult(String topicId, Object event){
+			this.topicId = topicId;
+			this.event = event;
+		}
+		
+		public String getTopicId(){
+			return topicId;
+		}
+		
+		public Object getEvent(){
+			return event;
+		}
 	}
 }

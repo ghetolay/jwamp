@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.event.ClientEventManager;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber;
+import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.ServerEventManager;
 import com.github.ghetolay.jwamp.rpc.CallAction;
@@ -29,6 +30,7 @@ import com.github.ghetolay.jwamp.rpc.DefaultRPCSender;
 import com.github.ghetolay.jwamp.rpc.SimpleRPCManager;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 import com.github.ghetolay.jwamp.utils.MapActionMapping;
+import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class DefaultWampParameter{ 
 	
@@ -150,19 +152,31 @@ public class DefaultWampParameter{
 	
 	public static class SimpleClientParameter extends FileMappingParameter{
 
+		private ResultListener<EventResult> eventListener;
+		
+		public SimpleClientParameter() {
+			super();
+		}
+		
 		public SimpleClientParameter(InputStream is) throws Exception {
 			super(is);
 		}
-
-		public SimpleClientParameter() {
-			super();
+		
+		public SimpleClientParameter(InputStream is, ResultListener<EventResult> eventListener) throws Exception {
+			super(is);
+			
+			this.eventListener = eventListener;
+		}
+		
+		public void setGlobalEventListener(ResultListener<EventResult> listener){
+			eventListener = listener;
 		}
 		
 		public Collection<WampMessageHandler> getnewHandlers(){
 			ArrayList<WampMessageHandler> handlers = new ArrayList<WampMessageHandler>(2);
 			
 			handlers.add(new DefaultRPCSender());
-			handlers.add(new DefaultEventSubscriber(topics));
+			handlers.add(new DefaultEventSubscriber(topics, eventListener));
 			
 			return handlers; 
 		}				
@@ -207,8 +221,20 @@ public class DefaultWampParameter{
 	
 	public static class FullServerParameter extends SimpleServerParameter{
 
+		private ResultListener<EventResult> eventListener;
+		
 		public FullServerParameter(InputStream is) throws Exception{
 			super(is);	
+		}
+		
+		public FullServerParameter(InputStream is, ResultListener<EventResult> eventListener) throws Exception {
+			super(is);
+			
+			this.eventListener = eventListener;
+		}
+		
+		public void setGlobalEventListener(ResultListener<EventResult> listener){
+			eventListener = listener;
 		}
 
 		@Override
@@ -216,7 +242,7 @@ public class DefaultWampParameter{
 			Collection<WampMessageHandler> handlers = super.getnewHandlers();
 			
 			handlers.add(new DefaultRPCSender());
-			handlers.add(new DefaultEventSubscriber(topics));
+			handlers.add(new DefaultEventSubscriber(topics, eventListener));
 			
 			return handlers;
 		}

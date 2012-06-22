@@ -18,6 +18,8 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	private URI uri;
 	protected Connection connection;
 	
+	private boolean intentionallyClosed = false;
+	
 	public JettyConnection(URI uri, ObjectMapper mapper, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) {
 		super(mapper, handlers, wr);
 		if(uri != null)
@@ -34,16 +36,17 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	}
 
 	public void onClose(int closeCode, String message){
-		if(connection != null){
+		super.onClose(closeCode, message);
+		
+		if(connection != null && !intentionallyClosed && autoReconnect == ReconnectPolicy.YES){
 			connection = null;
-			super.onClose(closeCode, message);
+			reconnect();
 		}
 	}
 	
 	public void close(int closeCode, String message){
+		intentionallyClosed = true;
 		connection.close(closeCode, message);
-		
-		connection = null;
 	}
 	
 	@Override
@@ -51,28 +54,32 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 		connection.sendMessage(data);
 	}
 	
-	@Override
 	protected void reconnect(){
-		int i;
-		for(i = 0; i <5 ; i++){
-			try{
-				WampJettyFactory.getInstance().connect(uri, 10000, this);
-				return;
-			}catch (Exception e){
-				if(log.isDebugEnabled())
-					log.debug("Failed to reconnect to " + uri.toString() + " [" + (i+1) + "/5] : " + e.getMessage());	
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e1){
-					e.printStackTrace();
-					if(log.isErrorEnabled())
-						log.error("Thread interrupted while trying to reconnect", e1);
+		reset();
+		try {
+			//Give it some time
+			Thread.sleep(1000);
+			
+			int i;
+			for(i = 0; i <5 ; i++){
+				try{
+					WampJettyFactory.getInstance().connect(uri, 10000, this);
+					return;
+				}catch (Exception e){
+					if(log.isDebugEnabled())
+						log.debug("Failed to reconnect to " + uri.toString() + " [" + (i+1) + "/5] : " + e.getMessage());	
+					
+						Thread.sleep(5000);
 				}
 			}
+			if( i == 5
+				&& log.isWarnEnabled())
+				log.warn("Unable to reconnect to " + uri.toString());
+		} catch (InterruptedException e){
+			e.printStackTrace();
+			if(log.isErrorEnabled())
+				log.error("Thread interrupted while trying to reconnect", e);
 		}
-		if( i == 5
-			&& log.isWarnEnabled())
-			log.warn("Unable to reconnect to " + uri.toString());
 	}
 	
 }

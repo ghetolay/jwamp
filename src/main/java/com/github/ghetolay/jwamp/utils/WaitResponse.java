@@ -20,7 +20,7 @@ public class WaitResponse<T> implements Callable<T>, ResultListener<T>{
 	
 	public synchronized void setResult(T result) {
 		this.result = result;
-		this.notify();
+		this.notifyAll();
 	}
 
 	public synchronized T call() throws Exception {
