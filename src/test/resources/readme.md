@@ -23,9 +23,10 @@ To run all tests on maven use :
 
     mvn test
 
-In eclipse you can  
+In eclipse you can :  
 * right-click on "srv/test/resources/testng.xml" file and select "run as TestNG Suite".  
-or if you have m2eclipse you can  
+
+or if you have m2eclipse installed you can :  
 * right-click on the project and select "run as Maven test".
 
 Server Actions
