@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
   
 <suite name="ClientServer" verbose="1" parallel="tests" thread-count="2" time-out="60000">
-  <test name="Server">
+  <test name="Server" time-out="60000">
     <classes>
        <class name="com.github.ghetolay.jwamp.test.server.TestServer" />
     </classes>
