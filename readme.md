@@ -15,10 +15,29 @@ Since I'm still working on the Javadoc and wiki, here is a quick tutorial to kee
 Tutorial
 ========
 
-Configuration
+Maven Configuration
 -------------
 
-First add jetty-websocket to your maven dependencies : 
+First you must enable SNAPSHOT from sonatype in your pom.xml or settings.xml like this :
+```xml
+<repository>
+	<id>snapshots-repo</id>
+	<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+	<snapshots>
+		<enabled>true</enabled>
+	</snapshots>
+</repository>
+```
+
+then add jwamp dependency : 
+```xml
+<dependency>
+	<groupId>com.github.ghetolay</groupId>
+	<artifactId>jwamp</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+</dependency>
+```
+To use jwamp with jetty-websocket (client&server) add : 
 ```xml
   <dependency>
      <groupId>org.eclipse.jetty</groupId>
