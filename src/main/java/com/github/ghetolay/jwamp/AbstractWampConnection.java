@@ -44,6 +44,7 @@ public abstract class AbstractWampConnection implements WampConnection{
 	protected ReconnectPolicy autoReconnect = ReconnectPolicy.YES;
 	private ObjectMapper mapper;
 	
+	private boolean connected = false;
 	private ResultListener<WampConnection> welcomeListener;
 		
 	private Set<WampMessageHandler> messageHandlers = new HashSet<WampMessageHandler>();
@@ -55,12 +56,7 @@ public abstract class AbstractWampConnection implements WampConnection{
 		else
 			this.mapper = new ObjectMapper();
 		
-		if(wl != null)
-			this.welcomeListener = wl;
-		else
-			welcomeListener = new ResultListener<WampConnection>() {
-				public void onResult(WampConnection result) {}
-			};
+		this.welcomeListener = wl;
 		
 		if(handlers!=null)
 			for(WampMessageHandler h : handlers)
@@ -72,24 +68,25 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public void onClose(int closeCode, String message){
 		for(WampMessageHandler h : messageHandlers)
 			h.onClose(sessionId, closeCode);
+		
+		connected = false;
 	}
 	
 	protected void reset(){
-		welcomeListener = new ResultListener<WampConnection>() {
-			public void onResult(WampConnection result) {}
-		};
+		connected = false;
 	}
 	
 	public void newClientConnection(){
+		newClientConnection(null);
+	}
+	
+	public void newClientConnection(String sessionId){
 		try {
-			sendWelcome();
+			sendWelcome(sessionId);
 			
 			initHandlers();
 			
-			if(welcomeListener != null){
-				welcomeListener.onResult(this);
-				welcomeListener = null;
-			}
+			connected = true;
 		} catch (IOException e) {
 			// TODO log
 			if(log.isErrorEnabled())
@@ -103,20 +100,21 @@ public abstract class AbstractWampConnection implements WampConnection{
 				h.onConnected(this);
 	}
 	
-	private void sendWelcome() throws IOException{
-		UUID uuid = UUID.randomUUID();
+	private void sendWelcome(String sessionId) throws IOException{
+		if(sessionId == null || sessionId.isEmpty())
+			this.sessionId = UUID.randomUUID().toString();
+		else
+			this.sessionId = sessionId;
 		
 		if(log.isTraceEnabled())
-			log.trace("Send welcome with sessionId : " + uuid.toString());
+			log.trace("Send welcome with sessionId : " + this.sessionId);
 		
 		WampWelcomeMessage msg = new WampWelcomeMessage();
 		msg.setImplementation(WampFactory.getImplementation());
 		msg.setProtocolVersion(WampFactory.getProtocolVersion());
-		msg.setSessionId(uuid.toString());
+		msg.setSessionId(this.sessionId);
 		
 		sendMessage(msg);
-		
-		sessionId = uuid.toString();
 	}
 	
 	//Need optimization
@@ -197,8 +195,8 @@ public abstract class AbstractWampConnection implements WampConnection{
 	
 	protected void onWelcome(WampWelcomeMessage wampWelcomeMessage) {
 		
-		//onWelcome should only be called once, we use listener as a boolean to determine if onWelcome was already called
-		if(welcomeListener != null){
+		//onWelcome should only be called once
+		if(!connected){
 			if(wampWelcomeMessage.getProtocolVersion() != WampFactory.getProtocolVersion()
 			 && log.isWarnEnabled())
 				log.warn("server's Wamp protocol version ('"+wampWelcomeMessage.getProtocolVersion()+"') differs from this implementation version ('" + WampFactory.getProtocolVersion() +"')\n"
@@ -214,6 +212,8 @@ public abstract class AbstractWampConnection implements WampConnection{
 			welcomeListener.onResult(this);
 			//save some memory since listener should be used only once
 			welcomeListener=null;
+			
+			connected=true;
 		}else if(log.isErrorEnabled())
 			//TODO error log
 			log.error("onWelcome called twice on the same connection !!");
@@ -242,8 +242,7 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public void addMessageHandler(WampMessageHandler handler){
 		messageHandlers.add(handler);
 		
-		//mean we already send or receive the welcome message i.e. we are connected 
-		if(welcomeListener == null)
+		if(connected)
 			handler.onConnected(this);
 	}
 
@@ -266,6 +265,10 @@ public abstract class AbstractWampConnection implements WampConnection{
 	
 	public String getSessionId() {
 		return sessionId;
+	}
+	
+	public boolean isConnected(){
+		return connected;
 	}
 	
 	protected ObjectMapper getObjectMapper() {

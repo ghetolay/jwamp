@@ -19,4 +19,9 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface WampWebSocketListener {
 	public void newWampWebSocket(HttpServletRequest request, WampWebSocket wws);
+
+	/**
+	 * @param sessionId
+	 */
+	public void closedWampWebSocket(String sessionId);
 }

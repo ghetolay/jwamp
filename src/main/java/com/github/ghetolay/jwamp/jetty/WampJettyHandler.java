@@ -16,7 +16,7 @@
 package com.github.ghetolay.jwamp.jetty;
 
 import java.util.Collection;
-
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,7 +32,6 @@ import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.WampParameter;
 import com.github.ghetolay.jwamp.WampWebSocket;
 import com.github.ghetolay.jwamp.WampWebSocketListener;
-import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class WampJettyHandler extends WebSocketHandler{
 	
@@ -41,32 +40,30 @@ public class WampJettyHandler extends WebSocketHandler{
 	private WampParameter param;
 	private ObjectMapper mapper;
 	private WampWebSocketListener listener;
-		
+	
+	private HashMap<JettyServerConnection,HttpServletRequest> requests;
+	
 	public WampJettyHandler(WampParameter param, ObjectMapper mapper, WampWebSocketListener newConnectionListener){
 		this.param = param;
 		this.mapper = mapper;
 		this.listener = newConnectionListener;
+		
+		if(listener != null)
+			requests = new HashMap<JettyServerConnection, HttpServletRequest>();
 	}
 	
-	public WebSocket doWebSocketConnect(final HttpServletRequest request, final String subprotocol) {
+	public WebSocket doWebSocketConnect(HttpServletRequest request, final String subprotocol) {
 		if(subprotocol != null && WampFactory.getProtocolName().equals(subprotocol.toUpperCase())){
 			
 			if(log.isTraceEnabled())
 				log.trace("New Wamp Connection from " + request.getRemoteAddr());
 			
-			JettyServerConnection jsc;
+			JettyServerConnection connection = new JettyServerConnection(mapper,param.getnewHandlers());
 			
-			if(listener != null)
-				jsc = new JettyServerConnection(mapper , param.getnewHandlers(), 
-						new ResultListener<WampConnection>() {
-							public void onResult(WampConnection result) {
-								listener.newWampWebSocket(request, new WampWebSocket(result));
-							}
-						});
-			else
-				jsc = new JettyServerConnection(mapper,param.getnewHandlers(),null);
+			if(requests != null)
+				requests.put(connection,request);
 			
-			return jsc;
+			return connection;
 		}
 		else
 			return new WebSocket(){
@@ -87,14 +84,22 @@ public class WampJettyHandler extends WebSocketHandler{
 	
 	private class JettyServerConnection extends JettyConnection{
 		
-		public JettyServerConnection(ObjectMapper mapper, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> rl) {
-			super(null,mapper, handlers, rl);
+		public JettyServerConnection(ObjectMapper mapper, Collection<WampMessageHandler> handlers) {
+			super(null,mapper, handlers, null);
 		}
 
 		@Override
 		public void onOpen(Connection connection){
 			super.onOpen(connection);
 			newClientConnection();
+			if(listener != null)
+				listener.newWampWebSocket(requests.remove(this), new WampWebSocket(this));
+		}
+		
+		@Override
+		public void onClose(){
+			if(listener != null)
+				listener.closedWampWebSocket(getSessionId());
 		}
 	}
 }

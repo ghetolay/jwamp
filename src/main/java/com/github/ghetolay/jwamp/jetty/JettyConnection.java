@@ -51,14 +51,20 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	}
 
 	public void onClose(int closeCode, String message){
-		if(connection != null){
-			super.onClose(closeCode, message);
-		
-			if(!intentionallyClosed && autoReconnect == ReconnectPolicy.YES){
-				connection = null;
-				reconnect();
-			}
+		if(connection != null 
+			&& !intentionallyClosed 
+			&& autoReconnect == ReconnectPolicy.YES){
+			
+			connection = null;
+			if(reconnect())
+				return;
 		}
+		onClose();
+		super.onClose(closeCode, message);
+	}
+	
+	public void onClose(){
+		
 	}
 	
 	public void close(int closeCode, String message){
@@ -71,7 +77,7 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 		connection.sendMessage(data);
 	}
 	
-	protected void reconnect(){
+	protected boolean reconnect(){
 		reset();
 		try {
 			//Give it some time
@@ -81,7 +87,7 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 			for(i = 0; i <5 ; i++){
 				try{
 					WampJettyFactory.getInstance().connect(uri, 10000, this);
-					return;
+					return true;
 				}catch (Exception e){
 					if(log.isDebugEnabled())
 						log.debug("Failed to reconnect to " + uri.toString() + " [" + (i+1) + "/5] : " + e.getMessage());	
@@ -97,6 +103,7 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 			if(log.isErrorEnabled())
 				log.error("Thread interrupted while trying to reconnect", e);
 		}
-	}
-	
+		
+		return false;
+	}	
 }

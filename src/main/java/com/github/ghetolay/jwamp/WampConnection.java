@@ -130,4 +130,11 @@ public interface WampConnection {
 	 * @param message The message or null to be sent to the other side.
 	 */
 	public void close(int closeCode, String message);
+	
+	/**
+	 * Return true if the connection is connected and active.
+	 * 
+	 * @return true if connected.
+	 */
+	public boolean isConnected();
 }

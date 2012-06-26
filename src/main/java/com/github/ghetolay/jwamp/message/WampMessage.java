@@ -27,6 +27,9 @@ public abstract class WampMessage {
 	public final static int PUBLISH     = 7;
 	public final static int EVENT       = 8;
 	
+	//add by me
+	public final static int CALLMORERESULT = 300;
+	
 	public int messageType;
 	
 	//Both constructor must be override

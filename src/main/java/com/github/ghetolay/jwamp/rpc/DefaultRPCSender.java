@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
+import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
@@ -37,7 +38,7 @@ public class DefaultRPCSender implements WampRPCSender{
 	
 	private WampConnection conn;
 	
-	private TimeoutResultListenerMap<String, WampCallResultMessage> resultListeners = new TimeoutResultListenerMap<String, WampCallResultMessage>();
+	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
 	
 	public void onConnected(WampConnection connection) {
 		conn = connection;
@@ -83,8 +84,12 @@ public class DefaultRPCSender implements WampRPCSender{
 		
 		switch(messageType){
 			case WampMessage.CALLRESULT:
-			case WampMessage.CALLERROR :
+			//special multiple call result
+			case WampMessage.CALLMORERESULT:
 				onCallResult(new WampCallResultMessage(array));
+				break;
+			case WampMessage.CALLERROR :
+				onCallResult(new WampCallErrorMessage(array));
 				break;
 			default: return false;
 		}
@@ -92,10 +97,17 @@ public class DefaultRPCSender implements WampRPCSender{
 		return true;
 	}
 	
-	public void onCallResult(WampCallResultMessage msg) {
-		if(resultListeners.containsKey(msg.getCallId()))
-			//The Map is designed to call the listener on remove
-			resultListeners.remove(msg.getCallId(),msg);
+	private void onCallResult(WampCallResultMessage msg) {
+		if(resultListeners.containsKey(msg.getCallId())){
+			ResultListener<WampCallResultMessage> listener;
+			if(msg.isLast())
+				listener = resultListeners.remove(msg.getCallId());
+			else
+				listener = resultListeners.get(msg.getCallId());
+			
+			if(listener != null)
+				listener.onResult(msg);
+		}
 		else if(log.isDebugEnabled())
 			log.debug("callId from CallResultMessage not recognized : " + msg.toString());
 	}	
@@ -115,26 +127,5 @@ public class DefaultRPCSender implements WampRPCSender{
 		}
 		
 		return id;
-	}
-	
-	private class TimeoutResultListenerMap<K,T> extends TimeoutHashMap<K, ResultListener<T>>{
-
-		private static final long serialVersionUID = -6289873124717928971L;
-
-		@Override
-		protected ResultListener<T> remove(Object key, boolean removeFromSet){
-			ResultListener<T> result = super.remove(key,removeFromSet);
-			
-			if(result != null)
-				result.onResult(null);
-			
-			return result;
-		}
-		
-		protected void remove(Object key, T result){
-			ResultListener<T> r = super.remove(key,true);
-			if(r != null)
-				r.onResult(result);
-		}
 	}
 }

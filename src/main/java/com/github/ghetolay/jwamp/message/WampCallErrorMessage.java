@@ -27,6 +27,16 @@ public class WampCallErrorMessage extends WampCallResultMessage{
 		messageType = CALLERROR;
 	}
 	
+	public WampCallErrorMessage(String... args){
+	
+		try{
+			setCallId(args[0]);
+			setErrorUri(args[1]);
+			setErrorDesc(args[2]);
+			setErrorDetails(args[3]);
+		}catch(IndexOutOfBoundsException e){}
+	}
+	
 	public WampCallErrorMessage(Object[] JSONArray) throws BadMessageFormException{
 		this();
 		

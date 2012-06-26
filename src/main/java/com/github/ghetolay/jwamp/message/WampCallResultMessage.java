@@ -25,14 +25,16 @@ public class WampCallResultMessage extends WampMessage{
 		messageType = CALLRESULT;
 	}
 	
+	public WampCallResultMessage(boolean last){
+		messageType = last?CALLRESULT:CALLMORERESULT;
+	}
+	
 	public WampCallResultMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
 		if(JSONArray.length < 3)
 			throw BadMessageFormException.notEnoughParameter("CallResult", JSONArray.length, 3);
 		
 		try{
-			
+			messageType = (Integer)JSONArray[0];
 			setCallId((String) JSONArray[1]);
 			setResult(JSONArray[2]);
 			
@@ -62,4 +64,7 @@ public class WampCallResultMessage extends WampMessage{
 		this.result = result;
 	}
 
+	public boolean isLast(){
+		return messageType != CALLMORERESULT;
+	}
 }

@@ -66,21 +66,35 @@ public class SimpleRPCManager implements WampMessageHandler{
 
 		CallAction action;
 		if( (action = callMapping.getAction(callMsg.getProcId())) != null){
-
-			resultMsg = new WampCallResultMessage();
-			resultMsg.setCallId(callMsg.getCallId());
-
-			resultMsg.setResult(action.execute(callMsg.getArgs()));	
+			try{
+				Object result = action.execute(callMsg.getArgs());
+				
+				if(result != null && result instanceof MultipleResult){
+					MultipleResult r = (MultipleResult)result;
+					
+					resultMsg = new WampCallResultMessage(r.isLast());
+					resultMsg.setResult(r.getResult());	
+				}else{
+					resultMsg = new WampCallResultMessage();
+					resultMsg.setResult(result);	
+				}	
+	
+				resultMsg.setCallId(callMsg.getCallId());
+			}catch(Exception e){
+				if(log.isDebugEnabled())
+					log.debug("Error on action " + callMsg.getCallId(),e);
+				
+				WampCallErrorMessage errorMsg = new WampCallErrorMessage(callMsg.getCallId(), callMsg.getProcId(),e.getLocalizedMessage());
+				if(!e.getMessage().equals(e.getLocalizedMessage()))
+					errorMsg.setErrorDetails(e.getMessage());
+				
+				resultMsg = errorMsg;
+			}
 		}else{
 			if(log.isWarnEnabled())
 				log.warn("Call " + callMsg.getProcId() + " not found");
 			
-			WampCallErrorMessage errorMsg = new WampCallErrorMessage();
-			errorMsg.setCallId(callMsg.getCallId());
-			errorMsg.setErrorUri(callMsg.getProcId());
-			errorMsg.setErrorDesc("Action not found");
-			
-			resultMsg = errorMsg;
+			resultMsg = new WampCallErrorMessage(callMsg.getCallId(), callMsg.getProcId(),"Action nor found");
 		}
 
 		if(resultMsg != null)
