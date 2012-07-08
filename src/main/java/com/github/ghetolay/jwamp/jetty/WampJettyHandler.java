@@ -58,7 +58,7 @@ public class WampJettyHandler extends WebSocketHandler{
 			if(log.isTraceEnabled())
 				log.trace("New Wamp Connection from " + request.getRemoteAddr());
 			
-			JettyServerConnection connection = new JettyServerConnection(mapper,param.getnewHandlers());
+			JettyServerConnection connection = new JettyServerConnection(mapper,param.getHandlers());
 			
 			if(requests != null)
 				requests.put(connection,request);

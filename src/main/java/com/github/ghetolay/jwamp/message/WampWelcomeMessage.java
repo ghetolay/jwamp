@@ -15,11 +15,21 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+
 public class WampWelcomeMessage extends WampMessage{
 
 	private String sessionId;
 	private int protocolVersion;
 	private String implementation;
+	
+	public WampWelcomeMessage(){
+		messageType = WELCOME;
+	}
 	
 	public WampWelcomeMessage(Object[] JSONArray) throws BadMessageFormException{
 		this();
@@ -36,8 +46,29 @@ public class WampWelcomeMessage extends WampMessage{
 		}
 	}
 	
-	public WampWelcomeMessage(){
-		messageType = WELCOME;
+	public WampWelcomeMessage(JsonParser parser) throws BadMessageFormException{
+		this();
+		
+		try {
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("SessionId is required and must be a string");
+			setSessionId(parser.getText());
+			
+			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
+				throw new BadMessageFormException("ProtocolVersion is required and must be a int");
+			setProtocolVersion(parser.getIntValue());
+			
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("Implementation is required and must be a string");
+			setImplementation(parser.getText());
+			
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
+			throw new BadMessageFormException(e);
+		}
+		
+		
 	}
 	
 	@Override

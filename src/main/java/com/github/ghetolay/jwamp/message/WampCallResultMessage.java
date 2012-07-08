@@ -15,11 +15,20 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.JsonToken;
+
 
 public class WampCallResultMessage extends WampMessage{
 
 	private String callId;
 	private Object result;
+	
+	private JsonParser parser;
 	
 	public WampCallResultMessage(){
 		messageType = CALLRESULT;
@@ -43,6 +52,27 @@ public class WampCallResultMessage extends WampMessage{
 		}
 	}
 	
+	public WampCallResultMessage(JsonParser parser) throws BadMessageFormException{
+		this(CALLRESULT, parser);
+	}
+	
+	public WampCallResultMessage(int messageType, JsonParser parser) throws BadMessageFormException{
+		this.messageType = messageType;
+		
+		try {
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("CallId is required and must be a string");
+			setCallId(parser.getText());
+			
+			this.parser = parser;
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
+			throw new BadMessageFormException(e);
+		}
+	}
+	
+	
 	@Override
 	public Object[] toJSONArray() {
 		return new Object[]{messageType, callId, result};
@@ -56,10 +86,54 @@ public class WampCallResultMessage extends WampMessage{
 		this.callId = callId;
 	}
 
-	public Object getResult() {
-		return result;
+	//TODO logging
+	public Object getResult(){
+		try {
+			return getResult(Object.class);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 
+	public <T> T getResult(Class<T> c) throws JsonProcessingException, IOException{
+		if(parser == null)
+			if(c.isInstance(result))
+				return c.cast(result);
+			else
+				return null;
+		
+		if(parser.nextToken() == JsonToken.END_ARRAY){
+			parser = null;
+			return null;
+		}
+			
+		T res = parser.readValueAs(c);
+		
+		result = res;
+		return res;
+	}
+	
+	public <T> T getNextResult(Class<T> c) throws JsonParseException, IOException{
+		if(parser == null)
+			return null;
+		
+		JsonToken token = parser.nextToken();
+		
+		if(token == JsonToken.START_ARRAY)
+			token = parser.nextToken();
+		
+		if(token == JsonToken.END_ARRAY){
+			parser = null;
+			return null;
+		}
+			
+		return parser.readValueAs(c);
+	}
+	
 	public void setResult(Object result) {
 		this.result = result;
 	}

@@ -17,6 +17,7 @@ package com.github.ghetolay.jwamp;
 
 
 import java.io.IOException;
+import java.util.List;
 
 import com.github.ghetolay.jwamp.event.WampEventSubscriber;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
@@ -80,10 +81,10 @@ public class WampWebSocket {
 	public void publish(String topicId, Object event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe);
 	}
-	public void publish(String topicId, Object event, boolean excludeMe, String[] eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe, eligible);
 	}
-	public void publish(String topicId, Object event, String[] exclude, String[] eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, exclude, eligible);
 	}
 	

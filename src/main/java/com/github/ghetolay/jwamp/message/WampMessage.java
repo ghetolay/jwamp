@@ -15,7 +15,13 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import org.codehaus.jackson.JsonParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class WampMessage {
+	
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
 	public final static int WELCOME     = 0;
 	public final static int PREFIX      = 1;
@@ -35,6 +41,7 @@ public abstract class WampMessage {
 	//Both constructor must be override
 	public WampMessage(){}
 	public WampMessage(Object[] JSONArray) throws BadMessageFormException {}
+	public WampMessage(JsonParser parser) throws BadMessageFormException {}
 	
 	public abstract Object[] toJSONArray();	
 }

@@ -25,6 +25,7 @@ import org.eclipse.jetty.websocket.WebSocketClient;
 import org.eclipse.jetty.websocket.WebSocketClientFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
+import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampFactory;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.WampParameter;
@@ -47,8 +48,9 @@ public class WampJettyFactory extends WampFactory{
 		this.fact = fact;
 	}
 		
-	protected WampConnection getConnection(URI uri, long timeout, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) throws TimeoutException, Exception{
+	protected WampConnection getConnection(URI uri, long timeout, ReconnectPolicy reconnectPolicy, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) throws TimeoutException, Exception{
 		JettyConnection connection = new JettyConnection(uri,getObjectMapper(),handlers,wr);
+		connection.setReconnectPolicy(reconnectPolicy);
 		
 		connect(uri, timeout, connection);
 		

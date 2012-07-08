@@ -15,6 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+
 
 public class WampCallErrorMessage extends WampCallResultMessage{
 
@@ -52,6 +58,35 @@ public class WampCallErrorMessage extends WampCallResultMessage{
 			if(JSONArray.length > 4)
 				setErrorDetails((String) JSONArray[4]);
 		} catch(ClassCastException e){
+			throw new BadMessageFormException(e);
+		}
+	}
+	
+	public WampCallErrorMessage(JsonParser parser) throws BadMessageFormException{
+		this();
+		
+		try {
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("CallId is required and must be a string");
+			setCallId(parser.getText());
+			
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("ErrorUri is required and must be a string");
+			setErrorUri(parser.getText());
+
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("ErrorDescription is required and must be a string");
+			setErrorDesc(parser.getText());
+			
+			if(parser.nextToken() != JsonToken.END_ARRAY){
+				if(parser.nextToken() != JsonToken.VALUE_STRING)
+					throw new BadMessageFormException("ErrorDetails must be a string");
+				setErrorDetails(parser.getText());
+			}
+			
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
 			throw new BadMessageFormException(e);
 		}
 	}

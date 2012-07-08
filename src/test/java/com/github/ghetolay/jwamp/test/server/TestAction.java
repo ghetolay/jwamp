@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
+import java.util.List;
+
 import com.github.ghetolay.jwamp.event.AbstractEventAction;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 
@@ -28,7 +30,7 @@ public class TestAction extends AbstractEventAction implements CallAction{
 	}
 	
 	//RPC
-	public Object execute(Object[] args) {
+	public Object execute(List<Object> args) {
 		return "SUCCEED";
 	}
 }

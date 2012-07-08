@@ -45,7 +45,7 @@ To use jwamp with jetty-websocket (client&server) add :
   </dependency>
 ```
 For an embedded jetty server add : 
-```
+```xml
   <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>

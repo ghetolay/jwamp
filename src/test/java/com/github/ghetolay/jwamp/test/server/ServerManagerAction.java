@@ -15,13 +15,15 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
+import java.util.List;
+
 import com.github.ghetolay.jwamp.rpc.CallAction;
 
 public class ServerManagerAction implements CallAction{
 
-	public Object execute(Object[] args) {
+	public Object execute(List<Object> args) {
 		try{
-			String arg = (String) args[0];
+			String arg = (String) args.get(0);
 			if("restart".equals(arg)){
 					try{
 						TestServer.server.stop();

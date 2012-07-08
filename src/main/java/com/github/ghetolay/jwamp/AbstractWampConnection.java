@@ -21,11 +21,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
@@ -47,10 +48,10 @@ public abstract class AbstractWampConnection implements WampConnection{
 	private boolean connected = false;
 	private ResultListener<WampConnection> welcomeListener;
 		
-	private Set<WampMessageHandler> messageHandlers = new HashSet<WampMessageHandler>();
+	private Collection<WampMessageHandler> messageHandlers;
 	private boolean exclusiveHandler = true;
 	
-	public AbstractWampConnection(ObjectMapper mapper, Collection<WampMessageHandler> handlers,  ResultListener<WampConnection> wl){
+	public AbstractWampConnection(ObjectMapper mapper, Collection<WampMessageHandler> messageHandlers,  ResultListener<WampConnection> wl){
 		if(mapper != null)
 			this.mapper = mapper;
 		else
@@ -58,9 +59,10 @@ public abstract class AbstractWampConnection implements WampConnection{
 		
 		this.welcomeListener = wl;
 		
-		if(handlers!=null)
-			for(WampMessageHandler h : handlers)
-				addMessageHandler(h);
+		if(messageHandlers!=null)
+			this.messageHandlers = messageHandlers;
+		else
+			messageHandlers = new HashSet<WampMessageHandler>();
 	}
 	
 	public abstract void sendMessage(String data) throws IOException;
@@ -146,13 +148,15 @@ public abstract class AbstractWampConnection implements WampConnection{
 			log.debug("Receive Wamp Message " + data);
 		
 		try {
-			Object[] array = getObjectMapper().readValue(data, Object[].class);
+			JsonParser parser = getObjectMapper().getJsonFactory().createJsonParser(data);
 			
-			if(array == null || array.length < 2 || array[0] == null)
-				throw new BadMessageFormException("WampMessage must be a not null JSON array with at least 2 elements and first element can't be null");
+			if(parser.nextToken() != JsonToken.START_ARRAY)
+				throw new BadMessageFormException("WampMessage must be a not null JSON array");
 			
-			int messageType = (Integer)array[0];
+			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
+				throw new BadMessageFormException("The first array element must be a int");
 			
+			int messageType = parser.getIntValue();
 	
 			switch(messageType){
 			/*
@@ -161,12 +165,12 @@ public abstract class AbstractWampConnection implements WampConnection{
 					return;
 			*/
 				case WampMessage.WELCOME :
-					onWelcome(new WampWelcomeMessage(array));
+					onWelcome(new WampWelcomeMessage(parser));
 					return;
 			}
 			
 			for(WampMessageHandler h : messageHandlers){
-				boolean result = h.onMessage(sessionId, messageType, array);
+				boolean result = h.onMessage(sessionId, messageType, parser);
 				if(exclusiveHandler && result)
 					return;
 			}

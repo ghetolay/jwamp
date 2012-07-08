@@ -18,6 +18,7 @@ package com.github.ghetolay.jwamp.rpc;
 
 import java.io.IOException;
 
+import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +49,10 @@ public class SimpleRPCManager implements WampMessageHandler{
 
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public boolean onMessage(String sessionId, int messageType, Object[] array) throws BadMessageFormException {
+	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException {
 		
 		if(messageType == WampMessage.CALL){
-			processAction(new WampCallMessage(array));
+			processAction(new WampCallMessage(parser));
 			return true;
 		}
 	
@@ -67,7 +68,7 @@ public class SimpleRPCManager implements WampMessageHandler{
 		CallAction action;
 		if( (action = callMapping.getAction(callMsg.getProcId())) != null){
 			try{
-				Object result = action.execute(callMsg.getArgs());
+				Object result = action.execute(callMsg.getArguments());
 				
 				if(result != null && result instanceof MultipleResult){
 					MultipleResult r = (MultipleResult)result;

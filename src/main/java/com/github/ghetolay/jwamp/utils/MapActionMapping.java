@@ -19,35 +19,24 @@ package com.github.ghetolay.jwamp.utils;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.github.ghetolay.jwamp.event.EventAction;
+public class MapActionMapping<T> extends HashMap<String,T> implements ActionMapping<T> {
 
-public class MapActionMapping<T> implements ActionMapping<T> {
-
-	Map<String,T> actions;
+	private static final long serialVersionUID = 5706026333888185183L;
 	
 	public MapActionMapping(){
-		actions = new HashMap<String,T>();
+		super();
 	}
 	
 	public MapActionMapping( Map<String,T> actions){
-		this.actions = actions;
+		super(actions);
 	}
 	
 	public T getAction(String actionId){
-		return actions.get(actionId);
+		return get(actionId);
 	}
 
 	public Iterator<T> getActionsIterator(){
-		return actions.values().iterator();
-	}
-
-	public String getActionId(EventAction action) {
-		 for (Entry<String, T> entry : actions.entrySet())
-			 if (entry.getValue().equals(action))
-		            return entry.getKey();
-	
-		 return null;
+		return values().iterator();
 	}
 }

@@ -17,12 +17,16 @@ package com.github.ghetolay.jwamp.event;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import org.codehaus.jackson.JsonParser;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
@@ -69,10 +73,10 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public boolean onMessage(String sessionId, int messageType, Object[] array)
+	public boolean onMessage(String sessionId, int messageType, JsonParser parser)
 			throws BadMessageFormException {
 		if(messageType == WampMessage.EVENT){
-			onEvent(new WampEventMessage(array));
+			onEvent(new WampEventMessage(parser));
 			return true;
 		}
 		return false;
@@ -119,39 +123,38 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		publish(topicId, event, true, null, null );
 	}
 
-	public void publish(String topicId, Object event, boolean excludeMe, String[] eligible) throws IOException {
+	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException {
 		if(eligible != null){
-			String [] excludes;
+			List<String> excludes = new ArrayList<String>();
 			if(excludeMe)
-				excludes = new String[] { conn.getSessionId() };
-			else
-				excludes = new String[0];
+				excludes.add(conn.getSessionId());
+			
 			publish(topicId, event, false, excludes, eligible);
 		}else
 			publish(topicId, event, excludeMe, null , null);
 	}
 	
-	public void publish(String topicId, Object event, String[] exclude, String[] eligible) throws IOException {
-		if(exclude.length == 1 && exclude[0].equals(conn.getSessionId()) && eligible == null)
+	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException {
+		if(exclude.size() == 1 && exclude.get(0).equals(conn.getSessionId()) && eligible == null)
 			publish(topicId, event, true, null, null);
 		else
 			publish(topicId, event, false, exclude, eligible);
 	}
 
-	private void publish(String topicId, Object event, boolean excludeMe, String[] exclude, String[] eligible) throws IOException{
+	private void publish(String topicId, Object event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException{
 		
 		if(!topics.contains(topicId))
 			subscribe(topicId);
 		
 		WampPublishMessage msg = new WampPublishMessage();
-		msg.setTopicUri(topicId);
+		msg.setTopicId(topicId);
 		msg.setEvent(event);
 		
 		if(excludeMe)
 			msg.setExcludeMe(true);
 		else if(exclude != null || eligible != null){
-			msg.setExclude(exclude != null ? exclude : new String[0]);
-			msg.setEligible(eligible != null ? exclude : new String[0]);
+			msg.setExclude(exclude != null ? exclude : new ArrayList<String>());
+			msg.setEligible(eligible != null ? exclude : new ArrayList<String>());
 		}
 		
 		conn.sendMessage(msg);

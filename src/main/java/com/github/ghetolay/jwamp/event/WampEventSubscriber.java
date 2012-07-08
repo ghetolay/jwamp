@@ -17,6 +17,7 @@ package com.github.ghetolay.jwamp.event;
 
 
 import java.io.IOException;
+import java.util.List;
 
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
@@ -30,8 +31,8 @@ public interface WampEventSubscriber extends WampMessageHandler{
 	
 	public void publish(String topicId, Object event) throws IOException;
 	public void publish(String topicId, Object event, boolean excludeMe) throws IOException;
-	public void publish(String topicId, Object event, boolean excludeMe, String[] eligible) throws IOException;
-	public void publish(String topicId, Object event, String[] exclude, String[] eligible) throws IOException;
+	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException;
+	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException;
 	
 	public ResultListener<EventResult> getGlobalListener();
 	public void setGlobalListener(ResultListener<EventResult> listener);

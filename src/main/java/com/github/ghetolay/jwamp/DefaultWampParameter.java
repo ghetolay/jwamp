@@ -126,8 +126,10 @@ public class DefaultWampParameter{
 										actions.put(actionId, (CallAction)action);
 									else throw new ClassCastException("class " + actionClass + " does not implements CallAction");
 								}else{
-									if(action instanceof EventAction)
+									if(action instanceof EventAction){
 										events.put(actionId, (EventAction)action);
+										((EventAction) action).setEventId(actionId);
+									}
 									else throw new ClassCastException("class " + actionClass + " does not implements EventAction");
 								}
 							}
@@ -187,7 +189,7 @@ public class DefaultWampParameter{
 			eventListener = listener;
 		}
 		
-		public Collection<WampMessageHandler> getnewHandlers(){
+		public Collection<WampMessageHandler> getHandlers(){
 			ArrayList<WampMessageHandler> handlers = new ArrayList<WampMessageHandler>(2);
 			
 			handlers.add(new DefaultRPCSender());
@@ -204,8 +206,8 @@ public class DefaultWampParameter{
 		}
 
 		@Override
-		public Collection<WampMessageHandler> getnewHandlers(){
-			Collection<WampMessageHandler> handlers = super.getnewHandlers();
+		public Collection<WampMessageHandler> getHandlers(){
+			Collection<WampMessageHandler> handlers = super.getHandlers();
 		
 			handlers.add(new SimpleRPCManager(actionMapping));
 			handlers.add(new ClientEventManager(eventMapping));
@@ -224,7 +226,7 @@ public class DefaultWampParameter{
 			eventManager = new ServerEventManager(eventMapping);
 		}
 		
-		public Collection<WampMessageHandler> getnewHandlers(){
+		public Collection<WampMessageHandler> getHandlers(){
 			ArrayList<WampMessageHandler> handlers = new ArrayList<WampMessageHandler>(2);
 			
 			handlers.add(new SimpleRPCManager(actionMapping));
@@ -253,8 +255,8 @@ public class DefaultWampParameter{
 		}
 
 		@Override
-		public Collection<WampMessageHandler> getnewHandlers(){
-			Collection<WampMessageHandler> handlers = super.getnewHandlers();
+		public Collection<WampMessageHandler> getHandlers(){
+			Collection<WampMessageHandler> handlers = super.getHandlers();
 			
 			handlers.add(new DefaultRPCSender());
 			handlers.add(new DefaultEventSubscriber(topics, eventListener));

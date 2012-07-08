@@ -18,7 +18,9 @@ package com.github.ghetolay.jwamp.event;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
+import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,17 +48,17 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			it.next().addEventListener(this);
 	}
 	
-	public boolean onMessage(String sessionId, int messageType, Object[] array) throws BadMessageFormException {
+	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException {
 		
 		switch(messageType){
 			case WampMessage.SUBSCRIBE :
-				onSubscribe(sessionId, new WampSubscribeMessage(array));
+				onSubscribe(sessionId, new WampSubscribeMessage(messageType, parser));
 				return true;
 			case WampMessage.UNSUBSCRIBE :
-				onUnsubscribe(sessionId, new WampSubscribeMessage(array));
+				onUnsubscribe(sessionId, new WampSubscribeMessage(messageType, parser));
 				return true;
 			case WampMessage.PUBLISH :
-				onPublish(sessionId, new WampPublishMessage(array));
+				onPublish(sessionId, new WampPublishMessage(parser));
 				return true;
 			default : 
 				return false;
@@ -86,7 +88,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			msg.setTopicId(wampPublishMessage.getTopicId());
 			msg.setEvent(wampPublishMessage.getEvent());
 			
-			String[] publishTo = e.publish(sessionId, wampPublishMessage, msg);
+			List<String> publishTo = e.publish(sessionId, wampPublishMessage, msg);
 			if(publishTo != null)
 				for(String s : publishTo)
 					sendEvent(s, msg);
@@ -94,18 +96,12 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}
 	
-	public void sendEvent(String sessionId, EventAction action, Object event){
-		String topic = eventMapping.getActionId(action);
-		
-		if(topic != null){
-			WampEventMessage msg = new WampEventMessage();
-			msg.setTopicId(topic);
-			msg.setEvent(event);
+	public void sendEvent(String sessionId, String eventId, Object event){		
+		WampEventMessage msg = new WampEventMessage();
+		msg.setTopicId(eventId);
+		msg.setEvent(event);
 			
-			sendEvent(sessionId, msg);
-		}else if(log.isErrorEnabled())
-			log.error("Unknown EventAction attempting to send event " + action.toString());
-			
+		sendEvent(sessionId, msg);
 	}
 	
 	private void sendEvent(String sessionId, WampEventMessage msg){

@@ -19,6 +19,7 @@ package com.github.ghetolay.jwamp.rpc;
 import java.io.IOException;
 import java.util.Random;
 
+import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,7 @@ public class DefaultRPCSender implements WampRPCSender{
 		}
 	}
 	
+	//TODO possibilité de passer un autre type d'argument/ voir WampCallMessage.setArgument
 	public String call(String procId, Object args, long timeout, ResultListener<WampCallResultMessage> listener) throws IOException{
 
 		String callId = generateCallId();
@@ -70,7 +72,7 @@ public class DefaultRPCSender implements WampRPCSender{
 		WampCallMessage msg = new WampCallMessage();
 		msg.setProcId(procId);
 		msg.setCallId(callId);
-		msg.setArgs(args);
+		msg.setArgument(args);
 		
 		conn.sendMessage(msg);
 			
@@ -80,16 +82,16 @@ public class DefaultRPCSender implements WampRPCSender{
 		return callId;
 	}
 	
-	public boolean onMessage(String sessionId, int messageType, Object[] array) throws BadMessageFormException {
+	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException {
 		
 		switch(messageType){
 			case WampMessage.CALLRESULT:
 			//special multiple call result
 			case WampMessage.CALLMORERESULT:
-				onCallResult(new WampCallResultMessage(array));
+				onCallResult(new WampCallResultMessage(parser));
 				break;
 			case WampMessage.CALLERROR :
-				onCallResult(new WampCallErrorMessage(array));
+				onCallResult(new WampCallErrorMessage(parser));
 				break;
 			default: return false;
 		}

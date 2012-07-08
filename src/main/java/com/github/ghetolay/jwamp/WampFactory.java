@@ -23,6 +23,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
 
@@ -178,7 +179,7 @@ public abstract class WampFactory {
 	 * @see #connect(URI)
 	 */
 	public WampConnection connect(URI uri, ResultListener<WampWebSocket> wws) throws Exception{
-		return connect(uri, timeout, param.getnewHandlers(), wws);
+		return connect(uri, timeout, ReconnectPolicy.YES, param.getHandlers(), wws);
 	}
 	
 	/**
@@ -194,7 +195,7 @@ public abstract class WampFactory {
 	 * @see #connect(URI)
 	 */
 	public WampConnection connect(URI uri, long connectTimeout, ResultListener<WampWebSocket> wws) throws Exception{
-		return connect(uri,connectTimeout,param.getnewHandlers(), wws);
+		return connect(uri, connectTimeout, ReconnectPolicy.YES, param.getHandlers(), wws);
 	}
 	
 	/**
@@ -211,7 +212,7 @@ public abstract class WampFactory {
 	 * @see #connect(URI)
 	 */
 	public WampConnection connect(URI uri, Collection<WampMessageHandler> handlers, ResultListener<WampWebSocket> wws) throws Exception{
-		return connect(uri, timeout, handlers, wws);
+		return connect(uri, timeout, ReconnectPolicy.YES, handlers, wws);
 	}
 	/**
 	 * Connect with a specific connection timeout and handlers.
@@ -227,7 +228,7 @@ public abstract class WampFactory {
 	 * @see #connect(URI, ResultListener)
 	 * @see #connect(URI)
 	 */
-	public WampConnection connect(URI uri, long connectTimeout, final Collection<WampMessageHandler> handlers, final ResultListener<WampWebSocket> wws) throws Exception{
+	public WampConnection connect(URI uri, long connectTimeout, ReconnectPolicy reconnectPolicy, final Collection<WampMessageHandler> handlers, final ResultListener<WampWebSocket> wws) throws Exception{
 				
 		ResultListener<WampConnection> connectionListener = new ResultListener<WampConnection>() {
 
@@ -239,7 +240,7 @@ public abstract class WampFactory {
 			}
 		};
 		
-		WampConnection connection =  getConnection(uri, connectTimeout, handlers, connectionListener);
+		WampConnection connection =  getConnection(uri, connectTimeout, reconnectPolicy, handlers, connectionListener);
 		
 		return connection;
 	}
@@ -260,7 +261,7 @@ public abstract class WampFactory {
 	 * @see #connect(URI, ResultListener)
 	 */
 	public WampWebSocket connect(URI uri) throws Exception{
-		return connect(uri, timeout, waitTimeout, param.getnewHandlers());
+		return connect(uri, timeout, waitTimeout, ReconnectPolicy.YES, param.getHandlers());
 	}
 	
 	/**
@@ -270,14 +271,15 @@ public abstract class WampFactory {
 	 * @param uri to connect to.
 	 * @param connectTimeout the connect timeout to use.
 	 * @param waitTimeout the wait timeout to use.
+	 * @param reconnectPolicy specify if whether or not the connection will auto reconnect if the connection permits it.
 	 * @return A effective {@link WampWebSocket}
 	 * @throws Exception If the connection is impossible : TimeoutException, InterruptedException, IOException..
 	 * this will depend on the WebSocket implementation.
 	 * @see #connect(URI)
 	 * @see #setWampParameter(WampParameter)
 	 */
-	public WampWebSocket connect(URI uri, long connectTimeout, long waitTimeout) throws Exception{
-		return connect(uri,connectTimeout, waitTimeout, param.getnewHandlers());
+	public WampWebSocket connect(URI uri, long connectTimeout, long waitTimeout, ReconnectPolicy reconnectPolicy) throws Exception{
+		return connect(uri,connectTimeout, waitTimeout, reconnectPolicy, param.getHandlers());
 	}
 	
 	/**
@@ -293,7 +295,7 @@ public abstract class WampFactory {
 	 * @see #setWampParameter(WampParameter)
 	 */
 	public WampWebSocket connect(URI uri, Collection<WampMessageHandler> handlers) throws Exception{
-		return connect(uri, timeout, waitTimeout, handlers);
+		return connect(uri, timeout, waitTimeout, ReconnectPolicy.YES,handlers);
 	}
 	/**
 	 * 
@@ -302,17 +304,20 @@ public abstract class WampFactory {
 	 * @param uri to connect to.
 	 * @param connectTimeout the connect timeout to use.
 	 * @param waitTimeout the wait timeout to use.
+	 * @param reconnectPolicy specify if whether or not the connection will auto reconnect.
 	 * @param handlers the handlers to use.
 	 * @return A effective {@link WampWebSocket}
 	 * @throws Exception If the connection is impossible : TimeoutException, InterruptedException, IOException..
 	 * this will depend on the WebSocket implementation.
 	 * @see #connect(URI)
 	 */
-	public WampWebSocket connect(URI uri, long connectTimeout, long waitTimeout, Collection<WampMessageHandler> handlers) throws Exception{
+	//TODO: reconnectPolicy only at connection (retry on fail)!
+	public WampWebSocket connect(URI uri, long connectTimeout, long waitTimeout, ReconnectPolicy reconnectPolicy, Collection<WampMessageHandler> handlers) throws Exception{
 			
 		WaitResponse<WampConnection> wr = new WaitResponse<WampConnection>(waitTimeout);
 		
-		WampConnection connection = getConnection(uri, connectTimeout, handlers, wr);
+		WampConnection connection = getConnection(uri, connectTimeout, reconnectPolicy, handlers, wr);
+	
 		
 		if(connection != null){
 			WampWebSocket wws = new WampWebSocket(connection);
@@ -331,5 +336,5 @@ public abstract class WampFactory {
 		return null;
 	}
 	
-	protected abstract WampConnection getConnection(URI uri, long connectTimeout, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wc) throws Exception;
+	protected abstract WampConnection getConnection(URI uri, long connectTimeout, ReconnectPolicy reconnectPolicy, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wc) throws Exception;
 }

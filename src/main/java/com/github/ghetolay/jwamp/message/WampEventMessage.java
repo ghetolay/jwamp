@@ -15,10 +15,19 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.JsonToken;
+
 public class WampEventMessage extends WampMessage{
 
 	private String topicId;
 	private Object event;
+	
+	private JsonParser parser;
 	
 	public WampEventMessage(){
 		messageType = EVENT;
@@ -40,6 +49,23 @@ public class WampEventMessage extends WampMessage{
 		}
 	}
 	
+	public WampEventMessage(JsonParser parser) throws BadMessageFormException{
+		try {
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("TopicUri is required and must be a string");
+			setTopicId(parser.getText());
+			
+			if(parser.nextToken() == JsonToken.END_ARRAY)
+				throw new BadMessageFormException("Missing event element");
+			
+			this.parser = parser;
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
+			throw new BadMessageFormException(e);
+		}
+	}
+	
 	@Override
 	public Object[] toJSONArray() {
 		return new Object[] { messageType, topicId, event};
@@ -53,10 +79,38 @@ public class WampEventMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
+	//TODO a voir l'histoire des exceptions
 	public Object getEvent() {
-		return event;
+		try {
+			return getEvent(Object.class);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
+	public <T> T getEvent(Class<T> c) throws JsonProcessingException, IOException{
+		if(parser == null)
+			if(c.isInstance(event))
+				return c.cast(event);
+			else
+				return null;
+		
+		T res = parser.readValueAs(c);
+	
+		event = res;
+		parser = null;
+		
+		return res;
+	}
+	
+	//TODO: add getIntEvent()/getFloatEvent()/getStringEvent()/getBooleanEvent()....
+	
 	public void setEvent(Object event) {
 		this.event = event;
 	}

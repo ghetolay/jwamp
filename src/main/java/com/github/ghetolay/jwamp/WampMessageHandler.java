@@ -15,12 +15,14 @@
 */
 package com.github.ghetolay.jwamp;
 
+import org.codehaus.jackson.JsonParser;
+
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
 
 public interface WampMessageHandler {
 	
 	public void onConnected(WampConnection connection);
 	
-	public boolean onMessage(String sessionId, int messageType, Object[] msg) throws BadMessageFormException;
+	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException;
 	public void onClose(String sessionId, int closeCode);
 }

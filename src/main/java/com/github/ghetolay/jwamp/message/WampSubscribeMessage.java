@@ -15,6 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+
 
 /**
  * Also UnsubscribeMessage
@@ -43,6 +49,21 @@ public class WampSubscribeMessage extends WampMessage{
 			setTopicId((String) JSONArray[1]);
 		
 		} catch(ClassCastException e){
+			throw new BadMessageFormException(e);
+		}
+	}
+	
+	public WampSubscribeMessage(int messageType, JsonParser parser) throws BadMessageFormException{
+		this.messageType = messageType;
+		
+		try {
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("TopicUri is required and must be a string");
+			setTopicId(parser.getText());
+			
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
 			throw new BadMessageFormException(e);
 		}
 	}

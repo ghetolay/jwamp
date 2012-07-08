@@ -15,8 +15,10 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
+import java.util.List;
+
 public interface CallAction {
 
-	Object execute(Object[] args) throws Exception;
+	Object execute(List<Object> args) throws Exception;
 
 }
