@@ -42,7 +42,7 @@ import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.ServerEventManager;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.DefaultRPCSender;
-import com.github.ghetolay.jwamp.rpc.SimpleRPCManager;
+import com.github.ghetolay.jwamp.rpc.MappingRPCManager;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 import com.github.ghetolay.jwamp.utils.MapActionMapping;
 import com.github.ghetolay.jwamp.utils.ResultListener;
@@ -209,7 +209,7 @@ public class DefaultWampParameter{
 		public Collection<WampMessageHandler> getHandlers(){
 			Collection<WampMessageHandler> handlers = super.getHandlers();
 		
-			handlers.add(new SimpleRPCManager(actionMapping));
+			handlers.add(new MappingRPCManager(actionMapping));
 			handlers.add(new ClientEventManager(eventMapping));
 			
 			return handlers;
@@ -229,7 +229,7 @@ public class DefaultWampParameter{
 		public Collection<WampMessageHandler> getHandlers(){
 			ArrayList<WampMessageHandler> handlers = new ArrayList<WampMessageHandler>(2);
 			
-			handlers.add(new SimpleRPCManager(actionMapping));
+			handlers.add(new MappingRPCManager(actionMapping));
 			handlers.add(eventManager);
 			
 			return handlers; 

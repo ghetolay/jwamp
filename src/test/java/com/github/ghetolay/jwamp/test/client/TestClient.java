@@ -99,9 +99,9 @@ public class TestClient {
 	
 	@Test(dependsOnMethods = {"connect"})
 	public void testSimpleCall() throws IOException, UnsupportedWampActionException{
-		WampCallResultMessage msg = wamp.call("CallTest", null, 10000);
+		WampCallResultMessage msg = wamp.call("CallTest", 10000, null);
 
-		boolean succeed = msg.messageType != WampMessage.CALLERROR && "SUCCEED".equals(msg.getResult());
+		boolean succeed = msg.getMessageType() != WampMessage.CALLERROR && "SUCCEED".equals(msg.getResult());
 		assertTrue("Simple Remote Call",succeed);
 	}
 	
@@ -113,7 +113,7 @@ public class TestClient {
 	
 	@Test(dependsOnMethods = {"testAutoSubscribeResponse"})
 	public void testAutoReconnectAutoResubscribe() throws IOException, UnsupportedWampActionException, InterruptedException{
-		wamp.call("Manage", "restart", 1, null);
+		wamp.call("Manage", 1, null, "restart");
 		
 		disconnected = true;
 		waitAfterRestart.start();

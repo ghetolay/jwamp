@@ -24,7 +24,8 @@ import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public interface WampRPCSender extends WampMessageHandler{
 	
-	public WampCallResultMessage call(String procId, Object args, long timeout) throws IOException;
-	public String call(String procId, Object args, long timeout, ResultListener<WampCallResultMessage> listener) throws IOException;
+	//TODO a voir seulement une fonction call
+	public WampCallResultMessage call(String procId, long timeout, Object... args) throws IOException;
+	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException;
 
 }

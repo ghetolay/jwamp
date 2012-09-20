@@ -30,7 +30,7 @@ public class TestAction extends AbstractEventAction implements CallAction{
 	}
 	
 	//RPC
-	public Object execute(List<Object> args) {
+	public Object execute(String sessionId, List<Object> args) {
 		return "SUCCEED";
 	}
 }

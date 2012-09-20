@@ -36,7 +36,11 @@ public abstract class WampMessage {
 	//add by me
 	public final static int CALLMORERESULT = 300;
 	
-	public int messageType;
+	protected int messageType;
+	
+	public int getMessageType(){
+		return messageType;
+	}
 	
 	//Both constructor must be override
 	public WampMessage(){}

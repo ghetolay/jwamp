@@ -21,7 +21,7 @@ import com.github.ghetolay.jwamp.rpc.CallAction;
 
 public class ServerManagerAction implements CallAction{
 
-	public Object execute(List<Object> args) {
+	public Object execute(String sessionId, List<Object> args) {
 		try{
 			String arg = (String) args.get(0);
 			if("restart".equals(arg)){

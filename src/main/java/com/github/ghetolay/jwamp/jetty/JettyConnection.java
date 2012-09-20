@@ -106,4 +106,8 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 		
 		return false;
 	}	
+	
+	public Connection getConnection(){
+		return connection;
+	}
 }

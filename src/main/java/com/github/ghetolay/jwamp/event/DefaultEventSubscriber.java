@@ -26,14 +26,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.codehaus.jackson.JsonParser;
-
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
+import com.github.ghetolay.jwamp.message.WampUnSubscribeMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class DefaultEventSubscriber implements WampEventSubscriber {
@@ -73,10 +72,10 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public boolean onMessage(String sessionId, int messageType, JsonParser parser)
+	public boolean onMessage(String sessionId, WampMessage message)
 			throws BadMessageFormException {
-		if(messageType == WampMessage.EVENT){
-			onEvent(new WampEventMessage(parser));
+		if(message instanceof WampEventMessage){
+			onEvent((WampEventMessage)message);
 			return true;
 		}
 		return false;
@@ -92,7 +91,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	
 	public void subscribe(String topicId) throws IOException {
 		if(!topics.contains(topicId)){
-			conn.sendMessage(new WampSubscribeMessage(WampMessage.SUBSCRIBE, topicId));
+			conn.sendMessage(new WampSubscribeMessage(topicId));
 			
 			topics.add(topicId);
 		}
@@ -107,7 +106,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	
 	public void unsubscribe(String topicId) throws IOException {
 		if(topics.contains(topicId)){
-			conn.sendMessage(new WampSubscribeMessage(WampMessage.UNSUBSCRIBE, topicId));
+			conn.sendMessage(new WampUnSubscribeMessage(topicId));
 			
 			topics.remove(topicId);
 		}

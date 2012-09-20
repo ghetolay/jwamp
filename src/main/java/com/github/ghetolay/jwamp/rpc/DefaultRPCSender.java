@@ -17,9 +17,9 @@ package com.github.ghetolay.jwamp.rpc;
 
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
-import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +31,10 @@ import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
+import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
 
-public class DefaultRPCSender implements WampRPCSender{
+public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, ResultListener<WampCallResultMessage>>{
 	
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -41,19 +42,24 @@ public class DefaultRPCSender implements WampRPCSender{
 	
 	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
 	
+	//TODO COMMMIT : add timeout listener
+	public DefaultRPCSender(){
+		resultListeners.addListener(this);
+	}
+	
 	public void onConnected(WampConnection connection) {
 		conn = connection;
 	}
 	
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public WampCallResultMessage call(String procId, Object args, long timeout) throws IOException{
+	public WampCallResultMessage call(String procId, long timeout, Object... args) throws IOException{
 		if(timeout < 0)
 			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String,Object[],int,ResultListener<WampCallResultMessage>)");
 		
 		WaitResponse<WampCallResultMessage> wr = new WaitResponse<WampCallResultMessage>();
 		
-		call(procId,args,timeout,wr);
+		call(procId,timeout,wr,args);
 		
 		try {
 			return wr.call();
@@ -65,14 +71,14 @@ public class DefaultRPCSender implements WampRPCSender{
 	}
 	
 	//TODO possibilité de passer un autre type d'argument/ voir WampCallMessage.setArgument
-	public String call(String procId, Object args, long timeout, ResultListener<WampCallResultMessage> listener) throws IOException{
+	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException{
 
 		String callId = generateCallId();
 		
 		WampCallMessage msg = new WampCallMessage();
 		msg.setProcId(procId);
 		msg.setCallId(callId);
-		msg.setArgument(args);
+		msg.setArguments(Arrays.asList(args));
 		
 		conn.sendMessage(msg);
 			
@@ -82,27 +88,22 @@ public class DefaultRPCSender implements WampRPCSender{
 		return callId;
 	}
 	
-	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException {
+	public boolean onMessage(String sessionId, WampMessage msg) throws BadMessageFormException {
 		
-		switch(messageType){
-			case WampMessage.CALLRESULT:
-			//special multiple call result
-			case WampMessage.CALLMORERESULT:
-				onCallResult(new WampCallResultMessage(parser));
-				break;
-			case WampMessage.CALLERROR :
-				onCallResult(new WampCallErrorMessage(parser));
-				break;
-			default: return false;
+		if(msg.getMessageType() == WampMessage.CALLRESULT
+				|| msg.getMessageType() == WampMessage.CALLERROR
+				|| msg.getMessageType() == WampMessage.CALLMORERESULT){
+			onCallResult((WampCallResultMessage)msg);
+			return true;
 		}
 		
-		return true;
+		return false;
 	}
 	
 	private void onCallResult(WampCallResultMessage msg) {
 		if(resultListeners.containsKey(msg.getCallId())){
 			ResultListener<WampCallResultMessage> listener;
-			if(msg.isLast())
+			if(msg.isLast() || msg.getMessageType() == WampMessage.CALLERROR)
 				listener = resultListeners.remove(msg.getCallId());
 			else
 				listener = resultListeners.get(msg.getCallId());
@@ -114,6 +115,10 @@ public class DefaultRPCSender implements WampRPCSender{
 			log.debug("callId from CallResultMessage not recognized : " + msg.toString());
 	}	
 
+	public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
+		value.onResult(null);
+	}
+	
 	private String generateCallId(){
 		Random rand = new Random();
 		String id ="";

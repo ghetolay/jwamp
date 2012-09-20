@@ -17,7 +17,6 @@ package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.jackson.JsonParseException;
@@ -149,12 +148,11 @@ public class WampCallMessage extends WampMessage{
 		this.args = args;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void setArgument(Object arg) {
-		if(arg instanceof List)
-			this.args = (List<Object>) arg;
+	public void addArgument(Object arg) {
+		if(args == null)
+			args = new ArrayList<Object>();
 		
-		this.args = Arrays.asList(arg);
+		args.add(arg);
 	}
 
 }

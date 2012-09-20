@@ -59,12 +59,16 @@ public class WampWebSocket {
 		return eventSubscriber;
 	}
 	
-	public WampCallResultMessage call(String procId, Object args, long timeout) throws IOException, UnsupportedWampActionException{
-		return getRPCSender().call(procId, args, timeout);
+	public WampCallResultMessage call(String procId, Object... args) throws IOException, UnsupportedWampActionException{
+		return getRPCSender().call(procId, 5000, args);
 	}
 	
-	public String call(String procId, Object args, long timeout, ResultListener<WampCallResultMessage> listener) throws IOException, UnsupportedWampActionException{
-		return getRPCSender().call(procId, args, timeout, listener);
+	public WampCallResultMessage call(String procId, long timeout, Object... args) throws IOException, UnsupportedWampActionException{
+		return getRPCSender().call(procId, timeout, args);
+	}
+	
+	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException, UnsupportedWampActionException{
+		return getRPCSender().call(procId, timeout, listener, args);
 	}
 	
 	public void subscribe(String topicId) throws IOException, UnsupportedWampActionException{

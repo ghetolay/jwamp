@@ -1,23 +1,24 @@
 /**
-*Copyright [2012] [Ghetolay]
-*
-*Licensed under the Apache License, Version 2.0 (the "License");
-*you may not use this file except in compliance with the License.
-*You may obtain a copy of the License at
-*
-*http://www.apache.org/licenses/LICENSE-2.0
-*
-*Unless required by applicable law or agreed to in writing, software
-*distributed under the License is distributed on an "AS IS" BASIS,
-*WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*See the License for the specific language governing permissions and
-*limitations under the License.
-*/
+ *Copyright [2012] [Ghetolay]
+ *
+ *Licensed under the Apache License, Version 2.0 (the "License");
+ *you may not use this file except in compliance with the License.
+ *You may obtain a copy of the License at
+ *
+ *http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *Unless required by applicable law or agreed to in writing, software
+ *distributed under the License is distributed on an "AS IS" BASIS,
+ *WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *See the License for the specific language governing permissions and
+ *limitations under the License.
+ */
 package com.github.ghetolay.jwamp.utils;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 public class TimeoutHashMap<K,V> extends HashMap<K,V>{
@@ -25,112 +26,137 @@ public class TimeoutHashMap<K,V> extends HashMap<K,V>{
 	private static final long serialVersionUID = 3164054746684312958L;
 
 	private TimeoutThread updater;
-	
+
+	Set<TimeoutListener<K,V>> listeners = new HashSet<TimeoutListener<K,V>>();
+
 	public TimeoutHashMap() {
 		updater = new TimeoutThread();
 		updater.start();
 	}
 
+	public void addListener(TimeoutListener<K,V> listener){
+		listeners.add(listener);
+	}
+
+	public void removeListener(TimeoutListener<K,V> listener){
+		listeners.remove(listener);
+	}
+
 	public void put(K key, V value, long timeout){
 		if(timeout > 0)
 			updater.add(key,timeout);
-		
+
 		super.put(key, value);
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	protected V remove(Object key, boolean deleteToRemove){
 		V result = super.remove(key);
-		
+
 		if(deleteToRemove)
 			updater.removeFromSet(key);
-		
+		else
+			for(TimeoutListener<K,V> l : listeners)
+				l.timedOut((K)key, result);
+
 		return result;
 	}
-	
+
 	@Override
 	public V remove(Object key){
 		return remove(key,true);
 	}
-	
+
 	@Override
 	public void finalize(){
 		updater.interrupt();
 	}
-	
+
 	private class TimeoutThread extends Thread{
-		
-		Set<ToRemove> toRemove = new HashSet<ToRemove>();
+
+		//TODO change to FieldMap when finish
+		HashMap<K,ToRemove> toRemove = new HashMap<K,ToRemove>();
 		long minimalWait = -1;
 		long sleepUntil = 0;
 		
 		public synchronized void add(K key, long timeout){
-			
+
 			if(toRemove.isEmpty())
 				notify();
-				
+
 			if(System.currentTimeMillis() + timeout < sleepUntil)
 				minimalWait = timeout;
-				notify();
-			
-			toRemove.add(new ToRemove(key,timeout));
+			notify();
+
+			synchronized(toRemove){	
+				toRemove.put(key,new ToRemove(key,timeout));
+			}
 		}
-		
-		public synchronized void removeFromSet(Object key){
-			toRemove.remove(key);
+
+		public void removeFromSet(Object key){
+			synchronized(toRemove){
+				toRemove.remove(key);
+			}
 		}
-		
+
 		public synchronized void run() {
-			 try{
-				 while(!isInterrupted()){
-					 if(toRemove.isEmpty())
-						 wait();
-						 
-					 //if minimalWait is >0 it means it has been set by add(key,timeout)
-					 if(minimalWait < 0){
-						 long currentTime = System.currentTimeMillis();
-						 minimalWait = Long.MAX_VALUE;
-						 sleepUntil = 0;
-						 
-						 for(Iterator<ToRemove> it = toRemove.iterator(); it.hasNext();){
-							 ToRemove tr = it.next();
-							 long timeleft = tr.timeLeft(currentTime);
-							 
-							 if(timeleft <= 0){
-								 it.remove();
-								 remove(tr.key, false);
-							 }else
-								 if(timeleft < minimalWait)
-									 minimalWait = timeleft;
-						 }
-					 }
-					 
-					 if(minimalWait != Long.MAX_VALUE){
-						 //we reset minimalWait before the wait
-						 long gowait = minimalWait;
-						 minimalWait = -1;
-						 
-						 sleepUntil = System.currentTimeMillis() + gowait;
-						 wait(gowait);
-					 }
-				 }
-			 }catch(InterruptedException e){}
-		 }
+			try{
+				while(!isInterrupted()){
+					if(toRemove.isEmpty())
+						wait();
+
+					//if minimalWait is >0 it means it has been set by add(key,timeout)
+					if(minimalWait < 0){
+						long currentTime = System.currentTimeMillis();
+						minimalWait = Long.MAX_VALUE;
+						sleepUntil = 0;
+
+						synchronized(toRemove){
+							for(Iterator<Map.Entry<K, ToRemove>> it = toRemove.entrySet().iterator(); it.hasNext();){
+								ToRemove tr = it.next().getValue();
+								long timeleft = tr.timeLeft(currentTime);
+
+								if(timeleft <= 0){
+									it.remove();
+									remove(tr.key, false);
+								}else
+									if(timeleft < minimalWait)
+										minimalWait = timeleft;
+							}
+						}
+					}
+
+					if(minimalWait != Long.MAX_VALUE){
+						//we reset minimalWait before the wait
+						long gowait = minimalWait;
+						minimalWait = -1;
+
+						sleepUntil = System.currentTimeMillis() + gowait;
+						wait(gowait);
+					}
+				}
+			}catch(InterruptedException e){}
+		}
 	}
-	
+
 	private class ToRemove{
-		
+
 		long timeout;
 		long startTime;
 		K key;
-		
+
 		private ToRemove(K key, long timeout){
 			startTime = System.currentTimeMillis();
 			this.timeout = timeout;
 			this.key = key;
 		}
-		
+
 		private long timeLeft(long currentTime){
 			return timeout - (currentTime - startTime);
 		}
+	}
+
+	public static interface TimeoutListener<K,V>{
+		public void timedOut(K key, V value);
 	}
 }

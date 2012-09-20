@@ -70,7 +70,7 @@ public class WampJettyFactory extends WampFactory{
 			ws.open(uri,connection);
 	}
 	
-	public WampJettyHandler newJettyHandler() throws Exception{
+	public WampJettyHandler newJettyHandler(){
 		return newJettyHandler(getParameter(),null);
 	}
 	

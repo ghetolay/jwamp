@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.codehaus.jackson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,17 +47,17 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			it.next().addEventListener(this);
 	}
 	
-	public boolean onMessage(String sessionId, int messageType, JsonParser parser) throws BadMessageFormException {
+	public boolean onMessage(String sessionId, WampMessage message) throws BadMessageFormException {
 		
-		switch(messageType){
+		switch(message.getMessageType()){
 			case WampMessage.SUBSCRIBE :
-				onSubscribe(sessionId, new WampSubscribeMessage(messageType, parser));
+				onSubscribe(sessionId, (WampSubscribeMessage)message);
 				return true;
 			case WampMessage.UNSUBSCRIBE :
-				onUnsubscribe(sessionId, new WampSubscribeMessage(messageType, parser));
+				onUnsubscribe(sessionId, (WampSubscribeMessage)message);
 				return true;
 			case WampMessage.PUBLISH :
-				onPublish(sessionId, new WampPublishMessage(parser));
+				onPublish(sessionId, (WampPublishMessage)message);
 				return true;
 			default : 
 				return false;

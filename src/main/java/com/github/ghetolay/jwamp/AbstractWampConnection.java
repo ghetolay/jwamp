@@ -33,7 +33,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
+import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
+import com.github.ghetolay.jwamp.message.WampCallMessage;
+import com.github.ghetolay.jwamp.message.WampCallResultMessage;
+import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
+import com.github.ghetolay.jwamp.message.WampUnSubscribeMessage;
 import com.github.ghetolay.jwamp.message.WampWelcomeMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
@@ -158,25 +165,60 @@ public abstract class AbstractWampConnection implements WampConnection{
 			
 			int messageType = parser.getIntValue();
 	
+			WampMessage msg;
+			
 			switch(messageType){
 			/*
 				case WampMessage.PREFIX :
 					handler.onPrefix(new WampPrefixMessage(array));
 					return;
 			*/
+				case WampMessage.CALL :
+					msg = new WampCallMessage(parser);
+					break;
+			
+				case WampMessage.CALLERROR :
+					msg = new WampCallErrorMessage(parser);
+					break;
+					
+				case WampMessage.CALLRESULT :
+					msg = new WampCallResultMessage(parser);
+					break;
+				
+				case WampMessage.EVENT :
+					msg = new WampEventMessage(parser);
+					break;
+				
+				case WampMessage.PUBLISH :
+					msg = new WampPublishMessage(parser);
+					break;
+				
+				case WampMessage.SUBSCRIBE :
+					msg = new WampSubscribeMessage(parser);
+					break;
+					
+				case WampMessage.UNSUBSCRIBE :	
+					msg = new WampUnSubscribeMessage(parser);
+					break;
+					
 				case WampMessage.WELCOME :
 					onWelcome(new WampWelcomeMessage(parser));
+					return;
+					
+				default :
+					//TODO log
+					log.debug("Unknown messagetype " + messageType);
 					return;
 			}
 			
 			for(WampMessageHandler h : messageHandlers){
-				boolean result = h.onMessage(sessionId, messageType, parser);
+				boolean result = h.onMessage(sessionId, msg);
 				if(exclusiveHandler && result)
 					return;
 			}
 			
-			if(log.isErrorEnabled())
-				log.error("Message Id not recognized : " + messageType);
+			if(log.isWarnEnabled())
+				log.warn("Message not handled : " + data);
 			
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block

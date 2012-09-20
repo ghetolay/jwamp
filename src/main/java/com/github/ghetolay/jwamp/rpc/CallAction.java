@@ -19,6 +19,6 @@ import java.util.List;
 
 public interface CallAction {
 
-	Object execute(List<Object> args) throws Exception;
+	Object execute(String sessionId, List<Object> args) throws Exception;
 
 }

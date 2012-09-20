@@ -159,7 +159,7 @@ see [here][test-readme].
   
   
   
-This are my first steps on open project so don't hesitate to send me your feedbacks or questions ! 
+These are my first steps on open project so don't hesitate to send me your feedbacks or questions ! 
 
 [wamp]: http://wamp.ws/
 [test-readme]: jwamp/tree/master/src/test/resources
