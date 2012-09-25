@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
-import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;

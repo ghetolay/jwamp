@@ -16,18 +16,18 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 
 public class WampEventMessage extends WampMessage{
 
 	private String topicId;
-	private Object event;
 	
-	private JsonParser parser;
+	private WampArguments event = new WampArguments();
 	
 	public WampEventMessage(){
 		messageType = EVENT;
@@ -42,7 +42,10 @@ public class WampEventMessage extends WampMessage{
 		try{
 			
 			setTopicId((String) JSONArray[1]);
-			setEvent(JSONArray[2]);
+			
+			List<Object> eventList = new ArrayList<Object>(1);
+			eventList.add(JSONArray[2]);
+			this.event.setArguments(eventList);
 			
 		} catch(ClassCastException e){
 			throw new BadMessageFormException(e);
@@ -58,7 +61,7 @@ public class WampEventMessage extends WampMessage{
 			if(parser.nextToken() == JsonToken.END_ARRAY)
 				throw new BadMessageFormException("Missing event element");
 			
-			this.parser = parser;
+			event.setParser(parser);
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
 		} catch (IOException e) {
@@ -68,7 +71,10 @@ public class WampEventMessage extends WampMessage{
 	
 	@Override
 	public Object[] toJSONArray() {
-		return new Object[] { messageType, topicId, event};
+		if(event.getArguments() != null && !event.getArguments().isEmpty())
+			return new Object[] { messageType, topicId, event.getArguments().get(0)};
+		else
+			return new Object[] { messageType, topicId, null};
 	}
 
 	public String getTopicId() {
@@ -79,40 +85,13 @@ public class WampEventMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
-	//TODO a voir l'histoire des exceptions
-	public Object getEvent() {
-		try {
-			return getEvent(Object.class);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	public <T> T getEvent(Class<T> c) throws JsonProcessingException, IOException{
-		if(parser == null)
-			if(c.isInstance(event))
-				return c.cast(event);
-			else
-				return null;
-		
-		T res = parser.readValueAs(c);
-	
-		event = res;
-		parser = null;
-		
-		return res;
+	public WampArguments getEvent(){
+		return event;
 	}
 	
-	//TODO: add getIntEvent()/getFloatEvent()/getStringEvent()/getBooleanEvent()....
-	
-	public void setEvent(Object event) {
-		this.event = event;
+	public void setEvent(Object args){
+		List<Object> eventList = new ArrayList<Object>(1);
+		eventList.add(args);
+		this.event.setArguments(eventList);
 	}
-
 }

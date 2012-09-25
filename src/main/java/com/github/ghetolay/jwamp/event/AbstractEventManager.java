@@ -35,6 +35,7 @@ import com.github.ghetolay.jwamp.utils.ActionMapping;
 public abstract class AbstractEventManager implements WampMessageHandler, EventSender {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	
+	//TODO changer action mapping
 	private ActionMapping<EventAction> eventMapping;
 	
 	//TODO ability to change eventMapping dynamically 
@@ -44,7 +45,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 		
 		this.eventMapping = eventMapping;
 		for(Iterator<EventAction> it = eventMapping.getActionsIterator(); it.hasNext();)
-			it.next().addEventListener(this);
+			it.next().setEventSender(this);
 	}
 	
 	public boolean onMessage(String sessionId, WampMessage message) throws BadMessageFormException {
@@ -67,7 +68,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 	public void onSubscribe(String sessionId, WampSubscribeMessage wampSubscribeMessage) {
 		EventAction e = eventMapping.getAction(wampSubscribeMessage.getTopicId());
 		if(e != null)
-			e.subscribe(sessionId);
+			e.subscribe(sessionId, wampSubscribeMessage.getArguments());
 		else if(log.isDebugEnabled())
 			log.debug("unable to subscribe : action name doesn't not exist " + wampSubscribeMessage.getTopicId());
 	}

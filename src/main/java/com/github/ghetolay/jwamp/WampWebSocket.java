@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.github.ghetolay.jwamp.event.WampEventSubscriber;
+import com.github.ghetolay.jwamp.event.WampSubscription;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
@@ -73,6 +75,14 @@ public class WampWebSocket {
 	
 	public void subscribe(String topicId) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().subscribe(topicId);
+	}
+	
+	public void subscribe(WampSubscription subscription) throws IOException, UnsupportedWampActionException{
+		getEventSubscriber().subscribe(subscription);
+	}
+	
+	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> listener) throws IOException, UnsupportedWampActionException{
+		getEventSubscriber().subscribe(subscription, listener);
 	}
 	
 	public void unsubscribe(String topicId) throws IOException, UnsupportedWampActionException{

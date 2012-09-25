@@ -50,6 +50,8 @@ public class WampJettyHandler extends WebSocketHandler{
 		
 		if(listener != null)
 			requests = new HashMap<JettyServerConnection, HttpServletRequest>();
+		
+		getWebSocketFactory().setMaxIdleTime(-1);
 	}
 	
 	public WebSocket doWebSocketConnect(HttpServletRequest request, final String subprotocol) {
@@ -76,6 +78,10 @@ public class WampJettyHandler extends WebSocketHandler{
 				public void onClose(int closeCode, String message) {}
 				
 			};
+	}
+	
+	public void setMaxIdleTime(int idleTimeout){
+		getWebSocketFactory().setMaxIdleTime(idleTimeout);
 	}
 	
 	public WampConnection getWampConnection(String uuid){

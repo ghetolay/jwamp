@@ -58,8 +58,9 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 			if(reconnect())
 				return;
 		}
-		onClose();
+		//deja swap les deux, si tjs pas bon reflechir plus fort :)
 		super.onClose(closeCode, message);
+		onClose();
 	}
 	
 	public void onClose(){

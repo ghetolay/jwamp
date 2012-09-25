@@ -21,33 +21,26 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 
-public class AbstractEventAction implements EventAction {
+public class SimpleEventAction implements EventAction {
 
-	private EventSender listener; 
-	private Set<String> subscriber = new HashSet<String>();
+	protected EventSender sender; 
+	protected Set<String> subscriber = new HashSet<String>();
 	
 	private String eventId;
-	
-	public void addEventListener(EventSender listener) {
-		this.listener = listener;
-	}
-
-	public void removeEventListener(EventSender listener) {
-		this.listener = null;
-	}
 	
 	public void setEventId(String eventId){
 		this.eventId = eventId;
 	}
 	
-	public String getEventId(){
-		return eventId;
+	public void setEventSender(EventSender sender) {
+		this.sender = sender;
 	}
 	
-	public void subscribe(String sessionId) {
+	public void subscribe(String sessionId, WampArguments args) {
 		subscriber.add(sessionId);
 	}
 
@@ -78,7 +71,7 @@ public class AbstractEventAction implements EventAction {
 	
 	public void eventAll(Object event){
 		for(String s : subscriber)
-			if(listener != null)
-				listener.sendEvent(s, getEventId(), event);
+			if(sender != null)
+				sender.sendEvent(s, eventId, event);
 	}
 }

@@ -17,18 +17,16 @@ package com.github.ghetolay.jwamp.event;
 
 import java.util.List;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 
 public interface EventAction {
 	
-	public void addEventListener(EventSender listener);
-	public void removeEventListener(EventSender listener);
+	public void setEventId(String id);
+	public void setEventSender(EventSender eventSender);
 	
-	public void setEventId(String eventId);
-	public String getEventId();
-	
-	public void subscribe(String sessionId);
+	public void subscribe(String sessionId, WampArguments args);
 	public void unsubscribe(String sessionId);
 
 	public List<String> publish(String sessionId, WampPublishMessage wampPublishMessage, WampEventMessage msg);

@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -75,6 +74,9 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public abstract void sendMessage(String data) throws IOException;
 	
 	public void onClose(int closeCode, String message){
+		if(log.isDebugEnabled())
+			log.debug("Close connection " + sessionId + " reason : " + message);
+			
 		for(WampMessageHandler h : messageHandlers)
 			h.onClose(sessionId, closeCode);
 		
@@ -185,6 +187,10 @@ public abstract class AbstractWampConnection implements WampConnection{
 					msg = new WampCallResultMessage(parser);
 					break;
 				
+				case WampMessage.CALLMORERESULT :
+					msg = new WampCallResultMessage(WampMessage.CALLMORERESULT, parser);
+					break;
+					
 				case WampMessage.EVENT :
 					msg = new WampEventMessage(parser);
 					break;
@@ -220,21 +226,12 @@ public abstract class AbstractWampConnection implements WampConnection{
 			if(log.isWarnEnabled())
 				log.warn("Message not handled : " + data);
 			
-		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassCastException e){
-			//TODO
-			e.printStackTrace();
-		} catch (BadMessageFormException e){
-			//TODO
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e){
+			if(log.isWarnEnabled()){
+				log.warn("Message not handled because of internal error.\nmessage : " + data + "\nException : " + e.getLocalizedMessage());
+				if(log.isTraceEnabled())
+					log.trace("Warning error stacktrace : ", e);
+			}
 		}
 		
 	}

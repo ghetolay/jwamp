@@ -19,7 +19,6 @@ package com.github.ghetolay.jwamp;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,6 +39,7 @@ import com.github.ghetolay.jwamp.event.DefaultEventSubscriber;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.ServerEventManager;
+import com.github.ghetolay.jwamp.event.WampSubscription;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.DefaultRPCSender;
 import com.github.ghetolay.jwamp.rpc.MappingRPCManager;
@@ -53,7 +53,7 @@ public class DefaultWampParameter{
 		
 		protected final Logger log = LoggerFactory.getLogger(getClass());
 		
-		protected Set<String> topics = new HashSet<String>();
+		protected Set<WampSubscription> topics = new HashSet<WampSubscription>();
 		
 		protected ActionMapping<CallAction> actionMapping;
 		protected ActionMapping<EventAction> eventMapping;	
@@ -68,6 +68,7 @@ public class DefaultWampParameter{
 			mapFromFile(is);
 		}
 		
+		//TODO update topic element to add arguments
 		private void mapFromFile(InputStream is) throws Exception{
 			
 			topics.clear();
@@ -129,8 +130,7 @@ public class DefaultWampParameter{
 									if(action instanceof EventAction){
 										events.put(actionId, (EventAction)action);
 										((EventAction) action).setEventId(actionId);
-									}
-									else throw new ClassCastException("class " + actionClass + " does not implements EventAction");
+									}else throw new ClassCastException("class " + actionClass + " does not implements EventAction");
 								}
 							}
 						}catch(Exception e){
@@ -144,7 +144,8 @@ public class DefaultWampParameter{
 								if(event.isCharacters()){
 									String list = event.asCharacters().getData();
 									if( list != null)
-										Collections.addAll(topics, list.split(","));
+										for(String sub :list.split(","))
+											topics.add(new WampSubscription.Impl(sub));
 								}else
 									continue;
 							}

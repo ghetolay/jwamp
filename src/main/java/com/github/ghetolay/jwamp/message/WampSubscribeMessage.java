@@ -16,12 +16,11 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 
 /**
@@ -30,9 +29,7 @@ import org.codehaus.jackson.JsonToken;
  */
 public class WampSubscribeMessage extends WampUnSubscribeMessage {
 
-	private List<Object> args;
-
-	private JsonParser parser; 
+	private WampArguments args = new WampArguments();
 
 	public WampSubscribeMessage(String topicId){
 		super(WampMessage.SUBSCRIBE, topicId);
@@ -42,16 +39,26 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 			throws BadMessageFormException {
 		super(WampMessage.SUBSCRIBE, parser);
 
-		this.parser = parser;
+		try {
+			
+			JsonToken token = parser.nextToken();
+			if(token != null && token != JsonToken.END_ARRAY)
+				args.setParser(parser);
+			
+		} catch (JsonParseException e) {
+			throw new BadMessageFormException(e);
+		} catch (IOException e) {
+			throw new BadMessageFormException(e);
+		}
 	}
 
 	public WampSubscribeMessage(Object[] JSONArray) throws BadMessageFormException{
 		super(JSONArray);
 
 		if(JSONArray.length > 2){
-			args = new ArrayList<Object>(JSONArray.length - 3);
-			for(int i = 3 ; i < JSONArray.length; i++)
-				args.add(JSONArray[i]);
+			args.initArgumentsList(JSONArray.length - 2);
+			for(int i = 2 ; i < JSONArray.length; i++)
+				args.addArgument(JSONArray[i]);
 		}
 	}
 
@@ -59,60 +66,27 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 	public Object[] toJSONArray() {
 		Object[] superResult = super.toJSONArray();
 
-		if(args == null)
+		if(args.getArguments() == null || args.getArguments().isEmpty())
 			return superResult;
 
 
-		Object[] result = Arrays.copyOf(superResult,superResult.length + args.size());
+		Object[] result = Arrays.copyOf(superResult,superResult.length + args.getArguments().size());
 
 		for(int i = superResult.length; i < result.length; i++)
-			result[i] = args.get(i - superResult.length);
+			result[i] = args.getArguments().get(i - superResult.length);
 
 		return result;
 	}
 
-	//TODO: avoid copy of code from WampCalMessage, use a abstractclass for message with undefined number of arguments
-	public List<Object> getArguments(){
-		if(parser==null)
-			return args;
-
-		try{
-			args = new ArrayList<Object>();
-
-			while(parser.nextToken() != JsonToken.END_ARRAY)
-				args.add(parser.readValueAs(Object.class));
-		}catch(Exception e){
-			log.error("ParseException",e);
-		}
-
-		parser = null;
+	public WampArguments getArguments(){
 		return args;
 	}
-
-	public Object nextArgument() throws JsonProcessingException, IOException{
-		return nextArgument(Object.class);
-	}
-
-	public <T> T nextArgument(Class<T> c) throws JsonProcessingException, IOException{
-		if(parser == null)
-			return null;
-
-		if(parser.nextToken() == JsonToken.END_ARRAY){
-			parser = null;
-			return null;
-		}
-
-		return parser.readValueAs(c);
-	}
-
+	
 	public void setArguments(List<Object> args){
-		this.args = args;
+		this.args.setArguments(args);
 	}
-
+	
 	public void addArgument(Object arg) {
-		if(args == null)
-			args = new ArrayList<Object>();
-
-		args.add(arg);
+		args.addArgument(arg);
 	}
 }

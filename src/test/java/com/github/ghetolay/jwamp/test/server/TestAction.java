@@ -15,22 +15,21 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
-import java.util.List;
-
-import com.github.ghetolay.jwamp.event.AbstractEventAction;
+import com.github.ghetolay.jwamp.event.SimpleEventAction;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 
-public class TestAction extends AbstractEventAction implements CallAction{
+public class TestAction extends SimpleEventAction implements CallAction{
 
 	@Override
-	public void subscribe(String sessionId){
-		super.subscribe(sessionId);
+	public void subscribe(String sessionId, WampArguments args){
+		super.subscribe(sessionId, args);
 		
 		eventAll("EventAction");
 	}
 	
 	//RPC
-	public Object execute(String sessionId, List<Object> args) {
+	public Object execute(String sessionId, WampArguments args) {
 		return "SUCCEED";
 	}
 }

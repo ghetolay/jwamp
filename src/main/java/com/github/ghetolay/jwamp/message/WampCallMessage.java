@@ -16,21 +16,18 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
 
 public class WampCallMessage extends WampMessage{
 
 	private String callId;
 	private String procId;
-	private List<Object> args;
 	
-	private JsonParser parser; 
+	private WampArguments args = new WampArguments();
 	
 	public WampCallMessage(){
 		messageType = CALL;
@@ -47,9 +44,9 @@ public class WampCallMessage extends WampMessage{
 			setProcId((String) JSONArray[2]);
 			
 			if(JSONArray.length > 3){
-				args = new ArrayList<Object>(JSONArray.length - 3);
+				args.initArgumentsList(JSONArray.length - 3);
 				for(int i = 3 ; i < JSONArray.length; i++)
-					args.add(JSONArray[i]);
+					args.addArgument(JSONArray[i]);
 			}
 		} catch(ClassCastException e){
 			throw new BadMessageFormException(e);
@@ -67,8 +64,11 @@ public class WampCallMessage extends WampMessage{
 			if(parser.nextToken() != JsonToken.VALUE_STRING)
 				throw new BadMessageFormException("ProcUri is required and must be a string");
 			setProcId(parser.getText());
-
-			this.parser = parser;
+			
+			JsonToken token = parser.nextToken();
+			if(token != null && token != JsonToken.END_ARRAY)
+				args.setParser(parser);
+			
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
 		} catch (IOException e) {
@@ -79,8 +79,8 @@ public class WampCallMessage extends WampMessage{
 	@Override
 	public Object[] toJSONArray() {
 		int argsLength = 0;
-		if(args != null)
-			argsLength = args.size();
+		if(args.getArguments() != null)
+			argsLength = args.getArguments().size();
 			
 		Object[] result = new Object[argsLength + 3];
 		
@@ -89,7 +89,7 @@ public class WampCallMessage extends WampMessage{
 		result[2] = procId;
 		
 		for(int i = argsLength - 1; i >= 0; i--)
-			result[i + 3] = args .get(i);
+			result[i + 3] = args.getArguments().get(i);
 		
 		return result;
 	}
@@ -109,50 +109,16 @@ public class WampCallMessage extends WampMessage{
 	public void setProcId(String procId) {
 		this.procId = procId;
 	}
-
-	//TODO: pas super le logging
-	public List<Object> getArguments(){
-		if(parser==null)
-			return args;
-		
-		try{
-			args = new ArrayList<Object>();
-			
-			while(parser.nextToken() != JsonToken.END_ARRAY)
-				args.add(parser.readValueAs(Object.class));
-		}catch(Exception e){
-			log.error("ParseException",e);
-		}
-		
-		parser = null;
-		return args;
-	}
-
-	public Object nextArgument() throws JsonProcessingException, IOException{
-		return nextArgument(Object.class);
-	}
 	
-	public <T> T nextArgument(Class<T> c) throws JsonProcessingException, IOException{
-		if(parser == null)
-			return null;
-		
-		if(parser.nextToken() == JsonToken.END_ARRAY){
-			parser = null;
-			return null;
-		}
-		
-		return parser.readValueAs(c);
+	public WampArguments getArguments(){
+		return args;
 	}
 	
 	public void setArguments(List<Object> args){
-		this.args = args;
+		this.args.setArguments(args);
 	}
 	
 	public void addArgument(Object arg) {
-		if(args == null)
-			args = new ArrayList<Object>();
-		
-		args.add(arg);
+		args.addArgument(arg);
 	}
-
 }

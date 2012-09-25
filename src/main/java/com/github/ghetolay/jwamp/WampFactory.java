@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,10 @@ public abstract class WampFactory {
 	
 	private WampParameter param = new DefaultWampParameter.SimpleClientParameter();
 	private static ObjectMapper mapper = new ObjectMapper();
+	//maybe give the possibility to change this configuration per connection
+	static{
+		mapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
+	}
 	
 	private long timeout = 5000;
 	private long waitTimeout = 5000;

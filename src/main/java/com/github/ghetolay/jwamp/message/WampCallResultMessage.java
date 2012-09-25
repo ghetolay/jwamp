@@ -21,6 +21,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.type.TypeReference;
 
 
 public class WampCallResultMessage extends WampMessage{
@@ -115,6 +116,23 @@ public class WampCallResultMessage extends WampMessage{
 		
 		result = res;
 		return res;
+	}
+	
+	public <T> T getNextResult(TypeReference<T> t) throws JsonParseException, IOException{
+		if(parser == null)
+			return null;
+		
+		JsonToken token = parser.nextToken();
+		
+		if(token == JsonToken.START_ARRAY)
+			token = parser.nextToken();
+		
+		if(token == JsonToken.END_ARRAY){
+			parser = null;
+			return null;
+		}
+			
+		return parser.readValueAs(t);
 	}
 	
 	public <T> T getNextResult(Class<T> c) throws JsonParseException, IOException{

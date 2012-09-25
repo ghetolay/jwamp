@@ -15,10 +15,10 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
-import java.util.List;
+import com.github.ghetolay.jwamp.message.WampArguments;
 
 public interface CallAction {
 
-	Object execute(String sessionId, List<Object> args) throws Exception;
+	Object execute(String sessionId, WampArguments args) throws Exception;
 
 }
