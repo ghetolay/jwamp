@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.event;
 
+import com.github.ghetolay.jwamp.message.WampResult;
+
 public interface EventSender {
-	public void sendEvent(String sessionId, String eventId, Object event);
+	public void sendEvent(String sessionId, String eventId, WampResult event);
 }

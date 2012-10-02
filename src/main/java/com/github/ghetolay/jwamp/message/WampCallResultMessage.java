@@ -16,20 +16,21 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.type.TypeReference;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 public class WampCallResultMessage extends WampMessage{
 
 	private String callId;
-	private Object result;
-	
-	private JsonParser parser;
+	private WampResult result = new WampResult();
 	
 	public WampCallResultMessage(){
 		messageType = CALLRESULT;
@@ -46,7 +47,10 @@ public class WampCallResultMessage extends WampMessage{
 		try{
 			messageType = (Integer)JSONArray[0];
 			setCallId((String) JSONArray[1]);
-			setResult(JSONArray[2]);
+			
+			List<Object> resultList = new ArrayList<Object>(1);
+			resultList.add(JSONArray[2]);
+			this.result.setArguments(resultList);
 			
 		} catch(ClassCastException e){
 			throw new BadMessageFormException(e);
@@ -65,7 +69,7 @@ public class WampCallResultMessage extends WampMessage{
 				throw new BadMessageFormException("CallId is required and must be a string");
 			setCallId(parser.getText());
 			
-			this.parser = parser;
+			result.setParser(parser);
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
 		} catch (IOException e) {
@@ -75,8 +79,16 @@ public class WampCallResultMessage extends WampMessage{
 	
 	
 	@Override
-	public Object[] toJSONArray() {
-		return new Object[]{messageType, callId, result};
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		appendString(result, callId);
+		result.append(',');
+		
+		this.result.toJSONMessage(result, objectMapper);
+		
+		return endMsg(result);
 	}
 
 	public String getCallId() {
@@ -87,73 +99,16 @@ public class WampCallResultMessage extends WampMessage{
 		this.callId = callId;
 	}
 
-	//TODO logging
-	public Object getResult(){
-		try {
-			return getResult(Object.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-
-	public <T> T getResult(Class<T> c) throws JsonProcessingException, IOException{
-		if(parser == null)
-			if(c.isInstance(result))
-				return c.cast(result);
-			else
-				return null;
-		
-		if(parser.nextToken() == JsonToken.END_ARRAY){
-			parser = null;
-			return null;
-		}
-			
-		T res = parser.readValueAs(c);
-		
-		result = res;
-		return res;
+	public WampResult getResult(){
+		return result;
 	}
 	
-	public <T> T getNextResult(TypeReference<T> t) throws JsonParseException, IOException{
-		if(parser == null)
-			return null;
-		
-		JsonToken token = parser.nextToken();
-		
-		if(token == JsonToken.START_ARRAY)
-			token = parser.nextToken();
-		
-		if(token == JsonToken.END_ARRAY){
-			parser = null;
-			return null;
-		}
-			
-		return parser.readValueAs(t);
+	public void setResult(WampResult args){
+		this.result = args;
 	}
 	
-	public <T> T getNextResult(Class<T> c) throws JsonParseException, IOException{
-		if(parser == null)
-			return null;
-		
-		JsonToken token = parser.nextToken();
-		
-		if(token == JsonToken.START_ARRAY)
-			token = parser.nextToken();
-		
-		if(token == JsonToken.END_ARRAY){
-			parser = null;
-			return null;
-		}
-			
-		return parser.readValueAs(c);
-	}
-	
-	public void setResult(Object result) {
-		this.result = result;
+	public void addResult(Object args){
+		this.result.addArgument(args);
 	}
 
 	public boolean isLast(){

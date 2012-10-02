@@ -19,15 +19,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class WampEventMessage extends WampMessage{
 
 	private String topicId;
 	
-	private WampArguments event = new WampArguments();
+	private WampResult event = new WampResult();
 	
 	public WampEventMessage(){
 		messageType = EVENT;
@@ -70,11 +73,16 @@ public class WampEventMessage extends WampMessage{
 	}
 	
 	@Override
-	public Object[] toJSONArray() {
-		if(event.getArguments() != null && !event.getArguments().isEmpty())
-			return new Object[] { messageType, topicId, event.getArguments().get(0)};
-		else
-			return new Object[] { messageType, topicId, null};
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		appendString(result, topicId);
+		result.append(',');
+		
+		event.toJSONMessage(result, objectMapper);
+		
+		return endMsg(result);
 	}
 
 	public String getTopicId() {
@@ -85,13 +93,15 @@ public class WampEventMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
-	public WampArguments getEvent(){
+	public WampResult getEvent(){
 		return event;
 	}
 	
-	public void setEvent(Object args){
-		List<Object> eventList = new ArrayList<Object>(1);
-		eventList.add(args);
-		this.event.setArguments(eventList);
+	public void setEvent(WampResult event){
+		this.event = event;
+	}
+	
+	public void addEventObject(Object obj){
+		event.addArgument(obj);
 	}
 }

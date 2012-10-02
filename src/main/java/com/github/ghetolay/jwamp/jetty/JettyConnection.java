@@ -28,7 +28,7 @@ import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
-public class JettyConnection extends AbstractWampConnection implements WebSocket.OnTextMessage {
+public class JettyConnection extends AbstractWampConnection implements WebSocket.OnTextMessage, WebSocket.OnBinaryMessage {
 
 	private URI uri;
 	protected Connection connection;
@@ -77,6 +77,15 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 		connection.sendMessage(data);
 	}
 	
+	@Override
+	public void sendMessage(byte[] data) throws IOException{
+		connection.sendMessage(data, 0, data.length);
+	}
+	
+	public void sendMessage(byte[] data, int offset, int length) throws IOException{
+		connection.sendMessage(data, offset, length);
+	}
+	
 	protected boolean reconnect(){
 		reset();
 		try {
@@ -111,4 +120,5 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	public Connection getConnection(){
 		return connection;
 	}
+
 }

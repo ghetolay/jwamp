@@ -17,9 +17,12 @@ package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 /**
@@ -80,8 +83,14 @@ public class WampUnSubscribeMessage extends WampMessage{
 	}
 	
 	@Override
-	public Object[] toJSONArray() {
-		return new Object[]{messageType,topicId};
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		result.append(',');
+		appendString(result, topicId);
+		
+		return endMsg(result);
 	}
 
 	public String getTopicId() {

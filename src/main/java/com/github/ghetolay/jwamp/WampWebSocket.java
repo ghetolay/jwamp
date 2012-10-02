@@ -23,6 +23,7 @@ import com.github.ghetolay.jwamp.event.WampEventSubscriber;
 import com.github.ghetolay.jwamp.event.WampSubscription;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
@@ -89,16 +90,16 @@ public class WampWebSocket {
 		getEventSubscriber().unsubscribe(topicId);
 	}
 	
-	public void publish(String topicId, Object event) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampResult event) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event);
 	}
-	public void publish(String topicId, Object event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampResult event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe);
 	}
-	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampResult event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe, eligible);
 	}
-	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampResult event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, exclude, eligible);
 	}
 	

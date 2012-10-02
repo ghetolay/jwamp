@@ -15,7 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +47,28 @@ public abstract class WampMessage {
 		return messageType;
 	}
 	
-	//Both constructor must be override
 	public WampMessage(){}
+	@Deprecated
 	public WampMessage(Object[] JSONArray) throws BadMessageFormException {}
 	public WampMessage(JsonParser parser) throws BadMessageFormException {}
 	
-	public abstract Object[] toJSONArray();	
+	public abstract String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException;
+	
+	protected StringBuffer startMsg(){
+		StringBuffer result = new StringBuffer("[");
+		result.append(messageType);
+		result.append(',');
+		return result;
+	}
+	
+	protected void appendString(StringBuffer sb, String s){
+		sb.append('\"');
+		sb.append(s);
+		sb.append('\"');
+	}
+	
+	protected String endMsg(StringBuffer sb){
+		sb.append(']');
+		return sb.toString();
+	}
 }

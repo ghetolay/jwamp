@@ -19,6 +19,7 @@ package com.github.ghetolay.jwamp.rpc;
 import java.io.IOException;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
 public class MappingRPCManager extends AbstractRPCManager{
@@ -53,7 +54,7 @@ public class MappingRPCManager extends AbstractRPCManager{
 
 		public void run(){ 
 		
-			Object result = null;
+			WampResult result = null;
 			try{
 				try {
 					result = action.execute(sessionId, message.getArguments());

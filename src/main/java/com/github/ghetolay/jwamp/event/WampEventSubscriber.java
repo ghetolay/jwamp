@@ -22,6 +22,7 @@ import java.util.List;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
 import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.WampResult;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public interface WampEventSubscriber extends WampMessageHandler{
@@ -31,10 +32,10 @@ public interface WampEventSubscriber extends WampMessageHandler{
 	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException;
 	public void unsubscribe(String topicId) throws IOException;
 	
-	public void publish(String topicId, Object event) throws IOException;
-	public void publish(String topicId, Object event, boolean excludeMe) throws IOException;
-	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException;
-	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException;
+	public void publish(String topicId, WampResult event) throws IOException;
+	public void publish(String topicId, WampResult event, boolean excludeMe) throws IOException;
+	public void publish(String topicId, WampResult event, boolean excludeMe, List<String> eligible) throws IOException;
+	public void publish(String topicId, WampResult event, List<String> exclude, List<String> eligible) throws IOException;
 	
 	public ResultListener<EventResult> getGlobalListener();
 	public void setGlobalListener(ResultListener<EventResult> listener);

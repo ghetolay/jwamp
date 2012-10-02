@@ -24,6 +24,7 @@ import java.util.Set;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 
 public class SimpleEventAction implements EventAction {
 
@@ -69,7 +70,7 @@ public class SimpleEventAction implements EventAction {
 		return res;	
 	}
 	
-	public void eventAll(Object event){
+	public void eventAll(WampResult event){
 		for(String s : subscriber)
 			if(sender != null)
 				sender.sendEvent(s, eventId, event);

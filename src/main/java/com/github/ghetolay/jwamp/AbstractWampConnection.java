@@ -57,6 +57,8 @@ public abstract class AbstractWampConnection implements WampConnection{
 	private Collection<WampMessageHandler> messageHandlers;
 	private boolean exclusiveHandler = true;
 	
+	private boolean preferBynaryMessaging = false;
+	
 	public AbstractWampConnection(ObjectMapper mapper, Collection<WampMessageHandler> messageHandlers,  ResultListener<WampConnection> wl){
 		if(mapper != null)
 			this.mapper = mapper;
@@ -72,6 +74,7 @@ public abstract class AbstractWampConnection implements WampConnection{
 	}
 	
 	public abstract void sendMessage(String data) throws IOException;
+	public abstract void sendMessage(byte[] data) throws IOException;
 	
 	public void onClose(int closeCode, String message){
 		if(log.isDebugEnabled())
@@ -130,25 +133,26 @@ public abstract class AbstractWampConnection implements WampConnection{
 	
 	//Need optimization
 	public void sendMessage(WampMessage msg) throws IOException{
+		if(preferBynaryMessaging)
+			sendAsBinaryMessage(msg);
+		else
+			sendAsTextMessage(msg);
+	}
 		
-		Object[] array = msg.toJSONArray();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(); 
+	public void sendAsBinaryMessage(WampMessage msg) throws IOException{
+		if(log.isDebugEnabled())
+			log.debug("Sending Binary Message " + msg);
 		
-		try {
-			getObjectMapper().writeValue(baos,array);
-			String jsonMsg = baos.toString("UTF-8");
-				
-			if(log.isDebugEnabled())
-				log.debug("Sending Message " + jsonMsg);
+		sendMessage(msg.toBytes());
+	}
+		
+	public void	sendAsTextMessage(WampMessage msg) throws IOException{
+		String jsonMsg = msg.toJSONMessage(getObjectMapper());
+
+		if(log.isDebugEnabled())
+			log.debug("Sending Text Message " + jsonMsg);
 			
-			sendMessage(jsonMsg);
-		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		sendMessage(jsonMsg);
 	}
 	
 	public void onMessage(String data){
@@ -236,6 +240,11 @@ public abstract class AbstractWampConnection implements WampConnection{
 		
 	}
 	
+	public void onMessage(byte[] data, int offset, int length) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	protected void onWelcome(WampWelcomeMessage wampWelcomeMessage) {
 		
 		//onWelcome should only be called once
@@ -280,6 +289,14 @@ public abstract class AbstractWampConnection implements WampConnection{
 	}
 	public ReconnectPolicy getReconnectPolicy(){
 		return autoReconnect;
+	}
+	
+	public void setPreferBinaryMessaging(boolean bool){
+		preferBynaryMessaging = bool;
+	}
+	
+	public boolean preferBinaryMessaging(){
+		return preferBynaryMessaging;
 	}
 	
 	public void addMessageHandler(WampMessageHandler handler){

@@ -18,17 +18,20 @@ package com.github.ghetolay.jwamp.message;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class WampPublishMessage extends WampMessage{
 
+	//TODO use WampArguments for event field/ problem: event is in the middle of the message not at the end
+	
 	private String topicId;
-	private Object event;
+	private WampResult event = new WampResult();
 	private List<String> exclude;
 	private List<String> eligible;
 	private boolean excludeMe;
@@ -47,7 +50,7 @@ public class WampPublishMessage extends WampMessage{
 		try{
 			
 			setTopicId((String) JSONArray[1]);
-			setEvent(JSONArray[2]);
+			event.addArgument(JSONArray[2]);
 			
 			if(JSONArray.length > 4)
 				if(JSONArray[4] instanceof Boolean)
@@ -70,7 +73,7 @@ public class WampPublishMessage extends WampMessage{
 				throw new BadMessageFormException("TopicUri is required and must be a string");
 			setTopicId(parser.getText());
 			
-			event = parser.readValueAs(Object.class);
+			event.setParser(parser);
 			
 			//excludeme or exclude list
 			if(parser.nextToken() != JsonToken.END_ARRAY){
@@ -105,9 +108,28 @@ public class WampPublishMessage extends WampMessage{
 	}
 	
 	@Override
-	public Object[] toJSONArray() {
-		// TODO Auto-generated method stub
-		return null;
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		result.append(',');
+		appendString(result, topicId);
+		
+		result.append(',');
+		result.append(objectMapper.writeValueAsString(event));
+		
+		if(excludeMe)
+			result.append(",true");
+		else
+			if( eligible != null || exclude != null ){
+				result.append(',');
+				result.append(exclude==null?"[]":objectMapper.writeValueAsString(exclude));
+				
+				result.append(',');
+				result.append(eligible==null?"[]":objectMapper.writeValueAsString(eligible));
+			}
+		
+		return endMsg(result);
 	}
 
 	public String getTopicId() {
@@ -118,29 +140,11 @@ public class WampPublishMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
-	public Object getEvent() {
+	public WampResult getEvent() {
 		return event;
 	}
-
-	public <T> T getEvent(Class<T> c) throws Exception{
-		if(c.isInstance(event))
-			return c.cast(event);
-		
-		if(event instanceof Map<?, ?>){
-			T result = c.newInstance();
-			@SuppressWarnings("unchecked")
-			Map<String,Object> eventMap = (Map<String, Object>) event;
-			for(Entry<String,Object> entry : eventMap.entrySet())
-				c.getMethod("set"+entry.getKey(), entry.getValue().getClass()).invoke(result, entry.getValue());
-			
-			event = result;
-			return result;
-		}
-		
-		return null;
-	}
 	
-	public void setEvent(Object event) {
+	public void setEvent(WampResult event) {
 		this.event = event;
 	}
 

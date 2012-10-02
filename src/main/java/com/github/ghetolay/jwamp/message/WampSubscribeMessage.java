@@ -16,12 +16,14 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * @author ghetolay
@@ -56,26 +58,22 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 		super(JSONArray);
 
 		if(JSONArray.length > 2){
-			args.initArgumentsList(JSONArray.length - 2);
 			for(int i = 2 ; i < JSONArray.length; i++)
 				args.addArgument(JSONArray[i]);
 		}
 	}
 
 	@Override
-	public Object[] toJSONArray() {
-		Object[] superResult = super.toJSONArray();
-
-		if(args.getArguments() == null || args.getArguments().isEmpty())
-			return superResult;
-
-
-		Object[] result = Arrays.copyOf(superResult,superResult.length + args.getArguments().size());
-
-		for(int i = superResult.length; i < result.length; i++)
-			result[i] = args.getArguments().get(i - superResult.length);
-
-		return result;
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		result.append(',');
+		appendString(result, getTopicId());
+		
+		args.toJSONMessage(result, objectMapper);
+		
+		return endMsg(result);
 	}
 
 	public WampArguments getArguments(){

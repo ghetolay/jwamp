@@ -16,11 +16,13 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.List;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class WampCallMessage extends WampMessage{
 
@@ -43,11 +45,10 @@ public class WampCallMessage extends WampMessage{
 			setCallId((String) JSONArray[1]);
 			setProcId((String) JSONArray[2]);
 			
-			if(JSONArray.length > 3){
-				args.initArgumentsList(JSONArray.length - 3);
+			if(JSONArray.length > 3)
 				for(int i = 3 ; i < JSONArray.length; i++)
 					args.addArgument(JSONArray[i]);
-			}
+			
 		} catch(ClassCastException e){
 			throw new BadMessageFormException(e);
 		}
@@ -77,21 +78,20 @@ public class WampCallMessage extends WampMessage{
 	}
 	
 	@Override
-	public Object[] toJSONArray() {
-		int argsLength = 0;
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg(); 
+		
+		appendString(result, callId);
+		result.append(',');
+		appendString(result, procId);
+		
 		if(args.getArguments() != null)
-			argsLength = args.getArguments().size();
-			
-		Object[] result = new Object[argsLength + 3];
+			args.toJSONMessage(result, objectMapper);
 		
-		result[0] = messageType;
-		result[1] = callId;
-		result[2] = procId;
+		result.append(']');
 		
-		for(int i = argsLength - 1; i >= 0; i--)
-			result[i + 3] = args.getArguments().get(i);
-		
-		return result;
+		return endMsg(result);
 	}
 
 	public String getCallId() {
@@ -112,10 +112,6 @@ public class WampCallMessage extends WampMessage{
 	
 	public WampArguments getArguments(){
 		return args;
-	}
-	
-	public void setArguments(List<Object> args){
-		this.args.setArguments(args);
 	}
 	
 	public void addArgument(Object arg) {

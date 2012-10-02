@@ -47,6 +47,7 @@ public abstract class WampFactory {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private WampParameter param = new DefaultWampParameter.SimpleClientParameter();
+	//TODO: possibility to use binary message so no jsonmapper...
 	private static ObjectMapper mapper = new ObjectMapper();
 	//maybe give the possibility to change this configuration per connection
 	static{

@@ -16,9 +16,9 @@
 package com.github.ghetolay.jwamp.rpc;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.WampResult;
 
 public interface CallAction {
 
-	Object execute(String sessionId, WampArguments args) throws Exception;
-
+	WampResult execute(String sessionId, WampArguments args) throws Exception;
 }

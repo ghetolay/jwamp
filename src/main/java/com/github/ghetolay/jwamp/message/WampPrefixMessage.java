@@ -15,6 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+
 public class WampPrefixMessage extends WampMessage{
 
 	private String prefix;
@@ -38,10 +44,18 @@ public class WampPrefixMessage extends WampMessage{
 		}
 	}
 	
+	
 	@Override
-	public Object[] toJSONArray() {
-		// TODO Auto-generated method stub
-		return null;
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		result.append(',');
+		appendString(result, prefix);
+		result.append(',');
+		appendString(result, uri);
+		
+		return endMsg(result);
 	}
 
 	public String getPrefix() {

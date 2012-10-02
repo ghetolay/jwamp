@@ -77,7 +77,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		WampCallMessage msg = new WampCallMessage();
 		msg.setProcId(procId);
 		msg.setCallId(callId);
-		msg.setArguments(Arrays.asList(args));
+		msg.addArgument(Arrays.asList(args));
 		
 		conn.sendMessage(msg);
 			

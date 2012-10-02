@@ -15,11 +15,13 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
+import com.github.ghetolay.jwamp.message.WampResult;
+
 /**
  * @author ghetolay
  *
  */
 public interface MultipleResult {
 	public boolean isLast();
-	public Object getResult();
+	public WampResult getResult();
 }

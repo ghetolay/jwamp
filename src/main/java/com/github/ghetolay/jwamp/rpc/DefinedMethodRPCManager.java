@@ -20,7 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 
 /**
  * @author ghetolay
@@ -78,7 +78,7 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 		public void run() {
 			try{
 				try{
-					Object result = m.invoke(objectClass, sessionId, message);
+					WampResult result = (WampResult) m.invoke(objectClass, sessionId, message);
 					//TODO change test, handle with a exception or do not send result automatically or....
 					//NoReturn must be used in case of multiple result only.
 					if(!result.equals(NORETURN))

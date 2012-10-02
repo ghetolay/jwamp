@@ -17,9 +17,12 @@ package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 
 public class WampCallErrorMessage extends WampCallResultMessage{
@@ -92,13 +95,25 @@ public class WampCallErrorMessage extends WampCallResultMessage{
 	}
 	
 	@Override
-	public Object[] toJSONArray() {
-		if(errorDetails != null)
-			return new Object[]{ messageType, getCallId(), errorUri, errorDesc, errorDetails };
-		else
-			return new Object[]{ messageType, getCallId(), errorUri, errorDesc};
+	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
+		
+		StringBuffer result = startMsg();
+		
+		result.append(',');
+		appendString(result, getCallId());
+		result.append(',');
+		appendString(result, errorUri);
+		result.append(',');
+		appendString(result, errorDesc);
+		
+		if(errorDetails != null && !errorDetails.isEmpty()){
+			result.append(',');
+			appendString(result, errorUri);
+		}
+		
+		return endMsg(result);
 	}
-
+	
 	public String getErrorUri() {
 		return errorUri;
 	}

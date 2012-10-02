@@ -29,6 +29,7 @@ import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 
 /**
  * @author ghetolay
@@ -62,7 +63,7 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 		return false;
 	}
 	
-	protected void sendResult(String callId, Object result) throws IOException{
+	protected void sendResult(String callId, WampResult result) throws IOException{
 		WampCallResultMessage resultMsg;
 
 		if(result != null && result instanceof MultipleResult){

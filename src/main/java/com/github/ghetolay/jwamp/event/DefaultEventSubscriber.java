@@ -35,6 +35,7 @@ import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.WampResult;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 import com.github.ghetolay.jwamp.message.WampUnSubscribeMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
@@ -152,15 +153,15 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			eventListeners.remove(topicId);
 	}
 
-	public void publish(String topicId, Object event) throws IOException {
+	public void publish(String topicId, WampResult event) throws IOException {
 		publish(topicId, event, true);
 	}
 
-	public void publish(String topicId, Object event, boolean excludeMe) throws IOException {
+	public void publish(String topicId, WampResult event, boolean excludeMe) throws IOException {
 		publish(topicId, event, true, null, null );
 	}
 
-	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException {
+	public void publish(String topicId, WampResult event, boolean excludeMe, List<String> eligible) throws IOException {
 		if(eligible != null){
 			List<String> excludes = new ArrayList<String>();
 			if(excludeMe)
@@ -171,14 +172,14 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			publish(topicId, event, excludeMe, null , null);
 	}
 
-	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException {
+	public void publish(String topicId, WampResult event, List<String> exclude, List<String> eligible) throws IOException {
 		if(exclude.size() == 1 && exclude.get(0).equals(conn.getSessionId()) && eligible == null)
 			publish(topicId, event, true, null, null);
 		else
 			publish(topicId, event, false, exclude, eligible);
 	}
 
-	private void publish(String topicId, Object event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException{
+	private void publish(String topicId, WampResult event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException{
 
 		if(!topics.contains(topicId))
 			subscribe(topicId);
