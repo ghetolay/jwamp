@@ -79,7 +79,6 @@ public class WampWelcomeMessage extends WampMessage{
 		
 		StringBuffer result = startMsg();
 		
-		result.append(',');
 		appendString(result, sessionId);
 		result.append(',');
 		result.append(protocolVersion);

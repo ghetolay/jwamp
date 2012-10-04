@@ -18,12 +18,12 @@ package com.github.ghetolay.jwamp;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import com.github.ghetolay.jwamp.event.WampEventSubscriber;
 import com.github.ghetolay.jwamp.event.WampSubscription;
-import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.message.WampResult;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
@@ -62,11 +62,11 @@ public class WampWebSocket {
 		return eventSubscriber;
 	}
 	
-	public WampCallResultMessage call(String procId, Object... args) throws IOException, UnsupportedWampActionException{
+	public WampObjectArray call(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException{
 		return getRPCSender().call(procId, 5000, args);
 	}
 	
-	public WampCallResultMessage call(String procId, long timeout, Object... args) throws IOException, UnsupportedWampActionException{
+	public WampObjectArray call(String procId, long timeout, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException{
 		return getRPCSender().call(procId, timeout, args);
 	}
 	
@@ -82,7 +82,7 @@ public class WampWebSocket {
 		getEventSubscriber().subscribe(subscription);
 	}
 	
-	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> listener) throws IOException, UnsupportedWampActionException{
+	public void subscribe(WampSubscription subscription, ResultListener<WampObjectArray> listener) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().subscribe(subscription, listener);
 	}
 	
@@ -90,16 +90,16 @@ public class WampWebSocket {
 		getEventSubscriber().unsubscribe(topicId);
 	}
 	
-	public void publish(String topicId, WampResult event) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampObjectArray event) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event);
 	}
-	public void publish(String topicId, WampResult event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampObjectArray event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe);
 	}
-	public void publish(String topicId, WampResult event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampObjectArray event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, excludeMe, eligible);
 	}
-	public void publish(String topicId, WampResult event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WampObjectArray event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
 		getEventSubscriber().publish(topicId, event, exclude, eligible);
 	}
 	

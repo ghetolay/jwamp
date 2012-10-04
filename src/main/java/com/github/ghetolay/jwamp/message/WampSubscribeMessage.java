@@ -16,7 +16,6 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -31,7 +30,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class WampSubscribeMessage extends WampUnSubscribeMessage {
 
-	private WampArguments args = new WampArguments();
+	private WampObjectArray args = new WampObjectArray();
 
 	public WampSubscribeMessage(String topicId){
 		super(WampMessage.SUBSCRIBE, topicId);
@@ -45,7 +44,7 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 			
 			JsonToken token = parser.nextToken();
 			if(token != null && token != JsonToken.END_ARRAY)
-				args.setParser(parser);
+				args.setParser(parser, true);
 			
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
@@ -59,7 +58,7 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 
 		if(JSONArray.length > 2){
 			for(int i = 2 ; i < JSONArray.length; i++)
-				args.addArgument(JSONArray[i]);
+				args.addObject(JSONArray[i]);
 		}
 	}
 
@@ -68,23 +67,23 @@ public class WampSubscribeMessage extends WampUnSubscribeMessage {
 		
 		StringBuffer result = startMsg();
 		
-		result.append(',');
 		appendString(result, getTopicId());
 		
-		args.toJSONMessage(result, objectMapper);
+		if(!args.isEmpty())
+			args.toJSONMessage(result, objectMapper, true);
 		
 		return endMsg(result);
 	}
 
-	public WampArguments getArguments(){
+	public WampObjectArray getArguments(){
 		return args;
 	}
 	
-	public void setArguments(List<Object> args){
-		this.args.setArguments(args);
+	public void setArguments(WampObjectArray args){
+		this.args = args;
 	}
 	
 	public void addArgument(Object arg) {
-		args.addArgument(arg);
+		args.addObject(arg);
 	}
 }

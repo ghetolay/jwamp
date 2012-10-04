@@ -19,7 +19,7 @@ package com.github.ghetolay.jwamp.rpc;
 import java.io.IOException;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampResult;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
 public class MappingRPCManager extends AbstractRPCManager{
@@ -54,7 +54,7 @@ public class MappingRPCManager extends AbstractRPCManager{
 
 		public void run(){ 
 		
-			WampResult result = null;
+			WampObjectArray result = null;
 			try{
 				try {
 					result = action.execute(sessionId, message.getArguments());
@@ -65,12 +65,12 @@ public class MappingRPCManager extends AbstractRPCManager{
 					sendError(message.getCallId(), message.getProcId(), e);
 					return;
 				}
-			
-				sendResult(message.getCallId(), result);
+				if(result != WampObjectArray.NORETURN)
+					sendResult(message.getCallId(), result);
 	
 			}catch(IOException e){
 				if(log.isDebugEnabled())
-					log.debug("Unable to send response for call action " + message.getCallId() + " with id " + message.getProcId(),e);
+					log.debug("Unable to send response for call action " + message.getProcId() + " with id " + message.getCallId(),e);
 			}
 		}
 		

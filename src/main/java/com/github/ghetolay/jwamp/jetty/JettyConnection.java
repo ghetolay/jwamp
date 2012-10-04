@@ -95,7 +95,6 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 			int i;
 			for(i = 0; i <5 ; i++){
 				try{
-					System.out.println("RECONNECT");
 					WampJettyFactory.getInstance().connect(uri, 10000, this);
 					return true;
 				}catch (Exception e){

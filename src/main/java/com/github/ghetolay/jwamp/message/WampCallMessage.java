@@ -29,29 +29,10 @@ public class WampCallMessage extends WampMessage{
 	private String callId;
 	private String procId;
 	
-	private WampArguments args = new WampArguments();
+	private WampObjectArray args = new WampObjectArray();
 	
 	public WampCallMessage(){
 		messageType = CALL;
-	}
-	
-	public WampCallMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 3)
-			throw BadMessageFormException.notEnoughParameter("Call", JSONArray.length, 3);
-		
-		try{
-			setCallId((String) JSONArray[1]);
-			setProcId((String) JSONArray[2]);
-			
-			if(JSONArray.length > 3)
-				for(int i = 3 ; i < JSONArray.length; i++)
-					args.addArgument(JSONArray[i]);
-			
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
 	}
 	
 	public WampCallMessage(JsonParser parser) throws BadMessageFormException{
@@ -68,7 +49,7 @@ public class WampCallMessage extends WampMessage{
 			
 			JsonToken token = parser.nextToken();
 			if(token != null && token != JsonToken.END_ARRAY)
-				args.setParser(parser);
+				args.setParser(parser,true);
 			
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
@@ -86,10 +67,8 @@ public class WampCallMessage extends WampMessage{
 		result.append(',');
 		appendString(result, procId);
 		
-		if(args.getArguments() != null)
-			args.toJSONMessage(result, objectMapper);
-		
-		result.append(']');
+		if(!args.isEmpty())
+			args.toJSONMessage(result, objectMapper, true);
 		
 		return endMsg(result);
 	}
@@ -110,11 +89,15 @@ public class WampCallMessage extends WampMessage{
 		this.procId = procId;
 	}
 	
-	public WampArguments getArguments(){
+	public WampObjectArray getArguments(){
 		return args;
 	}
 	
+	public void setArguments(WampObjectArray args){
+		this.args = args;
+	}
+	
 	public void addArgument(Object arg) {
-		args.addArgument(arg);
+		args.addObject(arg);
 	}
 }

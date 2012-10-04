@@ -15,14 +15,14 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
-import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 
 public class ServerManagerAction implements CallAction{
 
-	public Object execute(String sessionId, WampArguments args) {
+	public WampObjectArray execute(String sessionId, WampObjectArray args) {
 		try{
-			String arg = (String) args.getArguments().get(0);
+			String arg = args.nextObject(String.class);
 			if("restart".equals(arg)){
 					try{
 						TestServer.server.stop();
@@ -40,7 +40,7 @@ public class ServerManagerAction implements CallAction{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return null;
+		return WampObjectArray.NORETURN;
 	}
 
 }

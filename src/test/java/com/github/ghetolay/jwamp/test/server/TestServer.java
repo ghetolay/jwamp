@@ -16,6 +16,7 @@
 package com.github.ghetolay.jwamp.test.server;
 
 import java.io.InputStream;
+import java.util.Collection;
 
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
@@ -23,8 +24,10 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.github.ghetolay.jwamp.DefaultWampParameter;
+import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
 import com.github.ghetolay.jwamp.jetty.WampJettyHandler;
+import com.github.ghetolay.jwamp.rpc.DefinedMethodRPCManager;
 
 public class TestServer {
 	
@@ -41,7 +44,8 @@ public class TestServer {
 		
 		try{
 			InputStream is = getClass().getResourceAsStream("/wamp-server.xml");
-			WampJettyHandler wampHandler = wampFact.newJettyHandler(new DefaultWampParameter.SimpleServerParameter(is));
+			
+			WampJettyHandler wampHandler = wampFact.newJettyHandler(new Parameters(is));
 			
 			server.setHandler(wampHandler);
 	
@@ -52,5 +56,22 @@ public class TestServer {
 			e.printStackTrace();
 		}
 
+	}
+	
+	private class Parameters extends DefaultWampParameter.SimpleServerParameter{
+
+		public Parameters(InputStream is) throws Exception {
+			super(is);
+		}
+		
+		@Override
+		public Collection<WampMessageHandler> getHandlers(){
+			Collection<WampMessageHandler> handlers = super.getHandlers();
+			
+			handlers.add(new DefinedMethodRPCManager(new TestDefinedAction()));
+			
+			return handlers;
+		}
+		
 	}
 }

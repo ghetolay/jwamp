@@ -28,8 +28,8 @@ import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
-import com.github.ghetolay.jwamp.message.WampResult;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
@@ -97,7 +97,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}
 	
-	public void sendEvent(String sessionId, String eventId, WampResult event){		
+	public void sendEvent(String sessionId, String eventId, WampObjectArray event){		
 		WampEventMessage msg = new WampEventMessage();
 		msg.setTopicId(eventId);
 		msg.setEvent(event);

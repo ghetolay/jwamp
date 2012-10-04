@@ -16,8 +16,6 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -30,29 +28,10 @@ public class WampEventMessage extends WampMessage{
 
 	private String topicId;
 	
-	private WampResult event = new WampResult();
+	private WampObjectArray event = new WampObjectArray();
 	
 	public WampEventMessage(){
 		messageType = EVENT;
-	}
-	
-	public WampEventMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 3)
-			throw BadMessageFormException.notEnoughParameter("Event", JSONArray.length, 3);
-		
-		try{
-			
-			setTopicId((String) JSONArray[1]);
-			
-			List<Object> eventList = new ArrayList<Object>(1);
-			eventList.add(JSONArray[2]);
-			this.event.setArguments(eventList);
-			
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
 	}
 	
 	public WampEventMessage(JsonParser parser) throws BadMessageFormException{
@@ -64,7 +43,7 @@ public class WampEventMessage extends WampMessage{
 			if(parser.nextToken() == JsonToken.END_ARRAY)
 				throw new BadMessageFormException("Missing event element");
 			
-			event.setParser(parser);
+			event.setParser(parser, false);
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
 		} catch (IOException e) {
@@ -78,9 +57,11 @@ public class WampEventMessage extends WampMessage{
 		StringBuffer result = startMsg();
 		
 		appendString(result, topicId);
-		result.append(',');
 		
-		event.toJSONMessage(result, objectMapper);
+		if(event != null)
+			event.toJSONMessage(result, objectMapper, false);
+		else
+			result.append(",null");
 		
 		return endMsg(result);
 	}
@@ -93,15 +74,15 @@ public class WampEventMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
-	public WampResult getEvent(){
+	public WampObjectArray getEvent(){
 		return event;
 	}
 	
-	public void setEvent(WampResult event){
+	public void setEvent(WampObjectArray event){
 		this.event = event;
 	}
 	
 	public void addEventObject(Object obj){
-		event.addArgument(obj);
+		event.addObject(obj);
 	}
 }

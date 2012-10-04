@@ -15,22 +15,37 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
-import com.github.ghetolay.jwamp.event.SimpleEventAction;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampObjectArray;
-import com.github.ghetolay.jwamp.rpc.CallAction;
 
-public class TestAction extends SimpleEventAction implements CallAction{
+/**
+ * @author ghetolay
+ *
+ */
+public class TestDefinedAction {
 
-	@Override
-	public void subscribe(String sessionId, WampObjectArray args){
-		super.subscribe(sessionId, args);
+	
+	public WampObjectArray doEcho(String sessionId, WampCallMessage msg){
+		return msg.getArguments();
+	}
+	
+	public WampObjectArray doOneList(String sessionId, WampCallMessage msg){
+		List<String> list = new ArrayList<String>();
 		
-		eventAll(new WampObjectArray("EventAction"));
+		list.add("lol");
+		list.add("prout");
+		list.add("youk");
+		
+		WampObjectArray result = new WampObjectArray();
+		result.addObject(list);
+		
+		return result;
 	}
 	
-	//RPC
-	public WampObjectArray execute(String sessionId, WampObjectArray args) {
-		return new WampObjectArray("SUCCEED");
+	public WampObjectArray doSingleReturn(String sessionId, WampCallMessage msg){
+		return new WampObjectArray(1);
 	}
-	
 }

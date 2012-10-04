@@ -87,7 +87,6 @@ public class WampUnSubscribeMessage extends WampMessage{
 		
 		StringBuffer result = startMsg();
 		
-		result.append(',');
 		appendString(result, topicId);
 		
 		return endMsg(result);

@@ -16,8 +16,6 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -30,46 +28,34 @@ import org.codehaus.jackson.map.ObjectMapper;
 public class WampCallResultMessage extends WampMessage{
 
 	private String callId;
-	private WampResult result = new WampResult();
+	private WampObjectArray result;
+	
+	private WampCallResultMessage(int messageType){
+		this.messageType = messageType;
+		
+		result = new WampObjectArray();
+	}
 	
 	public WampCallResultMessage(){
-		messageType = CALLRESULT;
+		this(CALLRESULT);
 	}
 	
 	public WampCallResultMessage(boolean last){
-		messageType = last?CALLRESULT:CALLMORERESULT;
+		this(last?CALLRESULT:CALLMORERESULT);	
 	}
 	
-	public WampCallResultMessage(Object[] JSONArray) throws BadMessageFormException{
-		if(JSONArray.length < 3)
-			throw BadMessageFormException.notEnoughParameter("CallResult", JSONArray.length, 3);
-		
-		try{
-			messageType = (Integer)JSONArray[0];
-			setCallId((String) JSONArray[1]);
-			
-			List<Object> resultList = new ArrayList<Object>(1);
-			resultList.add(JSONArray[2]);
-			this.result.setArguments(resultList);
-			
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
-	}
-	
-	public WampCallResultMessage(JsonParser parser) throws BadMessageFormException{
-		this(CALLRESULT, parser);
-	}
-	
-	public WampCallResultMessage(int messageType, JsonParser parser) throws BadMessageFormException{
-		this.messageType = messageType;
+	public WampCallResultMessage(JsonParser parser, boolean last) throws BadMessageFormException{
+		this(last);
 		
 		try {
 			if(parser.nextToken() != JsonToken.VALUE_STRING)
 				throw new BadMessageFormException("CallId is required and must be a string");
 			setCallId(parser.getText());
+			if(parser.nextToken() == JsonToken.END_ARRAY)
+				throw new BadMessageFormException("Missing event element");
 			
-			result.setParser(parser);
+			result.setParser(parser,false);
+			
 		} catch (JsonParseException e) {
 			throw new BadMessageFormException(e);
 		} catch (IOException e) {
@@ -82,11 +68,11 @@ public class WampCallResultMessage extends WampMessage{
 	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 		
 		StringBuffer result = startMsg();
-		
 		appendString(result, callId);
-		result.append(',');
-		
-		this.result.toJSONMessage(result, objectMapper);
+		if(this.result != null)
+			this.result.toJSONMessage(result, objectMapper, false);
+		else	
+			result.append(",null");
 		
 		return endMsg(result);
 	}
@@ -99,16 +85,16 @@ public class WampCallResultMessage extends WampMessage{
 		this.callId = callId;
 	}
 
-	public WampResult getResult(){
+	public WampObjectArray getResult(){
 		return result;
 	}
 	
-	public void setResult(WampResult args){
+	public void setResult(WampObjectArray args){		
 		this.result = args;
 	}
 	
 	public void addResult(Object args){
-		this.result.addArgument(args);
+		this.result.addObject(args);
 	}
 
 	public boolean isLast(){

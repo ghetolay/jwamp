@@ -17,8 +17,8 @@ package com.github.ghetolay.jwamp.rpc;
 
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +28,7 @@ import com.github.ghetolay.jwamp.message.BadMessageFormException;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
@@ -52,7 +53,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public WampCallResultMessage call(String procId, long timeout, Object... args) throws IOException{
+	public WampObjectArray call(String procId, long timeout, Object... args) throws IOException, TimeoutException{
 		if(timeout < 0)
 			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String,Object[],int,ResultListener<WampCallResultMessage>)");
 		
@@ -61,12 +62,17 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		call(procId,timeout,wr,args);
 		
 		try {
-			return wr.call();
+			WampCallResultMessage result = wr.call();
+			if(result != null)
+				return result.getResult();
+			
 		} catch (Exception e) {
 			if(log.isErrorEnabled())
 				log.error("Error waiting call result : ",e);
 			return null;
 		}
+		
+		throw new TimeoutException();
 	}
 	
 	//TODO possibilité de passer un autre type d'argument/ voir WampCallMessage.setArgument
@@ -77,7 +83,8 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		WampCallMessage msg = new WampCallMessage();
 		msg.setProcId(procId);
 		msg.setCallId(callId);
-		msg.addArgument(Arrays.asList(args));
+		
+		msg.setArguments(new WampObjectArray(args));
 		
 		conn.sendMessage(msg);
 			

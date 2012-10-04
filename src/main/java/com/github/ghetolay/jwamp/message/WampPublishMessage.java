@@ -31,38 +31,13 @@ public class WampPublishMessage extends WampMessage{
 	//TODO use WampArguments for event field/ problem: event is in the middle of the message not at the end
 	
 	private String topicId;
-	private WampResult event = new WampResult();
+	private WampObjectArray event = new WampObjectArray();
 	private List<String> exclude;
 	private List<String> eligible;
 	private boolean excludeMe;
 	
 	public WampPublishMessage(){
 		messageType = PUBLISH;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public WampPublishMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 3)
-			throw BadMessageFormException.notEnoughParameter("Publish", JSONArray.length, 3);
-		
-		try{
-			
-			setTopicId((String) JSONArray[1]);
-			event.addArgument(JSONArray[2]);
-			
-			if(JSONArray.length > 4)
-				if(JSONArray[4] instanceof Boolean)
-					setExcludeMe((Boolean) JSONArray[4]);
-				else
-					setExclude((List<String>) JSONArray[4]);
-			
-			if(JSONArray.length > 5)
-				setEligible((List<String>) JSONArray[5]);
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
 	}
 	
 	public WampPublishMessage(JsonParser parser) throws BadMessageFormException{
@@ -73,7 +48,7 @@ public class WampPublishMessage extends WampMessage{
 				throw new BadMessageFormException("TopicUri is required and must be a string");
 			setTopicId(parser.getText());
 			
-			event.setParser(parser);
+			event.setParser(parser,false);
 			
 			//excludeme or exclude list
 			if(parser.nextToken() != JsonToken.END_ARRAY){
@@ -112,11 +87,12 @@ public class WampPublishMessage extends WampMessage{
 		
 		StringBuffer result = startMsg();
 		
-		result.append(',');
 		appendString(result, topicId);
 		
-		result.append(',');
-		result.append(objectMapper.writeValueAsString(event));
+		if(event != null)
+			event.toJSONMessage(result, objectMapper, false);
+		else
+			result.append(",null");
 		
 		if(excludeMe)
 			result.append(",true");
@@ -140,12 +116,16 @@ public class WampPublishMessage extends WampMessage{
 		this.topicId = topicId;
 	}
 
-	public WampResult getEvent() {
+	public WampObjectArray getEvent() {
 		return event;
 	}
 	
-	public void setEvent(WampResult event) {
+	public void setEvent(WampObjectArray event) {
 		this.event = event;
+	}
+	
+	public void addEvent(Object event) {
+		this.event.addObject(event);
 	}
 
 	public List<String> getExclude() {

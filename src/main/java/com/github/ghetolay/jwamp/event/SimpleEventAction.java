@@ -21,10 +21,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
-import com.github.ghetolay.jwamp.message.WampResult;
 
 public class SimpleEventAction implements EventAction {
 
@@ -41,7 +40,7 @@ public class SimpleEventAction implements EventAction {
 		this.sender = sender;
 	}
 	
-	public void subscribe(String sessionId, WampArguments args) {
+	public void subscribe(String sessionId, WampObjectArray args) {
 		subscriber.add(sessionId);
 	}
 
@@ -70,7 +69,7 @@ public class SimpleEventAction implements EventAction {
 		return res;	
 	}
 	
-	public void eventAll(WampResult event){
+	public void eventAll(WampObjectArray event){
 		for(String s : subscriber)
 			if(sender != null)
 				sender.sendEvent(s, eventId, event);

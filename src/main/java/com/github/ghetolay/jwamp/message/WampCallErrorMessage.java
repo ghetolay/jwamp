@@ -37,32 +37,14 @@ public class WampCallErrorMessage extends WampCallResultMessage{
 	}
 	
 	public WampCallErrorMessage(String... args){
-	
+		this();
+		
 		try{
 			setCallId(args[0]);
 			setErrorUri(args[1]);
 			setErrorDesc(args[2]);
 			setErrorDetails(args[3]);
 		}catch(IndexOutOfBoundsException e){}
-	}
-	
-	public WampCallErrorMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 4)
-			throw BadMessageFormException.notEnoughParameter("CallError", JSONArray.length, 4);
-		
-		try{
-			
-			setCallId((String) JSONArray[1]);
-			setErrorUri((String) JSONArray[2]);
-			setErrorDesc((String) JSONArray[3]);
-			
-			if(JSONArray.length > 4)
-				setErrorDetails((String) JSONArray[4]);
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
 	}
 	
 	public WampCallErrorMessage(JsonParser parser) throws BadMessageFormException{

@@ -20,7 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampResult;
+import com.github.ghetolay.jwamp.message.WampObjectArray;
 
 /**
  * @author ghetolay
@@ -44,20 +44,24 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 		String methodName = "do" + Character.toUpperCase(message.getProcId().charAt(0)) + message.getProcId().substring(1);
 		
 		try {
-			if(log.isTraceEnabled())
-				log.trace("Calling Method " + methodName + " of class " + objectClass.getClass().getName());
-			
 			Method m = objectClass.getClass().getMethod(methodName, String.class, WampCallMessage.class);
 			
-			MethodAction result = new MethodAction(sessionId, message);
-			result.setMethod(m);
+			if(m.getReturnType().equals(WampObjectArray.class)){
 			
-			return result;
+				if(log.isTraceEnabled())
+					log.trace("found matching method " + methodName + " of class " + objectClass.getClass().getName() + "for procId : " + message.getProcId());
+				
+				MethodAction result = new MethodAction(sessionId, message);
+				result.setMethod(m);
 			
+				return result;
+			}
 		} catch (SecurityException e) {
-			e.printStackTrace();
+			if(log.isTraceEnabled())
+				log.trace("",e);
 		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
+			if(log.isTraceEnabled())
+				log.trace("Unable to find method for " + message.getProcId(),e);
 		}
 		
 		return null;
@@ -74,16 +78,19 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 		private void setMethod(Method method){
 			m = method;
 		}
-
+		
 		public void run() {
 			try{
 				try{
-					WampResult result = (WampResult) m.invoke(objectClass, sessionId, message);
+					if(log.isTraceEnabled())
+						log.trace("Calling Method " + m.getName() + " of class " + objectClass.getClass().getName());
+					
+					WampObjectArray result = (WampObjectArray) m.invoke(objectClass, sessionId, message);
 					//TODO change test, handle with a exception or do not send result automatically or....
 					//NoReturn must be used in case of multiple result only.
-					if(!result.equals(NORETURN))
+					if(result != WampObjectArray.NORETURN)
 						sendResult(message.getCallId(), result);
-					
+						
 				}catch(InvocationTargetException e){
 					
 					sendError(message.getCallId(), message.getProcId(), e.getTargetException());
@@ -99,7 +106,4 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 		}
 		
 	}
-	
-	public static NORETURN NORETURN = new NORETURN();
-	public static class NORETURN{}
 }

@@ -16,17 +16,14 @@
 
 package com.github.ghetolay.jwamp;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +49,7 @@ public abstract class AbstractWampConnection implements WampConnection{
 	private ObjectMapper mapper;
 	
 	private boolean connected = false;
+	//bad design should do otherwise
 	private ResultListener<WampConnection> welcomeListener;
 		
 	private Collection<WampMessageHandler> messageHandlers;
@@ -138,12 +136,12 @@ public abstract class AbstractWampConnection implements WampConnection{
 		else
 			sendAsTextMessage(msg);
 	}
-		
+	
 	public void sendAsBinaryMessage(WampMessage msg) throws IOException{
 		if(log.isDebugEnabled())
 			log.debug("Sending Binary Message " + msg);
 		
-		sendMessage(msg.toBytes());
+		//sendMessage(msg.toBytes());
 	}
 		
 	public void	sendAsTextMessage(WampMessage msg) throws IOException{
@@ -188,11 +186,11 @@ public abstract class AbstractWampConnection implements WampConnection{
 					break;
 					
 				case WampMessage.CALLRESULT :
-					msg = new WampCallResultMessage(parser);
+					msg = new WampCallResultMessage(parser, true);
 					break;
 				
 				case WampMessage.CALLMORERESULT :
-					msg = new WampCallResultMessage(WampMessage.CALLMORERESULT, parser);
+					msg = new WampCallResultMessage(parser, false);
 					break;
 					
 				case WampMessage.EVENT :
@@ -261,9 +259,10 @@ public abstract class AbstractWampConnection implements WampConnection{
 			
 			initHandlers();
 			
-			welcomeListener.onResult(this);
-			//save some memory since listener should be used only once
-			welcomeListener=null;
+			if(welcomeListener != null){
+				welcomeListener.onResult(this);
+				welcomeListener = null;
+			}
 			
 			connected=true;
 		}else if(log.isErrorEnabled())
