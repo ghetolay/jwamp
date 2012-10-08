@@ -15,75 +15,28 @@
  */
 package com.github.ghetolay.jwamp.message;
 
-import java.io.IOException;
+import org.msgpack.annotation.Message;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * @author ghetolay
  *
  */
-public class WampSubscribeMessage extends WampUnSubscribeMessage {
+@Message
+public class WampSubscribeMessage extends WampUnsubscribeMessage {
 
-	private WampObjectArray args = new WampObjectArray();
+	protected ReadableWampArrayObject args;
 
-	public WampSubscribeMessage(String topicId){
-		super(WampMessage.SUBSCRIBE, topicId);
+	protected WampSubscribeMessage(){
+		super(SUBSCRIBE);
 	}
 
-	public WampSubscribeMessage(JsonParser parser)
-			throws BadMessageFormException {
-		super(WampMessage.SUBSCRIBE, parser);
-
-		try {
-			
-			JsonToken token = parser.nextToken();
-			if(token != null && token != JsonToken.END_ARRAY)
-				args.setParser(parser, true);
-			
-		} catch (JsonParseException e) {
-			throw new BadMessageFormException(e);
-		} catch (IOException e) {
-			throw new BadMessageFormException(e);
-		}
-	}
-
-	public WampSubscribeMessage(Object[] JSONArray) throws BadMessageFormException{
-		super(JSONArray);
-
-		if(JSONArray.length > 2){
-			for(int i = 2 ; i < JSONArray.length; i++)
-				args.addObject(JSONArray[i]);
-		}
-	}
-
-	@Override
-	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
-		
-		StringBuffer result = startMsg();
-		
-		appendString(result, getTopicId());
-		
-		if(!args.isEmpty())
-			args.toJSONMessage(result, objectMapper, true);
-		
-		return endMsg(result);
-	}
-
-	public WampObjectArray getArguments(){
+	public ReadableWampArrayObject getArguments(){
 		return args;
 	}
 	
-	public void setArguments(WampObjectArray args){
-		this.args = args;
-	}
-	
-	public void addArgument(Object arg) {
-		args.addObject(arg);
+	@Override
+	public String toString(){
+		return " WampSubscribehMessage { "+ topicId + " , " + args + " } ";
 	}
 }

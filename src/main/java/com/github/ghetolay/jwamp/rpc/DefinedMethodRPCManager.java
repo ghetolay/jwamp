@@ -15,12 +15,11 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
@@ -46,7 +45,7 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 		try {
 			Method m = objectClass.getClass().getMethod(methodName, String.class, WampCallMessage.class);
 			
-			if(m.getReturnType().equals(WampObjectArray.class)){
+			if(m.getReturnType().equals(WritableWampArrayObject.class)){
 			
 				if(log.isTraceEnabled())
 					log.trace("found matching method " + methodName + " of class " + objectClass.getClass().getName() + "for procId : " + message.getProcId());
@@ -85,13 +84,18 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 					if(log.isTraceEnabled())
 						log.trace("Calling Method " + m.getName() + " of class " + objectClass.getClass().getName());
 					
-					WampObjectArray result = (WampObjectArray) m.invoke(objectClass, sessionId, message);
+					WritableWampArrayObject result = (WritableWampArrayObject) m.invoke(objectClass, sessionId, message);
 					//TODO change test, handle with a exception or do not send result automatically or....
 					//NoReturn must be used in case of multiple result only.
-					if(result != WampObjectArray.NORETURN)
+					if(result != WritableWampArrayObject.NORETURN)
 						sendResult(message.getCallId(), result);
 						
 				}catch(InvocationTargetException e){
+					if(log.isDebugEnabled()){
+						log.debug("Error on action " + message.getCallId(),e.getMessage());
+						if(log.isTraceEnabled())
+							log.trace("Debug stacktrace ",e);
+					}
 					
 					sendError(message.getCallId(), message.getProcId(), e.getTargetException());
 			
@@ -100,7 +104,8 @@ public class DefinedMethodRPCManager extends AbstractRPCManager {
 				} catch (IllegalAccessException e) {
 					log.warn("blabla",e);
 				}
-			}catch(IOException e){
+			}catch(Exception e){
+				//TODO log
 				log.debug("Unable send response blabla");
 			}
 		}

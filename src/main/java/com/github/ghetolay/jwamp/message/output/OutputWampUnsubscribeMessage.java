@@ -13,33 +13,31 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.message.output;
 
+import org.msgpack.annotation.Message;
 
-public class WampCallErrorMessage extends WampCallResultMessage {
+import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
+/**
+ * @author ghetolay
+ *
+ */
+@Message
+public class OutputWampUnsubscribeMessage extends WampUnsubscribeMessage{
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
-	}
+	protected OutputWampUnsubscribeMessage(){}
 	
-	public String getErrorUri() {
-		return errorUri;
-	}
-
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
+	protected OutputWampUnsubscribeMessage(int messageType, String topicId){
+		super(messageType);
+		this.topicId = topicId;
 	}
 	
-	@Override
-	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+	public OutputWampUnsubscribeMessage(String topicId){
+		this.topicId = topicId;
+	}
+	
+	public void setTopicId(String topicId) {
+		this.topicId = topicId;
 	}
 }

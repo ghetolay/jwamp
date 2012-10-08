@@ -22,8 +22,10 @@ import java.util.concurrent.TimeoutException;
 
 import com.github.ghetolay.jwamp.event.WampEventSubscriber;
 import com.github.ghetolay.jwamp.event.WampSubscription;
+import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
@@ -62,44 +64,45 @@ public class WampWebSocket {
 		return eventSubscriber;
 	}
 	
-	public WampObjectArray call(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException{
+	public ReadableWampArrayObject call(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException{
 		return getRPCSender().call(procId, 5000, args);
 	}
 	
-	public WampObjectArray call(String procId, long timeout, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException{
+	//TODO issue this method can be miss-call
+	public ReadableWampArrayObject call(String procId, long timeout, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException{
 		return getRPCSender().call(procId, timeout, args);
 	}
 	
-	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException, UnsupportedWampActionException{
+	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException, UnsupportedWampActionException, SerializationException{
 		return getRPCSender().call(procId, timeout, listener, args);
 	}
 	
-	public void subscribe(String topicId) throws IOException, UnsupportedWampActionException{
+	public void subscribe(String topicId) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().subscribe(topicId);
 	}
 	
-	public void subscribe(WampSubscription subscription) throws IOException, UnsupportedWampActionException{
+	public void subscribe(WampSubscription subscription) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().subscribe(subscription);
 	}
 	
-	public void subscribe(WampSubscription subscription, ResultListener<WampObjectArray> listener) throws IOException, UnsupportedWampActionException{
+	public void subscribe(WampSubscription subscription, ResultListener<ReadableWampArrayObject> listener) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().subscribe(subscription, listener);
 	}
 	
-	public void unsubscribe(String topicId) throws IOException, UnsupportedWampActionException{
+	public void unsubscribe(String topicId) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().unsubscribe(topicId);
 	}
 	
-	public void publish(String topicId, WampObjectArray event) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WritableWampArrayObject event) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().publish(topicId, event);
 	}
-	public void publish(String topicId, WampObjectArray event, boolean excludeMe) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WritableWampArrayObject event, boolean excludeMe) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().publish(topicId, event, excludeMe);
 	}
-	public void publish(String topicId, WampObjectArray event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WritableWampArrayObject event, boolean excludeMe, List<String> eligible) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().publish(topicId, event, excludeMe, eligible);
 	}
-	public void publish(String topicId, WampObjectArray event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException{
+	public void publish(String topicId, WritableWampArrayObject event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().publish(topicId, event, exclude, eligible);
 	}
 	

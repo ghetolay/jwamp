@@ -13,33 +13,34 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.message.output;
 
+import org.msgpack.annotation.Message;
 
-public class WampCallErrorMessage extends WampCallResultMessage {
+import com.github.ghetolay.jwamp.message.WampEventMessage;
 
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
-	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
+/**
+ * @author ghetolay
+ *
+ */
+@Message
+public class OutputWampEventMessage extends WampEventMessage{
+
+	public void setTopicId(String topicId) {
+		this.topicId = topicId;
 	}
 	
-	public String getErrorUri() {
-		return errorUri;
-	}
-
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
+	public void setEvent(WritableWampArrayObject event){
+		this.event = event;
 	}
 	
 	@Override
-	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+	public WritableWampArrayObject getEvent(){
+		return (WritableWampArrayObject) event;
 	}
+	
+	public void addEventObject(Object obj){
+		((WritableWampArrayObject)event).addObject(obj);
+	}
+
 }

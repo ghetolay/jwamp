@@ -18,6 +18,7 @@ package com.github.ghetolay.jwamp;
 
 import java.io.IOException;
 
+import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampMessage;
 
 /**
@@ -42,14 +43,40 @@ public interface WampConnection {
 	public static enum ReconnectPolicy{ YES, NO, IMPOSSIBLE };
 	
 	/**
-	 * Send a {@link WampMessage} to the other side of the connection.
+	 * Send a {@link WampMessage} to the other side of the connection using default format.
 	 * This method should not be called directly, use {@link WampWebSocket} methods or a specific {@Link WampMessageHandler} instead.
 	 * 
 	 * @param msg The {@link WampMessage} to send.
 	 * @throws IOException if a connection problem occurs.
+	 * @throws SerializationException if a error occurs during serialization.
 	 * @see WampWebSocket
+	 * @see WampConnection#setPreferBinaryMessaging(boolean)
 	 */
-	public void sendMessage(WampMessage msg) throws IOException;
+	public void sendMessage(WampMessage msg) throws SerializationException, IOException;
+	
+	/**
+	 * Send a {@link WampMessage} to the other side of the connection using text format (JSON).
+	 * This method should not be called directly, use {@link WampWebSocket} methods or a specific {@Link WampMessageHandler} instead.
+	 * 
+	 * @param msg The {@link WampMessage} to send.
+	 * @throws IOException if a connection problem occurs.
+	 * @throws SerializationException if a error occurs during serialization.
+	 * @see WampWebSocket
+	 * 
+	 */
+	public void sendAsBinaryMessage(WampMessage msg) throws SerializationException, IOException;
+	
+	/**
+	 * Send a {@link WampMessage} to the other side of the connection using binary format (Message Pack).
+	 * This method should not be called directly, use {@link WampWebSocket} methods or a specific {@Link WampMessageHandler} instead.
+	 * 
+	 * @param msg The {@link WampMessage} to send.
+	 * @throws IOException if a connection problem occurs.
+	 * @throws SerializationException if a error occurs during serialization.
+	 * @see WampWebSocket
+	 * 
+	 */
+	public void	sendAsTextMessage(WampMessage msg) throws SerializationException, IOException;
 	
 	/**
 	 * Set whether we should stop at the first successful handler or not.
@@ -65,6 +92,21 @@ public interface WampConnection {
 	 * @see #setExclusiveHandler(boolean)
 	 */
 	public boolean isExclusiveHandler();
+	
+	/**
+	 * set if it would rather use binary message (Message Pack) than text message (JSON). 
+	 * 
+	 * @param true if binary message if preferred.
+	 */
+	public void setPreferBinaryMessaging(boolean bool);
+
+	/**
+	 * Return the message format preference.
+	 * 
+	 * @return true if binary message if preferred.
+	 * @see WampConnection.setPreferBinaryMessaging
+	 */
+	public boolean preferBinaryMessaging();
 	
 	/**
 	 * Set the reconnect policy.

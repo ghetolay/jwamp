@@ -13,12 +13,29 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.rpc;
+package com.github.ghetolay.jwamp.utils;
 
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
+import java.util.List;
+import java.util.Map;
 
-public interface CallAction {
+/**
+ * @author ghetolay
+ *
+ */
+public interface DynamicValue {
 
-	WritableWampArrayObject execute(String sessionId, ReadableWampArrayObject args) throws Exception;
+	boolean isBoolean();
+	boolean isNumber();
+	boolean isString();
+	boolean isList();
+	boolean isMap();
+	boolean maybeObject();
+	
+	Object asObject();
+	boolean asBoolean();
+	double asNumber();
+	String asString();
+	List<?> asList();
+	Map<?,?> asMap();
+
 }

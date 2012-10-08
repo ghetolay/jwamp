@@ -15,89 +15,35 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 
 public class WampCallResultMessage extends WampMessage{
 
-	private String callId;
-	private WampObjectArray result;
+	protected String callId;
+	protected ReadableWampArrayObject result;
 	
-	private WampCallResultMessage(int messageType){
-		this.messageType = messageType;
-		
-		result = new WampObjectArray();
+	protected WampCallResultMessage(){
+		this(true);
 	}
 	
-	public WampCallResultMessage(){
-		this(CALLRESULT);
+	protected WampCallResultMessage(boolean last) {
+		messageType = last?CALLRESULT:CALLMORERESULT;
 	}
 	
-	public WampCallResultMessage(boolean last){
-		this(last?CALLRESULT:CALLMORERESULT);	
-	}
-	
-	public WampCallResultMessage(JsonParser parser, boolean last) throws BadMessageFormException{
-		this(last);
-		
-		try {
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("CallId is required and must be a string");
-			setCallId(parser.getText());
-			if(parser.nextToken() == JsonToken.END_ARRAY)
-				throw new BadMessageFormException("Missing event element");
-			
-			result.setParser(parser,false);
-			
-		} catch (JsonParseException e) {
-			throw new BadMessageFormException(e);
-		} catch (IOException e) {
-			throw new BadMessageFormException(e);
-		}
-	}
-	
-	
-	@Override
-	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
-		
-		StringBuffer result = startMsg();
-		appendString(result, callId);
-		if(this.result != null)
-			this.result.toJSONMessage(result, objectMapper, false);
-		else	
-			result.append(",null");
-		
-		return endMsg(result);
-	}
-
 	public String getCallId() {
 		return callId;
 	}
-
-	public void setCallId(String callId) {
-		this.callId = callId;
-	}
-
-	public WampObjectArray getResult(){
+	
+	public ReadableWampArrayObject getResult(){
 		return result;
-	}
-	
-	public void setResult(WampObjectArray args){		
-		this.result = args;
-	}
-	
-	public void addResult(Object args){
-		this.result.addObject(args);
 	}
 
 	public boolean isLast(){
 		return messageType != CALLMORERESULT;
+	}
+	
+	@Override
+	public String toString(){
+		return " WampCallResultMessage { "+ callId+ " , " + result + " } ";
 	}
 }

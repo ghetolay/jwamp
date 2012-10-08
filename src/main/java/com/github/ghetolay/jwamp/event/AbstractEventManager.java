@@ -25,16 +25,19 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampMessageHandler;
-import com.github.ghetolay.jwamp.message.BadMessageFormException;
-import com.github.ghetolay.jwamp.message.WampEventMessage;
+import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
+import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
+import com.github.ghetolay.jwamp.message.output.OutputWampEventMessage;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
 public abstract class AbstractEventManager implements WampMessageHandler, EventSender {
 	private final Logger log = LoggerFactory.getLogger(getClass());
+	
+	private static final int[] msgType = new int[] { WampMessage.SUBSCRIBE, WampMessage.UNSUBSCRIBE, WampMessage.PUBLISH}; 
 	
 	//TODO changer action mapping
 	private ActionMapping<EventAction> eventMapping;
@@ -49,20 +52,30 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			it.next().setEventSender(this);
 	}
 	
-	public boolean onMessage(String sessionId, WampMessage message) throws BadMessageFormException {
-		
-		switch(message.getMessageType()){
-			case WampMessage.SUBSCRIBE :
-				onSubscribe(sessionId, (WampSubscribeMessage)message);
-				return true;
-			case WampMessage.UNSUBSCRIBE :
-				onUnsubscribe(sessionId, (WampSubscribeMessage)message);
-				return true;
-			case WampMessage.PUBLISH :
-				onPublish(sessionId, (WampPublishMessage)message);
-				return true;
-			default : 
-				return false;
+	public int[] getMsgType(){
+		return msgType;
+	}
+	
+	public boolean onMessage(String sessionId, WampMessage message){
+	
+		try{
+			switch(message.getMessageType()){
+				case WampMessage.SUBSCRIBE :
+					onSubscribe(sessionId, (WampSubscribeMessage)message);
+					return true;
+				case WampMessage.UNSUBSCRIBE :
+					onUnsubscribe(sessionId, (WampUnsubscribeMessage)message);
+					return true;
+				case WampMessage.PUBLISH :
+					onPublish(sessionId, (WampPublishMessage)message);
+					return true;
+				default : 
+					return false;
+			}
+		}catch(SerializationException e){
+			//TODO
+			log.trace("",e);
+			return true;
 		}
 	}
 
@@ -74,20 +87,20 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to subscribe : action name doesn't not exist " + wampSubscribeMessage.getTopicId());
 	}
 
-	public void onUnsubscribe(String sessionId, WampSubscribeMessage wampSubscribeMessage) {
-		EventAction e = eventMapping.getAction(wampSubscribeMessage.getTopicId());
+	public void onUnsubscribe(String sessionId, WampUnsubscribeMessage wampUnsubscribeMessage) {
+		EventAction e = eventMapping.getAction(wampUnsubscribeMessage.getTopicId());
 		if(e != null)
 			e.unsubscribe(sessionId);
 		else if(log.isDebugEnabled())
-			log.debug("unable to unsubscribe : action name doesn't not exist " + wampSubscribeMessage.getTopicId());
+			log.debug("unable to unsubscribe : action name doesn't not exist " + wampUnsubscribeMessage.getTopicId());
 	}
 
-	public void onPublish(String sessionId, WampPublishMessage wampPublishMessage) {
+	public void onPublish(String sessionId, WampPublishMessage wampPublishMessage) throws SerializationException {
 		EventAction e = eventMapping.getAction(wampPublishMessage.getTopicId());
 		if(e != null){
-			WampEventMessage msg = new WampEventMessage();
+			OutputWampEventMessage msg = new OutputWampEventMessage();
 			msg.setTopicId(wampPublishMessage.getTopicId());
-			msg.setEvent(wampPublishMessage.getEvent());
+			msg.setEvent( WritableWampArrayObject.withFirstObject(wampPublishMessage.getEvent()) );
 			
 			List<String> publishTo = e.publish(sessionId, wampPublishMessage, msg);
 			if(publishTo != null)
@@ -97,15 +110,15 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}
 	
-	public void sendEvent(String sessionId, String eventId, WampObjectArray event){		
-		WampEventMessage msg = new WampEventMessage();
+	public void sendEvent(String sessionId, String eventId, WritableWampArrayObject event) throws SerializationException{		
+		OutputWampEventMessage msg = new OutputWampEventMessage();
 		msg.setTopicId(eventId);
 		msg.setEvent(event);
 			
 		sendEvent(sessionId, msg);
 	}
 	
-	private void sendEvent(String sessionId, WampEventMessage msg){
+	private void sendEvent(String sessionId, OutputWampEventMessage msg) throws SerializationException{
 		WampConnection con = getConnection(sessionId);
 		if(con != null)
 			try {

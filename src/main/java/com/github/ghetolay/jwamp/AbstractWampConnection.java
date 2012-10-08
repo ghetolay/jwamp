@@ -1,284 +1,262 @@
 /**
-*Copyright [2012] [Ghetolay]
-*
-*Licensed under the Apache License, Version 2.0 (the "License");
-*you may not use this file except in compliance with the License.
-*You may obtain a copy of the License at
-*
-*http://www.apache.org/licenses/LICENSE-2.0
-*
-*Unless required by applicable law or agreed to in writing, software
-*distributed under the License is distributed on an "AS IS" BASIS,
-*WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*See the License for the specific language governing permissions and
-*limitations under the License.
-*/
+ *Copyright [2012] [Ghetolay]
+ *
+ *Licensed under the Apache License, Version 2.0 (the "License");
+ *you may not use this file except in compliance with the License.
+ *You may obtain a copy of the License at
+ *
+ *http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *Unless required by applicable law or agreed to in writing, software
+ *distributed under the License is distributed on an "AS IS" BASIS,
+ *WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *See the License for the specific language governing permissions and
+ *limitations under the License.
+ */
 
 package com.github.ghetolay.jwamp;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.msgpack.MessagePack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.message.BadMessageFormException;
-import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
-import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.message.WampEventMessage;
+import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampPublishMessage;
-import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
-import com.github.ghetolay.jwamp.message.WampUnSubscribeMessage;
+import com.github.ghetolay.jwamp.message.WampMessageDeserializer;
 import com.github.ghetolay.jwamp.message.WampWelcomeMessage;
+import com.github.ghetolay.jwamp.message.output.WampMessageSerializer;
+import com.github.ghetolay.jwamp.utils.MyMessagePack;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public abstract class AbstractWampConnection implements WampConnection{
-	
+
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-	
+
 	private String sessionId;
 	protected ReconnectPolicy autoReconnect = ReconnectPolicy.YES;
 	private ObjectMapper mapper;
-	
+
 	private boolean connected = false;
 	//bad design should do otherwise
 	private ResultListener<WampConnection> welcomeListener;
-		
-	private Collection<WampMessageHandler> messageHandlers;
+
+	//TODO possibility to change the comparator
+	private PriorityQueue<WampMessageHandler> messageHandlers;
 	private boolean exclusiveHandler = true;
-	
+
 	private boolean preferBynaryMessaging = false;
-	
+	private MessagePack msgPack = new MyMessagePack();
+
 	public AbstractWampConnection(ObjectMapper mapper, Collection<WampMessageHandler> messageHandlers,  ResultListener<WampConnection> wl){
 		if(mapper != null)
 			this.mapper = mapper;
 		else
 			this.mapper = new ObjectMapper();
-		
+
 		this.welcomeListener = wl;
-		
-		if(messageHandlers!=null)
-			this.messageHandlers = messageHandlers;
-		else
-			messageHandlers = new HashSet<WampMessageHandler>();
+
+		if(messageHandlers != null){
+			this.messageHandlers = new PriorityQueue<WampMessageHandler>(messageHandlers.size(),new WampMessageHandlerComparator());
+			this.messageHandlers.addAll(messageHandlers);
+		}else
+			this.messageHandlers = new PriorityQueue<WampMessageHandler>(0,new WampMessageHandlerComparator());
 	}
-	
+
 	public abstract void sendMessage(String data) throws IOException;
 	public abstract void sendMessage(byte[] data) throws IOException;
-	
+
 	public void onClose(int closeCode, String message){
 		if(log.isDebugEnabled())
 			log.debug("Close connection " + sessionId + " reason : " + message);
-			
+
 		for(WampMessageHandler h : messageHandlers)
 			h.onClose(sessionId, closeCode);
-		
+
 		connected = false;
 	}
-	
+
 	protected void reset(){
 		connected = false;
 	}
-	
+
 	public void newClientConnection(){
 		newClientConnection(null);
 	}
-	
+
 	public void newClientConnection(String sessionId){
 		try {
 			sendWelcome(sessionId);
-			
+
 			initHandlers();
-			
+
 			connected = true;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO log
 			if(log.isErrorEnabled())
 				log.error("Unable to send Welcome Message");
 		}
 	}
-	
+
 	private void initHandlers(){
 		if(messageHandlers != null)
 			for(WampMessageHandler h: messageHandlers)
 				h.onConnected(this);
 	}
-	
-	private void sendWelcome(String sessionId) throws IOException{
+
+	private void sendWelcome(String sessionId) throws SerializationException, IOException{
 		if(sessionId == null || sessionId.isEmpty())
 			this.sessionId = UUID.randomUUID().toString();
 		else
 			this.sessionId = sessionId;
-		
+
 		if(log.isTraceEnabled())
 			log.trace("Send welcome with sessionId : " + this.sessionId);
-		
+
 		WampWelcomeMessage msg = new WampWelcomeMessage();
 		msg.setImplementation(WampFactory.getImplementation());
 		msg.setProtocolVersion(WampFactory.getProtocolVersion());
 		msg.setSessionId(this.sessionId);
-		
+
 		sendMessage(msg);
 	}
-	
-	//Need optimization
-	public void sendMessage(WampMessage msg) throws IOException{
+
+	public void sendMessage(WampMessage msg) throws SerializationException, IOException{
 		if(preferBynaryMessaging)
 			sendAsBinaryMessage(msg);
 		else
 			sendAsTextMessage(msg);
 	}
-	
-	public void sendAsBinaryMessage(WampMessage msg) throws IOException{
-		if(log.isDebugEnabled())
-			log.debug("Sending Binary Message " + msg);
-		
-		//sendMessage(msg.toBytes());
-	}
-		
-	public void	sendAsTextMessage(WampMessage msg) throws IOException{
-		String jsonMsg = msg.toJSONMessage(getObjectMapper());
+
+	public void sendAsBinaryMessage(WampMessage msg) throws SerializationException, IOException{
+
+		sendMessage(WampMessageSerializer.serialize(msg, msgPack));
 
 		if(log.isDebugEnabled())
-			log.debug("Sending Text Message " + jsonMsg);
-			
-		sendMessage(jsonMsg);
+			log.debug("Send Binary Message " + msg.toString());
 	}
-	
-	public void onMessage(String data){
-		
+
+	public void	sendAsTextMessage(WampMessage msg) throws SerializationException, IOException{
+
+		String jsonMsg = WampMessageSerializer.serialize(msg, getObjectMapper());
+		sendMessage(jsonMsg);
+
 		if(log.isDebugEnabled())
-			log.debug("Receive Wamp Message " + data);
-		
-		try {
-			JsonParser parser = getObjectMapper().getJsonFactory().createJsonParser(data);
-			
-			if(parser.nextToken() != JsonToken.START_ARRAY)
-				throw new BadMessageFormException("WampMessage must be a not null JSON array");
-			
-			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
-				throw new BadMessageFormException("The first array element must be a int");
-			
-			int messageType = parser.getIntValue();
-	
-			WampMessage msg;
-			
-			switch(messageType){
-			/*
-				case WampMessage.PREFIX :
-					handler.onPrefix(new WampPrefixMessage(array));
-					return;
-			*/
-				case WampMessage.CALL :
-					msg = new WampCallMessage(parser);
-					break;
-			
-				case WampMessage.CALLERROR :
-					msg = new WampCallErrorMessage(parser);
-					break;
-					
-				case WampMessage.CALLRESULT :
-					msg = new WampCallResultMessage(parser, true);
-					break;
-				
-				case WampMessage.CALLMORERESULT :
-					msg = new WampCallResultMessage(parser, false);
-					break;
-					
-				case WampMessage.EVENT :
-					msg = new WampEventMessage(parser);
-					break;
-				
-				case WampMessage.PUBLISH :
-					msg = new WampPublishMessage(parser);
-					break;
-				
-				case WampMessage.SUBSCRIBE :
-					msg = new WampSubscribeMessage(parser);
-					break;
-					
-				case WampMessage.UNSUBSCRIBE :	
-					msg = new WampUnSubscribeMessage(parser);
-					break;
-					
-				case WampMessage.WELCOME :
-					onWelcome(new WampWelcomeMessage(parser));
-					return;
-					
-				default :
-					//TODO log
-					log.debug("Unknown messagetype " + messageType);
-					return;
-			}
-			
-			for(WampMessageHandler h : messageHandlers){
-				boolean result = h.onMessage(sessionId, msg);
-				if(exclusiveHandler && result)
-					return;
-			}
-			
+			log.debug("Send Text Message " + jsonMsg + " sent.");
+	}
+
+	public void onMessage(String data){
+
+		if(log.isDebugEnabled())
+			log.debug("Receive Text Wamp Message " + data);
+
+		try{
+			dispatch(WampMessageDeserializer.deserialize(getObjectMapper().getJsonFactory().createJsonParser(data)));
+
+		} catch(SerializationException e){
 			if(log.isWarnEnabled())
-				log.warn("Message not handled : " + data);
-			
+				log.warn("Unable to deserialize message : " + data.toString());
 		} catch (Exception e){
 			if(log.isWarnEnabled()){
-				log.warn("Message not handled because of internal error.\nmessage : " + data + "\nException : " + e.getLocalizedMessage());
+				log.warn("Error dispatching nmessage : " + data.toString() + "\nException : " + e.getLocalizedMessage());
 				if(log.isTraceEnabled())
 					log.trace("Warning error stacktrace : ", e);
 			}
 		}
-		
+
 	}
-	
+
 	public void onMessage(byte[] data, int offset, int length) {
-		// TODO Auto-generated method stub
-		
+
+		if(log.isDebugEnabled())
+			log.debug("Receive Binary Wamp Message. size : " + length );
+
+		try{
+			WampMessage msg = WampMessageDeserializer.deserialize(data, offset, length, msgPack);
+			
+			if(log.isDebugEnabled())
+				log.debug(" Message received : " + msg.toString());
+			
+			dispatch(msg);
+			
+		} catch(SerializationException e){
+			if(log.isWarnEnabled())
+				log.warn("Unable to deserialize message : " + data.toString());
+			if(log.isTraceEnabled())
+				log.trace("Warning error stacktrace : ", e);
+		} catch (Exception e){
+			if(log.isWarnEnabled())
+				log.warn("Message not handled because of internal error.\nmessage : " + data + "\nException : " + e.getLocalizedMessage());
+			if(log.isTraceEnabled())
+				log.trace("Warning error stacktrace : ", e);
+		}
 	}
-	
+
+	private void dispatch(WampMessage msg) throws BadMessageFormException{
+
+		if(msg.getMessageType() == WampMessage.WELCOME)
+			onWelcome((WampWelcomeMessage) msg);
+
+		else{
+			for(WampMessageHandler h : messageHandlers)
+				for(int type : h.getMsgType()){
+					if(msg.getMessageType() == type){
+						boolean result = h.onMessage(sessionId, msg);
+						if(exclusiveHandler && result)
+							return;
+
+						break;
+					}
+				}
+
+			if(log.isWarnEnabled())
+				log.warn("Message not handled.");
+		}
+	}
+
 	protected void onWelcome(WampWelcomeMessage wampWelcomeMessage) {
-		
+
 		//onWelcome should only be called once
 		if(!connected){
 			if(wampWelcomeMessage.getProtocolVersion() != WampFactory.getProtocolVersion()
-			 && log.isWarnEnabled())
+					&& log.isWarnEnabled())
 				log.warn("server's Wamp protocol version ('"+wampWelcomeMessage.getProtocolVersion()+"') differs from this implementation version ('" + WampFactory.getProtocolVersion() +"')\n"
 						+"Errors and weird behavior may occurs");
-			
+
 			if(log.isTraceEnabled())
 				log.trace("Server's Wamp Implementation : " + wampWelcomeMessage.getImplementation());
-	
+
 			sessionId = wampWelcomeMessage.getSessionId();
-			
+
 			initHandlers();
-			
+
 			if(welcomeListener != null){
 				welcomeListener.onResult(this);
 				welcomeListener = null;
 			}
-			
+
 			connected=true;
 		}else if(log.isErrorEnabled())
 			//TODO error log
 			log.error("onWelcome called twice on the same connection !!");
-			
+
 	}
-	
+
 	public void setExclusiveHandler(boolean exclusive){
 		this.exclusiveHandler = exclusive;
 	}
-	
+
 	public boolean isExclusiveHandler(){
 		return exclusiveHandler;
 	}
-	
+
 	public boolean setReconnectPolicy(ReconnectPolicy reconnect){
 		if(autoReconnect != ReconnectPolicy.IMPOSSIBLE){
 			autoReconnect = reconnect;
@@ -289,18 +267,18 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public ReconnectPolicy getReconnectPolicy(){
 		return autoReconnect;
 	}
-	
+
 	public void setPreferBinaryMessaging(boolean bool){
 		preferBynaryMessaging = bool;
 	}
-	
+
 	public boolean preferBinaryMessaging(){
 		return preferBynaryMessaging;
 	}
-	
+
 	public void addMessageHandler(WampMessageHandler handler){
 		messageHandlers.add(handler);
-		
+
 		if(connected)
 			handler.onConnected(this);
 	}
@@ -308,11 +286,11 @@ public abstract class AbstractWampConnection implements WampConnection{
 	public boolean containsMessageHandler(WampMessageHandler handler){
 		return messageHandlers.contains(handler);
 	}
-	
+
 	public void removeMessageHandler(WampMessageHandler handler){
 		messageHandlers.remove(handler);
 	}
-	
+
 	public <T extends WampMessageHandler> T getMessageHandler(Class<T> handlerClass){
 		for(Iterator<WampMessageHandler> it = messageHandlers.iterator(); it.hasNext();){
 			WampMessageHandler h = it.next();
@@ -321,15 +299,15 @@ public abstract class AbstractWampConnection implements WampConnection{
 		}
 		return null;
 	}
-	
+
 	public String getSessionId() {
 		return sessionId;
 	}
-	
+
 	public boolean isConnected(){
 		return connected;
 	}
-	
+
 	protected ObjectMapper getObjectMapper() {
 		return mapper;
 	}

@@ -15,74 +15,28 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class WampEventMessage extends WampMessage{
 
-	private String topicId;
+	protected String topicId;
 	
-	private WampObjectArray event = new WampObjectArray();
+	protected ReadableWampArrayObject event;
 	
-	public WampEventMessage(){
+	protected WampEventMessage(){
 		messageType = EVENT;
-	}
-	
-	public WampEventMessage(JsonParser parser) throws BadMessageFormException{
-		try {
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("TopicUri is required and must be a string");
-			setTopicId(parser.getText());
-			
-			if(parser.nextToken() == JsonToken.END_ARRAY)
-				throw new BadMessageFormException("Missing event element");
-			
-			event.setParser(parser, false);
-		} catch (JsonParseException e) {
-			throw new BadMessageFormException(e);
-		} catch (IOException e) {
-			throw new BadMessageFormException(e);
-		}
-	}
-	
-	@Override
-	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
-		
-		StringBuffer result = startMsg();
-		
-		appendString(result, topicId);
-		
-		if(event != null)
-			event.toJSONMessage(result, objectMapper, false);
-		else
-			result.append(",null");
-		
-		return endMsg(result);
 	}
 
 	public String getTopicId() {
 		return topicId;
 	}
 
-	public void setTopicId(String topicId) {
-		this.topicId = topicId;
-	}
-
-	public WampObjectArray getEvent(){
+	public ReadableWampArrayObject getEvent(){
 		return event;
 	}
 	
-	public void setEvent(WampObjectArray event){
-		this.event = event;
+	@Override
+	public String toString(){
+		return " WampEventMessage { "+ topicId+ " , " + event  + " } ";
 	}
-	
-	public void addEventObject(Object obj){
-		event.addObject(obj);
-	}
+
 }

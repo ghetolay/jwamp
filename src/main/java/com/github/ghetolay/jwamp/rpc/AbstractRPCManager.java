@@ -24,12 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampMessageHandler;
-import com.github.ghetolay.jwamp.message.BadMessageFormException;
-import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
+import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.output.OutputWampCallErrorMessage;
+import com.github.ghetolay.jwamp.message.output.OutputWampCallResultMessage;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
@@ -39,9 +39,14 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
+	private static final int[] msgType = new int[]{ WampMessage.CALL };
 	private WampConnection conn;
 	
 	private ExecutorService executor = Executors.newFixedThreadPool(25);
+	
+	public int[] getMsgType(){
+		return msgType;
+	}
 	
 	public void onConnected(WampConnection connection) {
 		conn = connection;
@@ -51,25 +56,23 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 		conn = null;
 	}
 	
-	public boolean onMessage(String sessionId, WampMessage message) throws BadMessageFormException {
-		
-		if(message.getMessageType() == WampMessage.CALL){
-			RunnableAction action = getRunnableAction(sessionId, (WampCallMessage)message);
-			if(action != null){
-				executor.execute(action);
-				return true;
-			}
+	public boolean onMessage(String sessionId, WampMessage message) {
+		RunnableAction action = getRunnableAction(sessionId, (WampCallMessage)message);
+		if(action != null){
+			executor.execute(action);
+			return true;
 		}
+		
 		return false;
 	}
 	
-	protected void sendResult(String callId, WampObjectArray result) throws IOException{
-		WampCallResultMessage resultMsg;
+	protected void sendResult(String callId, WritableWampArrayObject result) throws IOException, SerializationException{
+		OutputWampCallResultMessage resultMsg;
 
 		if(result != null && result instanceof MultipleResult)
-			resultMsg = new WampCallResultMessage(((MultipleResult)result).isLast());
+			resultMsg = new OutputWampCallResultMessage(((MultipleResult)result).isLast());
 		else
-			resultMsg = new WampCallResultMessage();
+			resultMsg = new OutputWampCallResultMessage();
 
 		resultMsg.setCallId(callId);
 		resultMsg.setResult(result);
@@ -77,8 +80,8 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 		conn.sendMessage(resultMsg);
 	}
 
-	protected void sendError(String callId, String procId, Throwable e) throws IOException{
-		WampCallErrorMessage errorMsg = new WampCallErrorMessage(callId, procId,e.getLocalizedMessage());
+	protected void sendError(String callId, String procId, Throwable e) throws IOException, SerializationException{
+		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage(callId, procId,e.getLocalizedMessage());
 		if(!e.getMessage().equals(e.getLocalizedMessage()))
 			errorMsg.setErrorDetails(e.getMessage());
 

@@ -15,31 +15,29 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+/**
+ * Also UnsubscribeMessage
+ * @author ghetolay
+ *
+ */
+public class WampUnsubscribeMessage extends WampMessage{
 
-public class WampCallErrorMessage extends WampCallResultMessage {
-
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
+	protected String topicId;
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
+	protected WampUnsubscribeMessage(int messageType){
+		this.messageType = messageType;
 	}
 	
-	public String getErrorUri() {
-		return errorUri;
+	protected WampUnsubscribeMessage(){
+		this(UNSUBSCRIBE);
 	}
-
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
+	
+	public String getTopicId() {
+		return topicId;
 	}
 	
 	@Override
 	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+		return " WampUnsubscribehMessage { "+ topicId + " } ";
 	}
 }

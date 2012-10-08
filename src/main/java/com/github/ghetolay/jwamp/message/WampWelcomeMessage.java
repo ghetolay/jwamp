@@ -15,77 +15,17 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import java.io.IOException;
+import org.msgpack.annotation.Message;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
+@Message
 public class WampWelcomeMessage extends WampMessage{
 
-	private String sessionId;
-	private int protocolVersion;
-	private String implementation;
+	protected String sessionId;
+	protected int protocolVersion;
+	protected String implementation;
 	
 	public WampWelcomeMessage(){
 		messageType = WELCOME;
-	}
-	
-	public WampWelcomeMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 4)
-			throw BadMessageFormException.notEnoughParameter("Welcome", JSONArray.length, 4);
-		
-		try{
-			setSessionId((String) JSONArray[1]);
-			setProtocolVersion((Integer) JSONArray[2]);
-			setImplementation((String) JSONArray[3]);
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
-	}
-	
-	public WampWelcomeMessage(JsonParser parser) throws BadMessageFormException{
-		this();
-		
-		try {
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("SessionId is required and must be a string");
-			setSessionId(parser.getText());
-			
-			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
-				throw new BadMessageFormException("ProtocolVersion is required and must be a int");
-			setProtocolVersion(parser.getIntValue());
-			
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("Implementation is required and must be a string");
-			setImplementation(parser.getText());
-			
-		} catch (JsonParseException e) {
-			throw new BadMessageFormException(e);
-		} catch (IOException e) {
-			throw new BadMessageFormException(e);
-		}
-		
-		
-	}
-	
-	@Override
-	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
-		
-		StringBuffer result = startMsg();
-		
-		appendString(result, sessionId);
-		result.append(',');
-		result.append(protocolVersion);
-		result.append(',');
-		appendString(result, implementation);
-		
-		return endMsg(result);
 	}
 
 	public String getSessionId() {
@@ -110,6 +50,11 @@ public class WampWelcomeMessage extends WampMessage{
 
 	public void setImplementation(String implementation) {
 		this.implementation = implementation;
+	}
+	
+	@Override
+	public String toString(){
+		return " WampWelcomehMessage { "+ sessionId + ", "  + protocolVersion + ", "  + implementation + " } ";
 	}
 
 }

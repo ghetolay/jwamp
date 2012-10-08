@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
@@ -28,24 +28,21 @@ import com.github.ghetolay.jwamp.message.WampObjectArray;
 public class TestDefinedAction {
 
 	
-	public WampObjectArray doEcho(String sessionId, WampCallMessage msg){
-		return msg.getArguments();
+	public WritableWampArrayObject doEcho(String sessionId, WampCallMessage msg){
+		return new WritableWampArrayObject(msg.getArguments());
 	}
 	
-	public WampObjectArray doOneList(String sessionId, WampCallMessage msg){
+	public WritableWampArrayObject doOneList(String sessionId, WampCallMessage msg){
 		List<String> list = new ArrayList<String>();
 		
 		list.add("lol");
 		list.add("prout");
 		list.add("youk");
 		
-		WampObjectArray result = new WampObjectArray();
-		result.addObject(list);
-		
-		return result;
+		return new WritableWampArrayObject(list);
 	}
 	
-	public WampObjectArray doSingleReturn(String sessionId, WampCallMessage msg){
-		return new WampObjectArray(1);
+	public WritableWampArrayObject doSingleReturn(String sessionId, WampCallMessage msg){
+		return WritableWampArrayObject.withFirstObject(1);
 	}
 }

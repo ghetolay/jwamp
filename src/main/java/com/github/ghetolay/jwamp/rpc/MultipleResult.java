@@ -15,12 +15,12 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
  *
  */
-public abstract class MultipleResult extends WampObjectArray{
+public abstract class MultipleResult extends WritableWampArrayObject{
 	public abstract boolean isLast();
 }

@@ -21,12 +21,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
-import com.github.ghetolay.jwamp.message.WampObjectArray;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 public class SimpleEventAction implements EventAction {
 
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+	
 	protected EventSender sender; 
 	protected Set<String> subscriber = new HashSet<String>();
 	
@@ -40,7 +46,7 @@ public class SimpleEventAction implements EventAction {
 		this.sender = sender;
 	}
 	
-	public void subscribe(String sessionId, WampObjectArray args) {
+	public void subscribe(String sessionId, ReadableWampArrayObject args) {
 		subscriber.add(sessionId);
 	}
 
@@ -69,9 +75,14 @@ public class SimpleEventAction implements EventAction {
 		return res;	
 	}
 	
-	public void eventAll(WampObjectArray event){
+	public void eventAll(WritableWampArrayObject event){
 		for(String s : subscriber)
 			if(sender != null)
-				sender.sendEvent(s, eventId, event);
+				try{
+					sender.sendEvent(s, eventId, event);
+				}catch(Exception e){
+					//TODO log
+					log.trace("eventall ",e);
+				}
 	}
 }

@@ -15,31 +15,23 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-
-public class WampCallErrorMessage extends WampCallResultMessage {
-
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
+/**
+ * @author ghetolay
+ *
+ */
+public class SerializationException extends Exception{
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
-	}
-	
-	public String getErrorUri() {
-		return errorUri;
-	}
+	private static final long serialVersionUID = -1503325621576550801L;
 
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
+	public SerializationException(String message){
+		super(message);
 	}
 	
-	@Override
-	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+	public SerializationException(Throwable e){
+		super("Serialization error",e);
+	}
+	
+	public SerializationException(String message, Throwable e){
+		super("Serialization error", e);
 	}
 }

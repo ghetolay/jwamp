@@ -24,8 +24,11 @@ public class SomeObject{
 	private String fieldOne;
 	private int fieldTwo;
 	
-	public SomeObject(){
-		
+	public SomeObject(){}
+	
+	public SomeObject(String fieldOne, int fieldTwo){
+		this.fieldOne = fieldOne;
+		this.fieldTwo = fieldTwo;
 	}
 	
 	public String getFieldOne() {
@@ -53,5 +56,9 @@ public class SomeObject{
 			}
 		}
 		return false;
+	}
+	
+	public String toString(){
+		return "SomeObject { " + fieldOne + ", " + fieldTwo + " }";
 	}
 }

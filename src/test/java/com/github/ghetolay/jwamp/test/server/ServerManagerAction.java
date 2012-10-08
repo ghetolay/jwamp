@@ -15,12 +15,13 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
-import com.github.ghetolay.jwamp.message.WampObjectArray;
+import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 
 public class ServerManagerAction implements CallAction{
 
-	public WampObjectArray execute(String sessionId, WampObjectArray args) {
+	public WritableWampArrayObject execute(String sessionId, ReadableWampArrayObject args) {
 		try{
 			String arg = args.nextObject(String.class);
 			if("restart".equals(arg)){
@@ -31,8 +32,6 @@ public class ServerManagerAction implements CallAction{
 					TestServer.server.start();
 				
 			}else if("shutdown".equals(arg)){
-				System.out.println("RECEIVE SHUTDOWN");
-
 				try{
 					TestServer.server.stop();
 				}catch(Exception e){}
@@ -40,7 +39,7 @@ public class ServerManagerAction implements CallAction{
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return WampObjectArray.NORETURN;
+		return WritableWampArrayObject.NORETURN;
 	}
 
 }

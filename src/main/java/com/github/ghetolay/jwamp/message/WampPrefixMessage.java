@@ -15,47 +15,14 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import java.io.IOException;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 
 public class WampPrefixMessage extends WampMessage{
 
-	private String prefix;
-	private String uri;
+	protected String prefix;
+	protected String uri;
 	
-	public WampPrefixMessage(){
+	WampPrefixMessage(){
 		messageType = PREFIX;
-	}
-	
-	public WampPrefixMessage(Object[] JSONArray) throws BadMessageFormException{
-		this();
-		
-		if(JSONArray.length < 3)
-			throw BadMessageFormException.notEnoughParameter("Prefix", JSONArray.length, 3);
-		
-		try{
-			setPrefix((String) JSONArray[1]);
-			setUri((String) JSONArray[2]);
-		} catch(ClassCastException e){
-			throw new BadMessageFormException(e);
-		}
-	}
-	
-	
-	@Override
-	public String toJSONMessage(ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
-		
-		StringBuffer result = startMsg();
-		
-		result.append(',');
-		appendString(result, prefix);
-		result.append(',');
-		appendString(result, uri);
-		
-		return endMsg(result);
 	}
 
 	public String getPrefix() {
@@ -74,4 +41,8 @@ public class WampPrefixMessage extends WampMessage{
 		this.uri = uri;
 	}
 
+	@Override
+	public String toString(){
+		return " WampPrefixMessage { "+ prefix+ " , " + uri + " } ";
+	}
 }

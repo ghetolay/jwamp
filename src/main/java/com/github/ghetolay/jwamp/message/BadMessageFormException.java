@@ -15,7 +15,7 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-public class BadMessageFormException extends Exception {
+public class BadMessageFormException extends SerializationException {
 
 	private static final long serialVersionUID = 1349080997487336808L;
 
@@ -23,12 +23,16 @@ public class BadMessageFormException extends Exception {
 		super(s);
 	}
 	
-	public BadMessageFormException(Exception e) {
+	public BadMessageFormException(String s, Throwable e){
+		super(s,e);
+	}
+	
+	public BadMessageFormException(Throwable e) {
 		super(e);
 	}
 
 	public static BadMessageFormException notEnoughParameter(String messageType, int nbParameter, int nbParameterNecessary){
 		return new BadMessageFormException("Not enough parameter for message type " + messageType + 
-								" only " + nbParameter + " on " + nbParameterNecessary + " necessary");
+								" only " + nbParameter + " on " + nbParameterNecessary + " (at least) necessary");
 	}
 }

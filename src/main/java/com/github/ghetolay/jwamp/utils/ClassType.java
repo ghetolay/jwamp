@@ -13,33 +13,28 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.utils;
 
+import java.lang.reflect.Type;
 
-public class WampCallErrorMessage extends WampCallResultMessage {
+import org.codehaus.jackson.type.TypeReference;
 
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
+/**
+ * @author ghetolay
+ *
+ */
+public class ClassType<T> extends TypeReference<T>{
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
-	}
-	
-	public String getErrorUri() {
-		return errorUri;
-	}
-
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
+	@SuppressWarnings("unchecked")
+	public Class<T> getEmbeddedClass(){
+		Type superClass = getClass().getGenericSuperclass();
+        if (superClass instanceof Class<?>)
+        	return (Class<T>)superClass;
+        
+        return null;
 	}
 	
-	@Override
-	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+	public Type getEmbeddedType(){
+		return getClass().getGenericSuperclass();
 	}
 }

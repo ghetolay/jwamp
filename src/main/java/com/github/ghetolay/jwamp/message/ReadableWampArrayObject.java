@@ -15,31 +15,25 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import com.github.ghetolay.jwamp.utils.ClassType;
+import com.github.ghetolay.jwamp.utils.DynamicValue;
 
-public class WampCallErrorMessage extends WampCallResultMessage {
 
-	protected String errorUri;
-	protected String errorDesc;
-	protected String errorDetails;
+
+/**
+ * @author ghetolay
+ *
+ */
+public interface ReadableWampArrayObject {
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
-	}
-	
-	public String getErrorUri() {
-		return errorUri;
-	}
+	public DynamicValue nextObject();
+	public <T> T nextObject(Class<T> ct);
+	/** Do not work with MessagePack
+	 * 
+	 * @param ct
+	 * @return
+	 */
+	public <T> T nextObject(ClassType<T> ct);
 
-	public String getErrorDesc() {
-		return errorDesc;
-	}
-
-	public String getErrorDetails() {
-		return errorDetails;
-	}
-	
-	@Override
-	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
-	}
+	public int size();
 }
