@@ -20,12 +20,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.websocket.WebSocket;
 
 import com.github.ghetolay.jwamp.AbstractWampConnection;
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampMessageHandler;
+import com.github.ghetolay.jwamp.WampSerializer;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class JettyConnection extends AbstractWampConnection implements WebSocket.OnTextMessage, WebSocket.OnBinaryMessage {
@@ -35,8 +35,8 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	
 	private boolean intentionallyClosed = false;
 	
-	public JettyConnection(URI uri, ObjectMapper mapper, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) {
-		super(mapper, handlers, wr);
+	public JettyConnection(URI uri, WampSerializer serializer, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) {
+		super(serializer, handlers, wr);
 		if(uri != null)
 			this.uri = uri;
 		else
@@ -46,6 +46,7 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	public void onOpen(Connection connection) {
 		if(log.isTraceEnabled())
 			log.trace("New connection opened");
+
 		this.connection = connection;
 	}
 
@@ -63,6 +64,9 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 		onClose();
 	}
 	
+	/**
+	 * meant to be override
+	 */
 	public void onClose(){
 		
 	}
@@ -70,6 +74,14 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	public void close(int closeCode, String message){
 		intentionallyClosed = true;
 		connection.close(closeCode, message);
+	}
+	
+	public void setMaxIdleTime(int ms) {
+		connection.setMaxIdleTime(ms);
+	}
+
+	public int getMaxIdleTime() {
+		return connection.getMaxIdleTime();
 	}
 	
 	@Override

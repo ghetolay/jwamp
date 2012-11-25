@@ -20,7 +20,6 @@ import java.io.IOException;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.msgpack.MessagePack;
 import org.msgpack.packer.BufferPacker;
 import org.msgpack.packer.Packer;
 
@@ -91,11 +90,10 @@ public class WampMessageSerializer {
 		}
 	}
 
-	public static byte[] serialize(WampMessage msg, MessagePack msgPack) throws SerializationException{
+	//TODO: profile synchronized vs independant bufferpacker creation
+	public synchronized static byte[] serialize(WampMessage msg, BufferPacker packer) throws SerializationException{
 
 		try{
-			BufferPacker packer = msgPack.createBufferPacker();
-
 			switch(msg.getMessageType()){
 			case WampMessage.CALL :
 				callMsg((OutputWampCallMessage) msg, packer);
@@ -139,6 +137,8 @@ public class WampMessageSerializer {
 			throw e;
 		} catch(Exception e){
 			throw new SerializationException(e);
+		}finally{
+			packer.clear();
 		}
 	}
 
@@ -185,74 +185,76 @@ public class WampMessageSerializer {
 	public static String callMsg(OutputWampCallMessage msg, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 
 		StringBuffer result = startMsg(msg.getMessageType()); 
-
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getArgument());
+		
 		appendString(result, msg.getCallId());
 		result.append(',');
 		appendString(result, msg.getProcId());
-		serializeArgs(result, msg.getArguments(), objectMapper, true);
+		arg.serialize(result,  objectMapper);
 
 		return endMsg(result);
 	}
 
 	public static void callMsg(OutputWampCallMessage msg, Packer pk) throws IOException {
 
-		pk.writeArrayBegin(3 + (msg.getArguments() == null ? 0 : msg.getArguments().size()) );
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getArgument());
+		pk.writeArrayBegin(3 + arg.size());
 
 		pk.write(msg.getMessageType());
 		pk.write(msg.getCallId());
 		pk.write(msg.getProcId());
-		serializeArgs(msg.getArguments(), pk, true);
+		arg.serialize(pk);
 
 		pk.writeArrayEnd(true);
 	}
 
 	public static String callResultMsg(OutputWampCallResultMessage msg, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 		StringBuffer result = startMsg(msg.getMessageType());
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getResult());
+		
 		appendString(result, msg.getCallId());
-		serializeArgs(result, msg.getResult(), objectMapper, false);
+		arg.serialize(result,  objectMapper);
 
 		return endMsg(result);
 	}
 
 	public static void callResultMsg(OutputWampCallResultMessage msg, Packer pk) throws IOException {
 
-		pk.writeArrayBegin(3);
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getResult());
+		pk.writeArrayBegin(3 + arg.size());
 
 		pk.write(msg.getMessageType());
 		pk.write(msg.getCallId());
-		serializeArgs(msg.getResult(), pk, false);
+		arg.serialize(pk);
 
 		pk.writeArrayEnd(true);
 	}
 
 	public static String eventMsg(OutputWampEventMessage msg, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 		StringBuffer result = startMsg(msg.getMessageType());
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getEvent());
+		
 		appendString(result, msg.getTopicId());
-		serializeArgs(result, msg.getEvent(), objectMapper, false);
+		arg.serialize(result,  objectMapper);
 
 		return endMsg(result);
 	}
 
 	public static void eventMsg(OutputWampEventMessage msg, Packer pk) throws IOException {
 
-		pk.writeArrayBegin(3);
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getEvent());
+		pk.writeArrayBegin(3 + arg.size());
 
 		pk.write(msg.getMessageType());
 		pk.write(msg.getTopicId());
-		serializeArgs(msg.getEvent(), pk, false);
+		arg.serialize(pk);
 
 		pk.writeArrayEnd(true);
 	}
 
+	//TODO new publish args at the end
 	public static String publishMsg(OutputWampPublishMessage msg,ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 		StringBuffer result = startMsg(msg.getMessageType());
-
-		appendString(result, msg.getTopicId());
-
-		if(msg.getEvent() != null)
-			result.append(objectMapper.writeValueAsString(msg.getEvent()));
-		else
-			result.append(",null");
 
 		if(msg.isExcludeMe())
 			result.append(",true");
@@ -265,6 +267,11 @@ public class WampMessageSerializer {
 				result.append(msg.getEligible()==null?"[]":objectMapper.writeValueAsString(msg.getEligible()));
 			}
 
+		appendString(result, msg.getTopicId());
+
+		if(msg.getEvent() != null)
+			result.append(objectMapper.writeValueAsString(msg.getEvent()));
+		
 		return endMsg(result);
 	}
 
@@ -282,8 +289,7 @@ public class WampMessageSerializer {
 
 		pk.writeArrayBegin(size);
 		pk.write(msg.getMessageType());
-		serializeArgs(msg.getEvent(), pk, false);
-
+		
 		if( size == 4)
 			pk.write(true);
 		else
@@ -292,27 +298,29 @@ public class WampMessageSerializer {
 				pk.write(msg.getEligible());
 			}
 
+		pk.write(msg.getTopicId());
+		new ArgumentSerializer(msg.getEvent()).serialize(pk);
 		pk.writeArrayEnd(true);
 	}
 
 	public static String subscribeMsg(OutputWampSubscribeMessage msg, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException{
 		StringBuffer result = startMsg(msg.getMessageType());
-
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getArgument());
+		
 		appendString(result, msg.getTopicId());
-
-		if(msg.getArguments() != null)
-			serializeArgs(result, msg.getArguments(), objectMapper, true);
+		arg.serialize(result,  objectMapper);
 
 		return endMsg(result);
 	}
 
 	public static void subscribeMsg(OutputWampSubscribeMessage msg, Packer pk) throws IOException {
 
+		ArgumentSerializer arg = new ArgumentSerializer(msg.getArgument());
 		pk.writeArrayBegin(2 + (msg.getArguments() == null ? 0 : msg.getArguments().size()) );
 
 		pk.write(msg.getMessageType());
 		pk.write(msg.getTopicId());
-		serializeArgs(msg.getArguments(), pk, true);
+		arg.serialize(pk);
 
 		pk.writeArrayEnd(true);
 	}
@@ -382,49 +390,5 @@ public class WampMessageSerializer {
 		pk.write(msg.getUri());
 
 		pk.writeArrayEnd(true);
-	}
-	
-	private static void serializeArgs(WritableWampArrayObject v, Packer pk, boolean allowMultipleArguments)
-			throws IOException {
-
-		if(allowMultipleArguments){
-			if(v != null && v.args != null)
-				for(Object obj : v.args)
-					pk.write(obj);
-		}else{
-			int size;
-			if(v != null && (size = v.size()) > 0){
-				if(size == 1)
-					pk.write(v.args.get(0));
-				else{
-					pk.writeArrayBegin(size);
-					for(Object obj : v.args)
-						pk.write(obj);
-					pk.writeArrayEnd();
-				}
-			}else
-				pk.writeNil();
-		}
-	}
-
-	private static void serializeArgs(StringBuffer result, WritableWampArrayObject argument, ObjectMapper objectMapper, boolean allowMultipleArguments) throws JsonGenerationException, JsonMappingException, IOException {
-
-		if(allowMultipleArguments){
-			if(argument != null && argument.args != null)
-				for(Object obj : argument.args){
-					result.append(',');
-					result.append(objectMapper.writeValueAsString(obj));
-				}
-		}else{
-			int size;
-			result.append(',');
-			if(argument != null && (size = argument.size()) > 0){
-				if(size == 1)
-					result.append(objectMapper.writeValueAsString(argument.args.get(0)));
-				else
-					result.append(objectMapper.writeValueAsString(argument.args));
-			}else
-				result.append("null");
-		}
 	}
 }

@@ -15,6 +15,7 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 
 
@@ -23,7 +24,9 @@ import com.github.ghetolay.jwamp.message.WampCallMessage;
  *
  */
 public class OutputWampCallMessage extends WampCallMessage{
-		
+	
+	private Object arg;
+	
 	public void setCallId(String callId) {
 		this.callId = callId;
 	}
@@ -32,16 +35,16 @@ public class OutputWampCallMessage extends WampCallMessage{
 		this.procId = procId;
 	}
 	
-	public void setArguments(WritableWampArrayObject args){
-		this.args = args;
+	public void setArgument(Object arg){
+		this.arg = arg;
+	}
+	
+	public Object getArgument(){
+		return arg;
 	}
 	
 	@Override
-	public WritableWampArrayObject getArguments(){
-		return (WritableWampArrayObject) args;
-	}
-	
-	public void addArgument(Object arg) {
-		((WritableWampArrayObject)args).addObject(arg);
+	public WampArguments getArguments(){
+		throw new IllegalStateException("Use getArgument()");
 	}
 }

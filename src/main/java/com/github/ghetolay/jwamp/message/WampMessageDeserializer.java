@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
 import org.msgpack.MessagePack;
-import org.msgpack.type.Value;
+import org.msgpack.type.ValueType;
 import org.msgpack.unpacker.BufferUnpacker;
 import org.msgpack.unpacker.Unpacker;
 import org.slf4j.Logger;
@@ -81,7 +81,7 @@ public class WampMessageDeserializer {
 		}
 	}
 
-	public static WampMessage deserialize(byte[] data, int offset, int length, MessagePack msgPack) throws SerializationException{
+	public synchronized static WampMessage deserialize(byte[] data, int offset, int length, MessagePack msgPack) throws SerializationException{
 
 		try{
 			BufferUnpacker unpacker = msgPack.createBufferUnpacker(data, offset, length);
@@ -166,7 +166,7 @@ public class WampMessageDeserializer {
 		
 		result.callId = getStringProperty(unpacker, "CallID");
 		result.errorUri = getStringProperty(unpacker, "errorUri");
-		result.errorDetails = getStringProperty(unpacker, "errorDesc");
+		result.errorDesc = getStringProperty(unpacker, "errorDesc");
 		
 		if(size > 4)
 			result.errorDetails = getStringProperty(unpacker, "errorDetails", false);
@@ -185,12 +185,10 @@ public class WampMessageDeserializer {
 				throw new BadMessageFormException("ProcUri is required and must be a string");
 			result.procId = parser.getText();
 
-			JsonToken token = parser.nextToken();
-			if(token != null && token != JsonToken.END_ARRAY)
-				result.args = new JSONWampArrayObject(parser,true);
+			parser.nextToken();
+			result.args = new JSONArguments(parser);
 
 			return result;
-	
 	}
 
 	public static WampCallMessage callMsg(Unpacker unpacker, int size) throws BadMessageFormException{
@@ -202,7 +200,7 @@ public class WampMessageDeserializer {
 		result.callId = getStringProperty(unpacker, "CallID");
 		result.procId = getStringProperty(unpacker, "procId");
 		if( size > 3)
-			result.args = new MsgPackWampArrayObject(unpacker, size - 3);
+			result.args = new MsgPackArguments(unpacker, size - 3);
 		
 		return result;
 	}
@@ -224,11 +222,9 @@ public class WampMessageDeserializer {
 				throw new BadMessageFormException("CallId is required and must be a string");
 			result.callId = parser.getText();
 
-			if(parser.nextToken() == JsonToken.END_ARRAY)
-				throw new BadMessageFormException("Missing event element");
-
-			result.result = new JSONWampArrayObject(parser,false);
-
+			parser.nextToken();
+			result.result = new JSONArguments(parser);
+			
 			return result;
 	}
 
@@ -239,7 +235,7 @@ public class WampMessageDeserializer {
 		WampCallResultMessage result = new WampCallResultMessage();
 		
 		result.callId = getStringProperty(unpacker, "CallID");
-		result.result = new MsgPackWampArrayObject(unpacker);
+		result.result = new MsgPackArguments(unpacker,size - 3);
 		
 		return result;
 	}
@@ -251,14 +247,10 @@ public class WampMessageDeserializer {
 				throw new BadMessageFormException("TopicUri is required and must be a string");
 			result.topicId = parser.getText();
 
-			if(parser.nextToken() == JsonToken.END_ARRAY)
-				throw new BadMessageFormException("Missing event element");
-
-			result.event = new JSONWampArrayObject(parser, false);
+			parser.nextToken();
+			result.event = new JSONArguments(parser);
 
 			return result;
-	
-
 	}
 
 	public static WampEventMessage eventMsg(Unpacker unpacker, int size) throws BadMessageFormException{
@@ -268,47 +260,45 @@ public class WampMessageDeserializer {
 		WampEventMessage result = new WampEventMessage();
 		
 		result.topicId = getStringProperty(unpacker, "topicURI");
-		result.event = new MsgPackWampArrayObject(unpacker);
+		result.event = new MsgPackArguments(unpacker, size - 3);
 		
 		return result;
 	}
 	
+	//TODO new streaming publish
 	public static WampPublishMessage publishMsg(JsonParser parser) throws BadMessageFormException, IOException{
 		WampPublishMessage result = new WampPublishMessage();			
 		
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("TopicUri is required and must be a string");
-			result.topicId  = parser.getText();
-
-			result.event = parser.readValueAs(Object.class);
-
 			//excludeme or exclude list
-			if(parser.nextToken() != JsonToken.END_ARRAY){
-				if(parser.getCurrentToken() == JsonToken.VALUE_TRUE)
-					result.excludeMe = true;
-				else if(parser.getCurrentToken() == JsonToken.START_ARRAY){
-					result.exclude = new ArrayList<String>();
-					while(parser.nextToken() != JsonToken.END_ARRAY){
-						if(parser.getCurrentToken() != JsonToken.VALUE_STRING)
-							throw new BadMessageFormException("Fourth element must be boolean or array of string");
-						result.exclude.add(parser.getText());
-					}
-				}else
-					throw new BadMessageFormException("Fourth element must be boolean or array of string");
-
+			if(parser.getCurrentToken() == JsonToken.VALUE_TRUE)
+				result.excludeMe = true;
+			else if(parser.getCurrentToken() == JsonToken.START_ARRAY){
+				result.exclude = new ArrayList<String>();
+				while(parser.nextToken() != JsonToken.END_ARRAY){
+					if(parser.getCurrentToken() != JsonToken.VALUE_STRING)
+						throw new BadMessageFormException("Fourth element must be boolean or array of string");
+					result.exclude.add(parser.getText());
+				}
+					
 				//eligible list
-				if(parser.nextToken() != JsonToken.END_ARRAY){
+				if(parser.nextToken() == JsonToken.START_ARRAY){
 					result.eligible = new ArrayList<String>();
 					while(parser.nextToken() != JsonToken.END_ARRAY){
 						if(parser.getCurrentToken() != JsonToken.VALUE_STRING)
 							throw new BadMessageFormException("Fifth element must be an array of string");
 						result.eligible.add(parser.getText());
 					}
-				}
+				}else
+					throw new BadMessageFormException("Exclude List found but Eligible list missing");
 			}
+			
+			if(parser.nextToken() != JsonToken.VALUE_STRING)
+				throw new BadMessageFormException("TopicUri is required and must be a string");
+			result.topicId  = parser.getText();
+
+			//result.event = parser.readValueAs(Object.class);
 
 			return result;
-	
 	}
 
 	public static WampPublishMessage publishMsg(Unpacker unpacker, int size) throws BadMessageFormException{
@@ -317,18 +307,22 @@ public class WampMessageDeserializer {
 		
 		WampPublishMessage result = new WampPublishMessage();
 		
-		result.topicId = getStringProperty(unpacker, "topicURI");
-		result.event = getValueProperty(unpacker, "event");
-		
-		if( size > 3 && size < 5)
-			result.excludeMe = getBooleanProperty(unpacker, "excludeMe", false);
-		else{
-			result.exclude = new ArrayList<String>();
-			result.eligible = new ArrayList<String>();
-			result.exclude = setProperty(unpacker, result.exclude, "exclude");
-			result.eligible = setProperty(unpacker, result.eligible, "eligible");
+		try{
+			if(unpacker.getNextType() == ValueType.BOOLEAN)
+				result.excludeMe = getBooleanProperty(unpacker, "excludeMe", false);
+			else if(unpacker.getNextType() == ValueType.ARRAY){
+				result.exclude = new ArrayList<String>();
+				result.eligible = new ArrayList<String>();
+				result.exclude = setProperty(unpacker, result.exclude, "exclude");
+				result.eligible = setProperty(unpacker, result.eligible, "eligible");
+			}
+		}catch(IOException e){
+			throw new BadMessageFormException(e);
 		}
-			
+		
+		result.topicId = getStringProperty(unpacker, "topicURI");
+		//result.event = getValueProperty(unpacker, "event");
+		
 		return result;
 	}
 	
@@ -361,8 +355,8 @@ public class WampMessageDeserializer {
 				throw new BadMessageFormException("TopicUri is required and must be a string");
 			result.topicId = parser.getText();
 
-			if(parser.nextToken() != JsonToken.END_ARRAY)
-				result.args = new JSONWampArrayObject(parser, true);
+			parser.nextToken();
+			result.args = new JSONArguments(parser);
 
 			return result;
 		
@@ -376,7 +370,7 @@ public class WampMessageDeserializer {
 		
 		result.topicId = getStringProperty(unpacker, "topicURI");
 		if(size > 2)
-			result.args = new MsgPackWampArrayObject(unpacker);
+			result.args = new MsgPackArguments(unpacker, size - 2);
 		
 		return result;
 	}
@@ -501,15 +495,6 @@ public class WampMessageDeserializer {
 	private static <T> T setProperty(Unpacker unpacker, T property, String propertyName) throws BadMessageFormException{
 		try{
 			return unpacker.read(property);
-		}catch(Exception e){
-			throw new BadMessageFormException("Error reading " + propertyName,e);
-		}
-	}
-
-	//should disappear, exist because of publish messages
-	private static Value getValueProperty(Unpacker unpacker, String propertyName) throws BadMessageFormException{
-		try{
-			return unpacker.readValue();
 		}catch(Exception e){
 			throw new BadMessageFormException("Error reading " + propertyName,e);
 		}

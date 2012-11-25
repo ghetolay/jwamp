@@ -31,13 +31,10 @@ import com.github.ghetolay.jwamp.message.WampPublishMessage;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampEventMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
 public abstract class AbstractEventManager implements WampMessageHandler, EventSender {
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	
-	private static final int[] msgType = new int[] { WampMessage.SUBSCRIBE, WampMessage.UNSUBSCRIBE, WampMessage.PUBLISH}; 
 	
 	//TODO changer action mapping
 	private ActionMapping<EventAction> eventMapping;
@@ -50,10 +47,6 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 		this.eventMapping = eventMapping;
 		for(Iterator<EventAction> it = eventMapping.getActionsIterator(); it.hasNext();)
 			it.next().setEventSender(this);
-	}
-	
-	public int[] getMsgType(){
-		return msgType;
 	}
 	
 	public boolean onMessage(String sessionId, WampMessage message){
@@ -95,12 +88,13 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to unsubscribe : action name doesn't not exist " + wampUnsubscribeMessage.getTopicId());
 	}
 
+	//TODO new publish
 	public void onPublish(String sessionId, WampPublishMessage wampPublishMessage) throws SerializationException {
 		EventAction e = eventMapping.getAction(wampPublishMessage.getTopicId());
 		if(e != null){
 			OutputWampEventMessage msg = new OutputWampEventMessage();
 			msg.setTopicId(wampPublishMessage.getTopicId());
-			msg.setEvent( WritableWampArrayObject.withFirstObject(wampPublishMessage.getEvent()) );
+			//msg.setEvent( wampPublishMessage.getEvent() );
 			
 			List<String> publishTo = e.publish(sessionId, wampPublishMessage, msg);
 			if(publishTo != null)
@@ -110,7 +104,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}
 	
-	public void sendEvent(String sessionId, String eventId, WritableWampArrayObject event) throws SerializationException{		
+	public void sendEvent(String sessionId, String eventId, Object event) throws SerializationException{		
 		OutputWampEventMessage msg = new OutputWampEventMessage();
 		msg.setTopicId(eventId);
 		msg.setEvent(event);

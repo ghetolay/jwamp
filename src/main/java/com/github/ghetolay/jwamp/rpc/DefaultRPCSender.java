@@ -24,12 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
@@ -39,7 +38,6 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private static final int[] msgType = new int[]{ WampMessage.CALLRESULT, WampMessage.CALLERROR, WampMessage.CALLMORERESULT };
 	private WampConnection conn;
 	
 	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
@@ -49,61 +47,74 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		resultListeners.addListener(this);
 	}
 	
-	public int[] getMsgType(){
-		return msgType;
-	}
-	
 	public void onConnected(WampConnection connection) {
 		conn = connection;
 	}
 	
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public ReadableWampArrayObject call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException{
-		if(timeout <= 0)
-			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String,Object[],int,ResultListener<WampCallResultMessage>)");
-		
-		WaitResponse<WampCallResultMessage> wr = new WaitResponse<WampCallResultMessage>();
-		
-		call(procId,timeout,wr,args);
-		
-		try {
-			WampCallResultMessage result = wr.call();
-			if(result != null)
-				return result.getResult();
+	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException{
+		if(timeout == 0)
+			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args)");
+
+		if(timeout > 0){
+			WaitResponse<WampCallResultMessage> wr = new WaitResponse<WampCallResultMessage>();
 			
-		} catch (Exception e) {
-			if(log.isErrorEnabled())
-				log.error("Error waiting call result : ",e);
-			return null;
+			call(procId,wr,timeout,args);
+			
+			try {
+				WampCallResultMessage result = wr.call();
+				if(result != null)
+					return result.getResults();
+				
+			} catch (Exception e) {
+				if(log.isErrorEnabled())
+					log.error("Error waiting call result : ",e);
+				return null;
+			}
+			
+			throw new TimeoutException();
 		}
 		
-		throw new TimeoutException();
+		call(procId,null,-1,args);
+		return null;
 	}
 	
-	//TODO possibilité de passer un autre type d'argument/ voir WampCallMessage.setArgument
-	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws IOException, SerializationException{
-
+	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, SerializationException{
 		String callId = generateCallId();
 		
 		OutputWampCallMessage msg = new OutputWampCallMessage();
 		msg.setProcId(procId);
 		msg.setCallId(callId);
 		
-		msg.setArguments(new WritableWampArrayObject(args));
-		
+		if(args.length > 0){
+			if(args.length == 1)
+				msg.setArgument(args[0]);
+			else
+				msg.setArgument(args);
+		}
+			
 		conn.sendMessage(msg);
 			
 		if(listener != null)
-			resultListeners.put(callId, listener, timeout);
+			if(timeout >= 0)
+				resultListeners.put(callId, listener, timeout);
+			else//weird listener will never be called
+				if(log.isWarnEnabled())
+					log.warn("ResultListener not null but timeout < 0. ResultListener will never be called.");
 			
 		return callId;
 	}
 	
 	public boolean onMessage(String sessionId, WampMessage msg) {
-		
-		onCallResult((WampCallResultMessage)msg);
-		return true;
+		if(msg.getMessageType() == WampMessage.CALLRESULT
+			|| msg.getMessageType() == WampMessage.CALLMORERESULT
+			|| msg.getMessageType() == WampMessage.CALLERROR){
+				onCallResult((WampCallResultMessage)msg);
+				return true;
+			}
+			
+		return false;
 	}
 	
 	private void onCallResult(WampCallResultMessage msg) {

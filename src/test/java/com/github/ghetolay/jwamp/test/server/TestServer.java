@@ -47,6 +47,8 @@ public class TestServer {
 			
 			WampJettyHandler wampHandler = wampFact.newJettyHandler(new Parameters(is));
 			
+			//wampFact.getSerializer().setDesiredFormat(WampSerializer.format.BINARY);
+			
 			server.setHandler(wampHandler);
 	
 			server.start();

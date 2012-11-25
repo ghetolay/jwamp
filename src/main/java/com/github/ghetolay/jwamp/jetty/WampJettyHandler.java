@@ -20,7 +20,6 @@ import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketHandler;
 import org.slf4j.Logger;
@@ -30,6 +29,7 @@ import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampFactory;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.WampParameter;
+import com.github.ghetolay.jwamp.WampSerializer;
 import com.github.ghetolay.jwamp.WampWebSocket;
 import com.github.ghetolay.jwamp.WampWebSocketListener;
 
@@ -38,14 +38,14 @@ public class WampJettyHandler extends WebSocketHandler{
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private WampParameter param;
-	private ObjectMapper mapper;
+	private WampSerializer serializer;
 	private WampWebSocketListener listener;
 	
 	private HashMap<JettyServerConnection,HttpServletRequest> requests;
 	
-	public WampJettyHandler(WampParameter param, ObjectMapper mapper, WampWebSocketListener newConnectionListener){
+	public WampJettyHandler(WampParameter param, WampSerializer serializer, WampWebSocketListener newConnectionListener){
 		this.param = param;
-		this.mapper = mapper;
+		this.serializer = serializer;
 		this.listener = newConnectionListener;
 		
 		if(listener != null)
@@ -60,7 +60,7 @@ public class WampJettyHandler extends WebSocketHandler{
 			if(log.isTraceEnabled())
 				log.trace("New Wamp Connection from " + request.getRemoteAddr());
 			
-			JettyServerConnection connection = new JettyServerConnection(mapper,param.getHandlers());
+			JettyServerConnection connection = new JettyServerConnection(serializer,param.getHandlers());
 			
 			if(requests != null)
 				requests.put(connection,request);
@@ -90,8 +90,8 @@ public class WampJettyHandler extends WebSocketHandler{
 	
 	private class JettyServerConnection extends JettyConnection{
 		
-		public JettyServerConnection(ObjectMapper mapper, Collection<WampMessageHandler> handlers) {
-			super(null,mapper, handlers, null);
+		public JettyServerConnection(WampSerializer serializer, Collection<WampMessageHandler> handlers) {
+			super(null,serializer, handlers, null);
 		}
 
 		@Override

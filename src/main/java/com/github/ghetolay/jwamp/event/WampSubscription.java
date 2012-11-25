@@ -15,7 +15,6 @@
 */
 package com.github.ghetolay.jwamp.event;
 
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
@@ -27,12 +26,12 @@ public interface WampSubscription {
 	public String getTopicId();
 	
 	//can change over time, if we re-subscribe.
-	public WritableWampArrayObject getSubscribeArguments();
+	public Object getSubscribeArguments();
 	
 	public class Impl implements WampSubscription{
 
 		String topicId;
-		WritableWampArrayObject args;
+		Object args;
 		
 		public Impl(String topicId){
 			if(topicId ==null || topicId.isEmpty())
@@ -41,7 +40,7 @@ public interface WampSubscription {
 			this.topicId = topicId;
 		}
 		
-		public Impl(String topicId, WritableWampArrayObject args){
+		public Impl(String topicId, Object args){
 			this(topicId);
 			this.args = args;
 		}
@@ -50,7 +49,7 @@ public interface WampSubscription {
 			return topicId;
 		}
 
-		public WritableWampArrayObject getSubscribeArguments() {
+		public Object getSubscribeArguments() {
 			return args;
 		}
 	}

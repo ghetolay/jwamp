@@ -13,14 +13,27 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.rpc;
+package com.github.ghetolay.jwamp.message;
 
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
+import org.codehaus.jackson.type.TypeReference;
+
+import com.github.ghetolay.jwamp.utils.DynamicValue;
+
+
 
 /**
  * @author ghetolay
  *
  */
-public abstract class MultipleResult extends WritableWampArrayObject{
-	public abstract boolean isLast();
+public interface WampArguments {
+	
+	public boolean hasNext();
+	
+	public DynamicValue nextObject();
+	
+	//TODO differentiate the end of stream and a null element
+	public <T> T nextObject(Class<T> ct);
+	public <T> T nextObject(TypeReference<T> ct);
+	
+	public int size();
 }

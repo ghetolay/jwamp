@@ -15,100 +15,62 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
  *
  */
-public class DefinedMethodRPCManager extends AbstractRPCManager {
+public class DefinedMethodRPCManager extends AbstractRPCManager{
 
 	Object objectClass;
+	
+	HashMap<String,Method> mapping = new HashMap<String,Method>();
 	
 	public DefinedMethodRPCManager(Object objectClass){
 		if(objectClass == null)
 			throw new IllegalArgumentException("objectClass can't be null");
 		
 		this.objectClass = objectClass;
+		
+		for(Method m : objectClass.getClass().getMethods()){
+			String name = m.getName();
+			Class<?>[] params = m.getParameterTypes();
+			if(params != null && params.length == 3
+					&& name.startsWith("do")
+					&& name.length() > 2
+					&& params[0].equals(String.class) 
+					&& params[1].equals(WampArguments.class)
+					&& params[2].equals(CallResultSender.class))
+				
+				mapping.put(Character.toUpperCase(name.charAt(2)) + name.substring(3), m);
+		}
 	}
 	
 	//TODO logging
 	@Override
 	protected RunnableAction getRunnableAction(String sessionId, WampCallMessage message) {
 		
-		String methodName = "do" + Character.toUpperCase(message.getProcId().charAt(0)) + message.getProcId().substring(1);
-		
-		try {
-			Method m = objectClass.getClass().getMethod(methodName, String.class, WampCallMessage.class);
+		String methodName = Character.toUpperCase(message.getProcId().charAt(0)) + message.getProcId().substring(1);
+		final Method method = mapping.get(methodName);
 			
-			if(m.getReturnType().equals(WritableWampArrayObject.class)){
-			
-				if(log.isTraceEnabled())
-					log.trace("found matching method " + methodName + " of class " + objectClass.getClass().getName() + "for procId : " + message.getProcId());
+		if(method != null){
+			if(log.isTraceEnabled())
+				log.trace("found matching method " + methodName + " of class " + objectClass.getClass().getName() + "for procId : " + message.getProcId());
 				
-				MethodAction result = new MethodAction(sessionId, message);
-				result.setMethod(m);
-			
-				return result;
-			}
-		} catch (SecurityException e) {
-			if(log.isTraceEnabled())
-				log.trace("",e);
-		} catch (NoSuchMethodException e) {
-			if(log.isTraceEnabled())
-				log.trace("Unable to find method for " + message.getProcId(),e);
-		}
-		
-		return null;
-	}
-
-	private class MethodAction extends RunnableAction{
-		
-		private Method m;
-		
-		public MethodAction(String sessionId, WampCallMessage message) {
-			super(sessionId, message);
-		}
-		
-		private void setMethod(Method method){
-			m = method;
-		}
-		
-		public void run() {
-			try{
-				try{
-					if(log.isTraceEnabled())
-						log.trace("Calling Method " + m.getName() + " of class " + objectClass.getClass().getName());
-					
-					WritableWampArrayObject result = (WritableWampArrayObject) m.invoke(objectClass, sessionId, message);
-					//TODO change test, handle with a exception or do not send result automatically or....
-					//NoReturn must be used in case of multiple result only.
-					if(result != WritableWampArrayObject.NORETURN)
-						sendResult(message.getCallId(), result);
-						
-				}catch(InvocationTargetException e){
-					if(log.isDebugEnabled()){
-						log.debug("Error on action " + message.getCallId(),e.getMessage());
-						if(log.isTraceEnabled())
-							log.trace("Debug stacktrace ",e);
-					}
-					
-					sendError(message.getCallId(), message.getProcId(), e.getTargetException());
-			
-				} catch (IllegalArgumentException e) {
-					log.warn("blabla",e);
-				} catch (IllegalAccessException e) {
-					log.warn("blabla",e);
+			return new RunnableAction(sessionId, message){			
+				protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception {
+					method.invoke(objectClass, sessionID, args, sender);
 				}
-			}catch(Exception e){
-				//TODO log
-				log.debug("Unable send response blabla");
-			}
+			};
 		}
 		
+		if(log.isTraceEnabled())
+			log.trace("Unable to find method for " + message.getProcId());
+		return null;
 	}
 }

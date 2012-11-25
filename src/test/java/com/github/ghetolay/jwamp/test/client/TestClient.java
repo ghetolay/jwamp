@@ -23,8 +23,6 @@ import static org.testng.AssertJUnit.fail;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -38,12 +36,14 @@ import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampWebSocket;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.test.server.SomeObject;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class TestClient {
+	
+	//TODO Test multiple call result
 	
 	protected static final Logger log = LoggerFactory.getLogger(TestClient.class);
 	
@@ -62,6 +62,8 @@ public class TestClient {
 	public void connect(){
 		try{
 			WampJettyFactory wampFact = WampJettyFactory.getInstance();
+			
+			//wampFact.getSerializer().setDesiredFormat(WampSerializer.format.BINARY);
 			
 			wampFact.setWampParameter(new DefaultWampParameter.SimpleClientParameter(getClass().getResourceAsStream("/wamp-client.xml"), getEventListener()));
 			wamp = wampFact.connect(new URI("ws://localhost:8080"), 1000, 1000, ReconnectPolicy.YES);
@@ -108,19 +110,14 @@ public class TestClient {
 	
 	@Test(dependsOnMethods = {"connect"})
 	public void callSimple() throws IOException, UnsupportedWampActionException, TimeoutException, SerializationException{
-		ReadableWampArrayObject msg = wamp.call("CallTest");
+		WampArguments msg = wamp.simpleCall("CallTest");
 
 		assertNotNull("Simple Remote Call",msg);
 	}
 	
 	@Test(dependsOnMethods = {"connect"})
 	public void callReturnOneList() throws IOException, UnsupportedWampActionException, TimeoutException, SerializationException{
-		ReadableWampArrayObject msg = wamp.call("oneList");
-		
-		List<String> list = new ArrayList<String>();
-		list.add("lol");
-		list.add("prout");
-		list.add("youk");
+		WampArguments msg = wamp.simpleCall("oneList");
 		
 		assertEquals("lol",   msg.nextObject(String.class));
 		assertEquals("prout", msg.nextObject(String.class));
@@ -130,7 +127,7 @@ public class TestClient {
 	
 	@Test(dependsOnMethods = {"connect"})
 	public void callSingleReturn() throws IOException, UnsupportedWampActionException, TimeoutException, SerializationException{
-		ReadableWampArrayObject msg = wamp.call("singleReturn");
+		WampArguments msg = wamp.simpleCall("singleReturn");
 		
 		assertEquals(Integer.valueOf(1),msg.nextObject(Integer.class));
 		assertNull(msg.nextObject());
@@ -143,28 +140,41 @@ public class TestClient {
 		obj.setFieldOne("b");
 		obj.setFieldTwo(2);
 		
-		ReadableWampArrayObject msg = wamp.call("echo", "a", 45, obj, "a");
+		WampArguments msg = wamp.simpleCall("echo", "a", 45, obj, "a");
 
 		assertEquals(  "a" ,  msg.nextObject(String.class)             );
 		assertEquals(  45  ,  msg.nextObject(Integer.class).intValue() );
 		assertEquals(  obj ,  msg.nextObject(SomeObject.class)         );
 		assertEquals(  "a" ,  msg.nextObject(String.class)             );
 
-		assertNull(msg.nextObject());
+		assertTrue(!msg.hasNext());
+	}
+	
+	@Test(dependsOnMethods = {"connect"})
+	public void callArrayArg() throws IOException, UnsupportedWampActionException, TimeoutException, SerializationException{
+		WampArguments msg = wamp.simpleCall("arrayArgs");
+		
+		assertEquals( 10 , msg.nextObject(int.class).intValue() );
+		assertEquals( 11 , msg.nextObject(int.class).intValue() );
+		assertEquals( 12 , msg.nextObject(int.class).intValue() );
+		assertEquals( 13 , msg.nextObject(int.class).intValue() );
+		assertTrue(!msg.hasNext());
 	}
 	
 	@AfterClass()
 	public void shutdownServer() throws IOException, UnsupportedWampActionException, SerializationException{		
 		try {
-			wamp.call("Manage", 1,"shutdown");
+			wamp.call("Manage", -1,"shutdown");
 		} catch (TimeoutException e){}
 		
 		wamp.getConnection().close(10000, "");
 	}
 	
 	@Test(dependsOnMethods = {"testAutoSubscribeResponse"})
-	public void testAutoReconnectAutoResubscribe() throws IOException, UnsupportedWampActionException, InterruptedException, SerializationException{
-		wamp.call("Manage", 1, null, "restart");
+	public void testAutoReconnectAutoResubscribe() throws IOException, UnsupportedWampActionException, InterruptedException, SerializationException, TimeoutException{
+		try {
+			wamp.call("Manage", -1, "restart");
+		} catch (TimeoutException e){}
 		
 		disconnected = true;
 		waitAfterRestart.start();

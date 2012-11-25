@@ -25,13 +25,13 @@ import org.msgpack.annotation.Message;
 @Message
 public class WampSubscribeMessage extends WampUnsubscribeMessage {
 
-	protected ReadableWampArrayObject args;
+	protected WampArguments args;
 
 	protected WampSubscribeMessage(){
 		super(SUBSCRIBE);
 	}
 
-	public ReadableWampArrayObject getArguments(){
+	public WampArguments getArguments(){
 		return args;
 	}
 	

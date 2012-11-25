@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,27 +30,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampPublishMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampSubscribeMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampUnsubscribeMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class DefaultEventSubscriber implements WampEventSubscriber {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-
-	private static final int[] msgType = new int[] { WampMessage.EVENT }; 
 	
 	private WampConnection conn;
 
 	private Set<SubSet> topics = new HashSet<SubSet>();
 
-	private Map<String, ResultListener<ReadableWampArrayObject>> eventListeners = new HashMap<String, ResultListener<ReadableWampArrayObject>>();
+	private Map<String, ResultListener<WampArguments>> eventListeners = new HashMap<String, ResultListener<WampArguments>>();
 	private ResultListener<EventResult> globalListener;
 
 	public DefaultEventSubscriber(Collection<WampSubscription> topics, ResultListener<EventResult> globalListener){
@@ -58,10 +56,6 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			this.topics.add(new SubSet(sub));
 		
 		this.globalListener = globalListener;
-	}
-
-	public int[] getMsgType(){
-		return msgType;
 	}
 	
 	public void onConnected(WampConnection connection) {
@@ -76,44 +70,48 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 				if(log.isTraceEnabled())
 					log.trace("Warning verbose : ", e);
 			}
-
 	}
 
 	public void onClose(String sessionId, int closeCode) {}
 
 	public boolean onMessage(String sessionId, WampMessage message){
 
-		onEvent((WampEventMessage)message);
-		return true;
+		if(message.getMessageType() == WampMessage.EVENT){
+			onEvent((WampEventMessage)message);
+			return true;
+		}
+		
+		return false;
 	}
 
 	private void onEvent(WampEventMessage msg){	
 		//TODO: ThreadPool shared with RPC
 		if(eventListeners.containsKey(msg.getTopicId())){
 			try{
-				 eventListeners.get(msg.getTopicId()).onResult(msg.getEvent());
+				 eventListeners.get(msg.getTopicId()).onResult(msg.getEvents());
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 		}
 		else if(globalListener != null)
-			globalListener.onResult(new EventResult(msg.getTopicId(), msg.getEvent()));
+			globalListener.onResult(new EventResult(msg.getTopicId(), msg.getEvents()));
 
 	}
 
 	private void subscribe(SubSet s) throws IOException, SerializationException{
 		OutputWampSubscribeMessage msg = new OutputWampSubscribeMessage(s.sub.getTopicId());
 
-		WritableWampArrayObject args = s.sub.getSubscribeArguments();
-
-		if(args != null)
-			msg.setArguments(args);
+		msg.setArgument(s.sub.getSubscribeArguments());
 
 		conn.sendMessage(msg);
 	}
 
-	public void subscribe(String topicId) throws IOException, SerializationException{
-		subscribe(new WampSubscription.Impl(topicId));
+	public void subscribe(String topicId) throws IOException{
+		try {
+			subscribe(new WampSubscription.Impl(topicId));
+		} catch (SerializationException e) {
+			log.error("Serialization error on unsubscribe message");
+		}
 	}
 
 	public void subscribe(WampSubscription subscription) throws IOException, SerializationException {
@@ -135,7 +133,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			log.trace("Already subscribed to the topic : " + subscription.getTopicId());
 	}
 
-	public void subscribe(WampSubscription subscription, ResultListener<ReadableWampArrayObject> eventListener) throws IOException, SerializationException {
+	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, SerializationException {
 
 		try{
 			subscribe(subscription);
@@ -147,9 +145,13 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		}
 	}
 
-	public void unsubscribe(String topicId) throws IOException, SerializationException {
+	public void unsubscribe(String topicId) throws IOException {
 		if(topics.contains(topicId)){
-			conn.sendMessage(new OutputWampUnsubscribeMessage(topicId));
+			try {
+				conn.sendMessage(new OutputWampUnsubscribeMessage(topicId));
+			} catch (SerializationException e) {
+				log.error("Serialization error on unsubscribe message");
+			}
 
 			topics.remove(topicId);
 		}
@@ -157,15 +159,26 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			eventListeners.remove(topicId);
 	}
 
-	public void publish(String topicId, WritableWampArrayObject event) throws IOException, SerializationException {
+	public void unsubscribeAll() throws IOException{
+		for(Iterator<SubSet> it = topics.iterator(); it.hasNext();){
+			try {
+				conn.sendMessage(new OutputWampUnsubscribeMessage( it.next().sub.getTopicId() ));
+			} catch (SerializationException e) {
+				log.error("Serialization error on unsubscribe message");
+			}
+			it.remove();
+		}
+	}
+	
+	public void publish(String topicId, Object event) throws IOException, SerializationException {
 		publish(topicId, event, true);
 	}
 
-	public void publish(String topicId, WritableWampArrayObject event, boolean excludeMe) throws IOException, SerializationException {
+	public void publish(String topicId, Object event, boolean excludeMe) throws IOException, SerializationException {
 		publish(topicId, event, true, null, null );
 	}
 
-	public void publish(String topicId, WritableWampArrayObject event, boolean excludeMe, List<String> eligible) throws IOException, SerializationException {
+	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException, SerializationException {
 		if(eligible != null){
 			List<String> excludes = new ArrayList<String>();
 			if(excludeMe)
@@ -176,14 +189,14 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			publish(topicId, event, excludeMe, null , null);
 	}
 
-	public void publish(String topicId, WritableWampArrayObject event, List<String> exclude, List<String> eligible) throws IOException, SerializationException {
+	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, SerializationException {
 		if(exclude.size() == 1 && exclude.get(0).equals(conn.getSessionId()) && eligible == null)
 			publish(topicId, event, true, null, null);
 		else
 			publish(topicId, event, false, exclude, eligible);
 	}
 
-	private void publish(String topicId, WritableWampArrayObject event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException, SerializationException{
+	private void publish(String topicId, Object event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException, SerializationException{
 
 		if(!topics.contains(topicId))
 			subscribe(topicId);
@@ -212,9 +225,9 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 
 	public class EventResult{
 		private String topicId;
-		private ReadableWampArrayObject event;
+		private WampArguments event;
 
-		private EventResult(String topicId, ReadableWampArrayObject event){
+		private EventResult(String topicId, WampArguments event){
 			this.topicId = topicId;
 			this.event = event;
 		}
@@ -223,7 +236,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			return topicId;
 		}
 
-		public ReadableWampArrayObject getEvent(){
+		public WampArguments getEvent(){
 			return event;
 		}
 	}

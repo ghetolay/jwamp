@@ -49,7 +49,7 @@ public class WampJettyFactory extends WampFactory{
 	}
 		
 	protected WampConnection getConnection(URI uri, long timeout, ReconnectPolicy reconnectPolicy, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) throws TimeoutException, Exception{
-		JettyConnection connection = new JettyConnection(uri,getObjectMapper(),handlers,wr);
+		JettyConnection connection = new JettyConnection(uri,getSerializer(),handlers,wr);
 		connection.setReconnectPolicy(reconnectPolicy);
 		
 		connect(uri, timeout, connection);
@@ -75,15 +75,15 @@ public class WampJettyFactory extends WampFactory{
 	}
 	
 	public WampJettyHandler newJettyHandler(WampParameter param){
-		return new WampJettyHandler(param, getObjectMapper(), null);
+		return new WampJettyHandler(param, getSerializer(), null);
 	}
 	
 	public WampJettyHandler newJettyHandler(WampWebSocketListener listener){
-		return new WampJettyHandler(getParameter(), getObjectMapper(), listener);
+		return new WampJettyHandler(getParameter(), getSerializer(), listener);
 	}
 	
 	public WampJettyHandler newJettyHandler(WampParameter param, WampWebSocketListener listener){
-		return new WampJettyHandler(param, getObjectMapper(), listener);
+		return new WampJettyHandler(param, getSerializer(), listener);
 	}
 	
 	public static WampJettyFactory getInstance(){

@@ -20,7 +20,7 @@ public class WampEventMessage extends WampMessage{
 
 	protected String topicId;
 	
-	protected ReadableWampArrayObject event;
+	protected WampArguments event;
 	
 	protected WampEventMessage(){
 		messageType = EVENT;
@@ -30,7 +30,7 @@ public class WampEventMessage extends WampMessage{
 		return topicId;
 	}
 
-	public ReadableWampArrayObject getEvent(){
+	public WampArguments getEvents(){
 		return event;
 	}
 	

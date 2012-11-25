@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import com.github.ghetolay.jwamp.WampMessageHandler;
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
@@ -29,7 +29,8 @@ public interface WampRPCSender extends WampMessageHandler{
 	
 	//TODO a voir seulement une fonction call
 	//how handle callerror : null ? exception ?
-	public ReadableWampArrayObject call(String procId, long timeout, Object... args) throws SerializationException, IOException, TimeoutException;
-	public String call(String procId, long timeout, ResultListener<WampCallResultMessage> listener, Object... args) throws SerializationException, IOException;
-
+	public WampArguments call(String procId, long timeout, Object... args) 
+			throws SerializationException, IOException, TimeoutException;
+	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) 
+			throws SerializationException, IOException;
 }

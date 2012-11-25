@@ -19,8 +19,6 @@ package com.github.ghetolay.jwamp;
 import java.net.URI;
 import java.util.Collection;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +45,8 @@ public abstract class WampFactory {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
 	private WampParameter param = new DefaultWampParameter.SimpleClientParameter();
-	//TODO: possibility to use binary message so no jsonmapper...
-	private static ObjectMapper mapper = new ObjectMapper();
-	//maybe give the possibility to change this configuration per connection
-	static{
-		mapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_DEFAULT);
-	}
+	
+	private WampSerializer serializer = new WampSerializer();
 	
 	private long timeout = 5000;
 	private long waitTimeout = 5000;
@@ -109,13 +103,12 @@ public abstract class WampFactory {
 		this.param = param;
 	}
 	
-	/**
-	 * The {@link ObjectMapper} meant to be share with each connection for better efficiency.
-	 * 
-	 * @return The shared {@link ObjectMapper} Object.
-	 */
-	protected ObjectMapper getObjectMapper(){
-		return mapper;
+	public WampSerializer getSerializer() {
+		return serializer;
+	}
+
+	public void setSerializer(WampSerializer serializer) {
+		this.serializer = serializer;
 	}
 	
 	/**

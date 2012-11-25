@@ -24,10 +24,9 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 public class SimpleEventAction implements EventAction {
 
@@ -46,7 +45,7 @@ public class SimpleEventAction implements EventAction {
 		this.sender = sender;
 	}
 	
-	public void subscribe(String sessionId, ReadableWampArrayObject args) {
+	public void subscribe(String sessionId, WampArguments args) {
 		subscriber.add(sessionId);
 	}
 
@@ -75,7 +74,7 @@ public class SimpleEventAction implements EventAction {
 		return res;	
 	}
 	
-	public void eventAll(WritableWampArrayObject event){
+	public void eventAll(Object event){
 		for(String s : subscriber)
 			if(sender != null)
 				try{

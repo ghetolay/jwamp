@@ -15,11 +15,8 @@
 */
 package com.github.ghetolay.jwamp.test.server;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.rpc.CallResultSender;
 
 /**
  * @author ghetolay
@@ -28,21 +25,19 @@ import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 public class TestDefinedAction {
 
 	
-	public WritableWampArrayObject doEcho(String sessionId, WampCallMessage msg){
-		return new WritableWampArrayObject(msg.getArguments());
+	public void doEcho(String sessionId, WampArguments arguments, CallResultSender sender){
+		sender.sendResult(true,arguments);
 	}
 	
-	public WritableWampArrayObject doOneList(String sessionId, WampCallMessage msg){
-		List<String> list = new ArrayList<String>();
-		
-		list.add("lol");
-		list.add("prout");
-		list.add("youk");
-		
-		return new WritableWampArrayObject(list);
+	public void doOneList(String sessionId, WampArguments arguments, CallResultSender sender){		
+		sender.sendResult(true,"lol","prout","youk");
 	}
 	
-	public WritableWampArrayObject doSingleReturn(String sessionId, WampCallMessage msg){
-		return WritableWampArrayObject.withFirstObject(1);
+	public void doSingleReturn(String sessionId, WampArguments arguments, CallResultSender sender){
+		sender.sendResult(true,1);
+	}
+	
+	public void doArrayArgs(String sessionId, WampArguments arguments, CallResultSender sender){
+		sender.sendResult(true, new int[]{10,11,12,13});
 	}
 }

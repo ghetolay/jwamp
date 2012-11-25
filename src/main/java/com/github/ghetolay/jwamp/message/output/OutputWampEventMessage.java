@@ -17,6 +17,7 @@ package com.github.ghetolay.jwamp.message.output;
 
 import org.msgpack.annotation.Message;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 
 /**
@@ -26,21 +27,23 @@ import com.github.ghetolay.jwamp.message.WampEventMessage;
 @Message
 public class OutputWampEventMessage extends WampEventMessage{
 
+	private Object arg;
+	
 	public void setTopicId(String topicId) {
 		this.topicId = topicId;
 	}
 	
-	public void setEvent(WritableWampArrayObject event){
-		this.event = event;
+	public void setEvent(Object arg){
+		this.arg = arg;
+	}
+	
+	public Object getEvent(){
+		return arg;
 	}
 	
 	@Override
-	public WritableWampArrayObject getEvent(){
-		return (WritableWampArrayObject) event;
-	}
-	
-	public void addEventObject(Object obj){
-		((WritableWampArrayObject)event).addObject(obj);
+	public WampArguments getEvents(){
+		throw new IllegalStateException("Use getEvent()");
 	}
 
 }

@@ -21,7 +21,7 @@ public class WampCallMessage extends WampMessage{
 	protected String callId;
 	protected String procId;
 	
-	protected ReadableWampArrayObject args;
+	protected WampArguments args;
 	
 	protected WampCallMessage(){
 		messageType = CALL;
@@ -35,12 +35,12 @@ public class WampCallMessage extends WampMessage{
 		return procId;
 	}
 	
-	public ReadableWampArrayObject getArguments(){
+	public WampArguments getArguments(){
 		return args;
 	}
 	
 	@Override
 	public String toString(){
-		return " WampCallMessage { "+ callId+ ", " + procId + ", " + args + " } ";
+		return " WampCallMessage { "+ callId+ ", " + procId + ", " + args.size() + " arguments} ";
 	}
 }

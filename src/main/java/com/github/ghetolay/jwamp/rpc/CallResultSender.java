@@ -13,10 +13,7 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
-
-import com.github.ghetolay.jwamp.utils.ClassType;
-import com.github.ghetolay.jwamp.utils.DynamicValue;
+package com.github.ghetolay.jwamp.rpc;
 
 
 
@@ -24,16 +21,6 @@ import com.github.ghetolay.jwamp.utils.DynamicValue;
  * @author ghetolay
  *
  */
-public interface ReadableWampArrayObject {
-	
-	public DynamicValue nextObject();
-	public <T> T nextObject(Class<T> ct);
-	/** Do not work with MessagePack
-	 * 
-	 * @param ct
-	 * @return
-	 */
-	public <T> T nextObject(ClassType<T> ct);
-
-	public int size();
+public interface CallResultSender {
+	public boolean sendResult(boolean last, Object... result);
 }

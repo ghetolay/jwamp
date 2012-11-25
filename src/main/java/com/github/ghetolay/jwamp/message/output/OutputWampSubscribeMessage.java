@@ -17,6 +17,7 @@ package com.github.ghetolay.jwamp.message.output;
 
 import org.msgpack.annotation.Message;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 /**
  * @author ghetolay
@@ -25,7 +26,7 @@ import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 @Message
 public class OutputWampSubscribeMessage extends WampSubscribeMessage {
 	
-	private WritableWampArrayObject args;
+	private Object args;
 	
 	public OutputWampSubscribeMessage(){}
 	
@@ -33,23 +34,22 @@ public class OutputWampSubscribeMessage extends WampSubscribeMessage {
 		super();
 		
 		this.topicId = topicId;
-		args = new WritableWampArrayObject();
 	}
 	
 	public void setTopicId(String topicId) {
 		this.topicId = topicId;
 	}
 	
-	public void setArguments(WritableWampArrayObject args){
-		this.args = args;
+	public void setArgument(Object arg){
+		this.args = arg;
+	}
+	
+	public Object getArgument(){
+		return args;
 	}
 	
 	@Override
-	public WritableWampArrayObject getArguments(){
-		return (WritableWampArrayObject) args;
-	}
-	
-	public void addArgument(Object arg) {
-		((WritableWampArrayObject)args).addObject(arg);
+	public WampArguments getArguments(){
+		throw new IllegalStateException("Use getArgument()");
 	}
 }

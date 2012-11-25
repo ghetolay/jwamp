@@ -24,7 +24,6 @@ import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.utils.ClassType;
 import com.github.ghetolay.jwamp.utils.DynamicValue;
 import com.github.ghetolay.jwamp.utils.DynamicValueBuilder;
 
@@ -32,27 +31,19 @@ import com.github.ghetolay.jwamp.utils.DynamicValueBuilder;
  * @author ghetolay
  *
  */
-public class JSONWampArrayObject implements ReadableWampArrayObject{
+public class JSONArguments implements WampArguments{
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private JsonParser parser;
-	private boolean first = true;
 
-	public JSONWampArrayObject(JsonParser parser, boolean allowMultipleArguments){
-		this.parser = parser;
+	public JSONArguments(JsonParser parser){
+		if(parser.getCurrentToken() != null && parser.getCurrentToken() != JsonToken.END_ARRAY)
+			this.parser = parser;
 	}
 
 	public DynamicValue nextObject() {
 		return DynamicValueBuilder.fromObject( nextObject(Object.class) );
-	}
-	
-	public <T> T nextObject(ClassType<T> ct){
-		Class<T> clazz = ct.getEmbeddedClass();
-		if(clazz != null)
-			return nextObject(clazz);
-		
-		return nextObject((TypeReference<T>)ct);
 	}
 	
 	//TODO a bcp tester, liste vide, tout type de collection
@@ -62,23 +53,10 @@ public class JSONWampArrayObject implements ReadableWampArrayObject{
 			return null;
 
 		try{
-			//TODO special case when user send a type defined data =/= List
-			/*
-				if(first && parser.getCurrentToken() == JsonToken.START_ARRAY 
-						&& !type.getType() instanceof List)
-					parser.nextToken();
-			 */
-
 			if(parser.getCurrentToken() != null){
 				T result =  parser.readValueAs(type);
 				parser.nextToken();
-
-				if(result != null){
-					if(first)
-						first = false;
-
-					return result;
-				}
+				return result;
 			}
 
 		}catch(JsonProcessingException e){
@@ -98,19 +76,10 @@ public class JSONWampArrayObject implements ReadableWampArrayObject{
 			return null;
 
 		try{
-			if(first && parser.getCurrentToken()==JsonToken.START_ARRAY)
-				parser.nextToken();
-
 			if(parser.getCurrentToken() != null){
 				T result =  parser.readValueAs(c);
 				parser.nextToken();
-
-				if(result != null){
-					if(first)
-						first = false;
-
-					return result;
-				}
+				return result;
 			}
 		}catch(JsonProcessingException e){
 			if(log.isDebugEnabled())
@@ -122,6 +91,11 @@ public class JSONWampArrayObject implements ReadableWampArrayObject{
 
 		parser = null;
 		return null;
+	}
+	
+	//TODO count number of [] if currentToken = ] and it's the last it means it's the end
+	public boolean hasNext(){
+		return parser != null && parser.getCurrentToken() != JsonToken.END_ARRAY;
 	}
 	
 	public int size(){

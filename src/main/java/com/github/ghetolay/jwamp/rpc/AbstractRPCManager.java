@@ -24,12 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampMessageHandler;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallResultMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 /**
  * @author ghetolay
@@ -39,15 +39,10 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final int[] msgType = new int[]{ WampMessage.CALL };
 	private WampConnection conn;
-	
+
 	private ExecutorService executor = Executors.newFixedThreadPool(25);
-	
-	public int[] getMsgType(){
-		return msgType;
-	}
-	
+
 	public void onConnected(WampConnection connection) {
 		conn = connection;
 	}
@@ -55,32 +50,47 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 	public void onClose(String sessionId, int closeCode) {
 		conn = null;
 	}
-	
+
 	public boolean onMessage(String sessionId, WampMessage message) {
-		RunnableAction action = getRunnableAction(sessionId, (WampCallMessage)message);
-		if(action != null){
-			executor.execute(action);
-			return true;
+		if(message.getMessageType() == WampMessage.CALL){
+			RunnableAction action = getRunnableAction(sessionId, (WampCallMessage)message);
+			if(action != null){
+				executor.execute(action);
+				return true;
+			}
 		}
-		
+
 		return false;
 	}
-	
-	protected void sendResult(String callId, WritableWampArrayObject result) throws IOException, SerializationException{
-		OutputWampCallResultMessage resultMsg;
 
-		if(result != null && result instanceof MultipleResult)
-			resultMsg = new OutputWampCallResultMessage(((MultipleResult)result).isLast());
-		else
-			resultMsg = new OutputWampCallResultMessage();
+	/**
+	 * any result will be sent.
+	 * 
+	 * @param callId
+	 * @param result
+	 * @param last
+	 * @throws IOException
+	 * @throws SerializationException
+	 * @see #sendResult(String, Object)
+	 */
+	private void sendResult(String callId, boolean last, Object... result) throws IOException, SerializationException{
 
+		OutputWampCallResultMessage resultMsg = new OutputWampCallResultMessage(last);
+
+		if(result != null && result.length > 0){
+			if(result.length == 1)
+				resultMsg.setResult(result[0]);
+			else
+				resultMsg.setResult(result);
+		}
+		
 		resultMsg.setCallId(callId);
-		resultMsg.setResult(result);
+
 
 		conn.sendMessage(resultMsg);
 	}
 
-	protected void sendError(String callId, String procId, Throwable e) throws IOException, SerializationException{
+	private void sendError(String callId, String procId, Throwable e) throws IOException, SerializationException{
 		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage(callId, procId,e.getLocalizedMessage());
 		if(!e.getMessage().equals(e.getLocalizedMessage()))
 			errorMsg.setErrorDetails(e.getMessage());
@@ -89,15 +99,47 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 	}
 
 	protected abstract RunnableAction getRunnableAction(String sessionId, WampCallMessage message);
-	
-	public static abstract class RunnableAction implements Runnable{
+
+	public abstract class RunnableAction implements Runnable, CallResultSender{
 
 		protected String sessionId;
 		protected WampCallMessage message;
-		
+
 		public RunnableAction(String sessionId, WampCallMessage message) {
 			this.sessionId = sessionId;
 			this.message = message;
+		}
+
+		protected abstract void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception;
+
+		public void run(){ 
+
+			try{	
+				try {
+					excuteAction(sessionId, message.getArguments(), this);
+				} catch (Exception e) {
+					if(log.isDebugEnabled())
+						log.debug("Error on action " + message.getCallId(),e);
+
+					sendError(message.getCallId(), message.getProcId(), e);
+					return;
+				}
+			}catch(Exception e){
+				if(log.isDebugEnabled())
+					log.debug("Unable to send response for call action " + message.getProcId() + " with id " + message.getCallId(),e);
+			}
+		}
+		
+		public boolean sendResult(boolean last, Object... result){
+			try {
+				AbstractRPCManager.this.sendResult(message.getCallId(),last,result);
+				return true;
+			} catch (Exception e) {
+				if(log.isDebugEnabled())
+					log.debug("Unable to send response for call action with id " + message.getCallId(),e);
+			} 
+			
+			return false;
 		}
 		
 	}

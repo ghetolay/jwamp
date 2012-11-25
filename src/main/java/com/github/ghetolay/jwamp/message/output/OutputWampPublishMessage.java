@@ -17,12 +17,15 @@ package com.github.ghetolay.jwamp.message.output;
 
 import java.util.List;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 /**
  * @author ghetolay
  *
  */
 public class OutputWampPublishMessage extends WampPublishMessage{
+	
+	private Object arg;
 	
 	public void setTopicId(String topicId) {
 		this.topicId = topicId;
@@ -40,16 +43,16 @@ public class OutputWampPublishMessage extends WampPublishMessage{
 		this.excludeMe = excludeMe;
 	}
 	
-	public void setEvent(WritableWampArrayObject event) {
-		this.event = event;
+	public void setEvent(Object arg){
+		this.arg = arg;
+	}
+	
+	public Object getEvent(){
+		return arg;
 	}
 	
 	@Override
-	public WritableWampArrayObject getEvent(){
-		return (WritableWampArrayObject) event;
-	}
-	
-	public void addEvent(Object event) {
-		((WritableWampArrayObject)this.event).addObject(event);
+	public WampArguments getEvents(){
+		throw new IllegalStateException("Use getEvent()");
 	}
 }

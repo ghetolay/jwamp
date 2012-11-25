@@ -19,8 +19,6 @@ import com.github.ghetolay.jwamp.message.WampMessage;
 
 public interface WampMessageHandler {
 	
-	public int[] getMsgType();
-	
 	public void onConnected(WampConnection connection);
 	
 	public boolean onMessage(String sessionId, WampMessage message);

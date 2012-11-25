@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 
 /**
@@ -23,8 +25,20 @@ import com.github.ghetolay.jwamp.message.WampCallResultMessage;
  */
 public class OutputWampCallResultMessage extends WampCallResultMessage{
 	
+	private Object arg;
+	
 	public OutputWampCallResultMessage(){
 		super(true);
+	}
+	
+	public OutputWampCallResultMessage(WampCallMessage callMsg, boolean last){
+		super(last);
+		
+		setCallId(callMsg.getCallId());
+	}
+	
+	public OutputWampCallResultMessage(WampCallMessage callMsg){
+		this(callMsg, true);
 	}
 	
 	public OutputWampCallResultMessage(boolean last){
@@ -35,16 +49,16 @@ public class OutputWampCallResultMessage extends WampCallResultMessage{
 		this.callId = callId;
 	}
 	
-	public void setResult(WritableWampArrayObject result){		
-		this.result = result;
+	public void setResult(Object arg){
+		this.arg = arg;
+	}
+	
+	public Object getResult(){
+		return arg;
 	}
 	
 	@Override
-	public WritableWampArrayObject getResult(){
-		return (WritableWampArrayObject) result;
-	}
-	
-	public void addResult(Object result){
-		((WritableWampArrayObject)result).addObject(result);
+	public WampArguments getResults(){
+		throw new IllegalStateException("Use getResult()");
 	}
 }

@@ -20,7 +20,7 @@ import java.util.List;
 public class WampPublishMessage extends WampMessage{
 
 	protected String topicId;
-	protected Object event;
+	protected WampArguments event;
 	protected List<String> exclude;
 	protected List<String> eligible;
 	protected boolean excludeMe;
@@ -33,7 +33,7 @@ public class WampPublishMessage extends WampMessage{
 		return topicId;
 	}
 
-	public Object getEvent() {
+	public WampArguments getEvents() {
 		return event;
 	}
 

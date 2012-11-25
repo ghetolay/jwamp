@@ -76,7 +76,7 @@ public interface WampConnection {
 	 * @see WampWebSocket
 	 * 
 	 */
-	public void	sendAsTextMessage(WampMessage msg) throws SerializationException, IOException;
+	public void sendAsTextMessage(WampMessage msg) throws SerializationException, IOException;
 	
 	/**
 	 * Set whether we should stop at the first successful handler or not.
@@ -93,20 +93,9 @@ public interface WampConnection {
 	 */
 	public boolean isExclusiveHandler();
 	
-	/**
-	 * set if it would rather use binary message (Message Pack) than text message (JSON). 
-	 * 
-	 * @param true if binary message if preferred.
-	 */
-	public void setPreferBinaryMessaging(boolean bool);
+	public void setSerializer(WampSerializer serializer);
 
-	/**
-	 * Return the message format preference.
-	 * 
-	 * @return true if binary message if preferred.
-	 * @see WampConnection.setPreferBinaryMessaging
-	 */
-	public boolean preferBinaryMessaging();
+	public WampSerializer getSerializer();
 	
 	/**
 	 * Set the reconnect policy.
@@ -126,7 +115,7 @@ public interface WampConnection {
 	public ReconnectPolicy getReconnectPolicy();
 	
 	/**
-	 * Add a {@link WampMessageHandler}.
+	 * Append a {@link WampMessageHandler} to the end.
 	 * 
 	 * @param handler The {@link WampMessageHandler} to add.
 	 * @see WampMessageHandler
@@ -163,6 +152,21 @@ public interface WampConnection {
 	 * @return The session Id of this connection.
 	 */
 	public String getSessionId();
+	
+	/**
+	 * Set the max time in millisecond the connection can be idle before it close
+	 * 
+	 * @param ms Time in millisecond.
+	 */
+	public void setMaxIdleTime(int ms);
+	
+	/**
+	 * Return the max time in millisecond the connection can be in the idle state before it close.
+	 * 
+	 * 
+	 * @return Max time in millisecond the connection can be idle before it close.
+	 */
+	public int getMaxIdleTime();
 	
 	/**
 	 * 

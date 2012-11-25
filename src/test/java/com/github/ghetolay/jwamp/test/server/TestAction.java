@@ -16,22 +16,22 @@
 package com.github.ghetolay.jwamp.test.server;
 
 import com.github.ghetolay.jwamp.event.SimpleEventAction;
-import com.github.ghetolay.jwamp.message.ReadableWampArrayObject;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.rpc.CallAction;
+import com.github.ghetolay.jwamp.rpc.CallResultSender;
 
 public class TestAction extends SimpleEventAction implements CallAction{
 
 	@Override
-	public void subscribe(String sessionId, ReadableWampArrayObject args){
+	public void subscribe(String sessionId, WampArguments args){
 		super.subscribe(sessionId, args);
 
-		eventAll(WritableWampArrayObject.withFirstObject("EventAction"));
+		eventAll("EventAction");
 	}
 	
 	//RPC
-	public WritableWampArrayObject execute(String sessionId, ReadableWampArrayObject args) {
-		return null;
+	public void execute(String sessionId, WampArguments args, CallResultSender sender) {
+		sender.sendResult(true, (Object)null);
 	}
 	
 }

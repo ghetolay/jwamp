@@ -16,8 +16,7 @@
 package com.github.ghetolay.jwamp.event;
 
 import com.github.ghetolay.jwamp.message.SerializationException;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 
 public interface EventSender {
-	public void sendEvent(String sessionId, String eventId, WritableWampArrayObject event) throws SerializationException;
+	public void sendEvent(String sessionId, String eventId, Object event) throws SerializationException;
 }

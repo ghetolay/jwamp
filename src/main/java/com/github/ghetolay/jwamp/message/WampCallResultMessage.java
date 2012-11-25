@@ -20,7 +20,7 @@ package com.github.ghetolay.jwamp.message;
 public class WampCallResultMessage extends WampMessage{
 
 	protected String callId;
-	protected ReadableWampArrayObject result;
+	protected WampArguments result;
 	
 	protected WampCallResultMessage(){
 		this(true);
@@ -34,7 +34,7 @@ public class WampCallResultMessage extends WampMessage{
 		return callId;
 	}
 	
-	public ReadableWampArrayObject getResult(){
+	public WampArguments getResults(){
 		return result;
 	}
 
@@ -44,6 +44,6 @@ public class WampCallResultMessage extends WampMessage{
 	
 	@Override
 	public String toString(){
-		return " WampCallResultMessage { "+ callId+ " , " + result + " } ";
+		return " WampCallResultMessage { "+ callId+ " , " + result.size() + " results} ";
 	}
 }

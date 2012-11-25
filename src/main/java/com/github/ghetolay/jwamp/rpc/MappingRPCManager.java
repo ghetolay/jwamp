@@ -16,8 +16,8 @@
 package com.github.ghetolay.jwamp.rpc;
 
 
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.output.WritableWampArrayObject;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
 
 public class MappingRPCManager extends AbstractRPCManager{
@@ -50,28 +50,9 @@ public class MappingRPCManager extends AbstractRPCManager{
 			this.action = action;
 		}
 
-		public void run(){ 
-		
-			WritableWampArrayObject result = null;
-			try{
-				try {
-					result = action.execute(sessionId, message.getArguments());
-				} catch (Exception e) {
-					if(log.isDebugEnabled())
-						log.debug("Error on action " + message.getCallId(),e);
-					
-					sendError(message.getCallId(), message.getProcId(), e);
-					return;
-				}
-				if(result != WritableWampArrayObject.NORETURN)
-					sendResult(message.getCallId(), result);
-	
-			}catch(Exception e){
-				if(log.isDebugEnabled())
-					log.debug("Unable to send response for call action " + message.getProcId() + " with id " + message.getCallId(),e);
-			}
-		}
-		
+		protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception {
+			action.execute(sessionID, args, sender);
+		}		
 	}
 
 }

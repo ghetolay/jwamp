@@ -28,10 +28,22 @@ public class DynamicValueBuilder {
 
 
 	public static DynamicValue fromObject(Object obj){
+		if(obj == null)
+			return null;
+		
 		if(obj instanceof BooleanValue)
 			return new BooleanValue((Boolean)obj);
 		
-		if(obj instanceof Integer || obj instanceof Float || obj instanceof Long || obj instanceof Double)
+		if(obj instanceof Integer)
+			return new DoubleValue((Integer)obj);
+			
+		if(obj instanceof Float)
+			return new DoubleValue((Float)obj);
+			
+		if(obj instanceof Long)
+			return new DoubleValue((Long)obj);
+			
+		if(obj instanceof Double)
 			return new DoubleValue((Double)obj);
 		
 		if(obj instanceof String)
@@ -45,7 +57,7 @@ public class DynamicValueBuilder {
 		if(obj instanceof Map)
 			return new MapValue((Map<?, ?>)obj, true);
 		
-		throw new DynamicValueException();
+		throw new DynamicValueException("Unknow Value Type " + obj.getClass());
 	}
 
 	public static DynamicValue fromValue(Value v){
@@ -191,6 +203,12 @@ public class DynamicValueBuilder {
 
 	private static class DynamicValueException extends RuntimeException{
 		private static final long serialVersionUID = -6667860784049423058L;	
+		
+		public DynamicValueException(){}
+		
+		public DynamicValueException(String msg){
+			super(msg);
+		}
 	}
 	
 }
