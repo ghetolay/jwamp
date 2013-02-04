@@ -22,5 +22,5 @@ package com.github.ghetolay.jwamp.rpc;
  *
  */
 public interface CallResultSender {
-	public boolean sendResult(boolean last, Object... result);
+	public boolean sendResult(Object... result);
 }

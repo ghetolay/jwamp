@@ -129,9 +129,9 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 			}
 		}
 		
-		public boolean sendResult(boolean last, Object... result){
+		public boolean sendResult(Object... result){
 			try {
-				AbstractRPCManager.this.sendResult(message.getCallId(),last,result);
+				AbstractRPCManager.this.sendResult(message.getCallId(),result);
 				return true;
 			} catch (Exception e) {
 				if(log.isDebugEnabled())

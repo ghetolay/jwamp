@@ -26,18 +26,18 @@ public class TestDefinedAction {
 
 	
 	public void doEcho(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(true,arguments);
+		sender.sendResult(arguments);
 	}
 	
 	public void doOneList(String sessionId, WampArguments arguments, CallResultSender sender){		
-		sender.sendResult(true,"lol","prout","youk");
+		sender.sendResult("lol","prout","youk");
 	}
 	
 	public void doSingleReturn(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(true,1);
+		sender.sendResult(1);
 	}
 	
 	public void doArrayArgs(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(true, new int[]{10,11,12,13});
+		sender.sendResult(new int[]{10,11,12,13});
 	}
 }
