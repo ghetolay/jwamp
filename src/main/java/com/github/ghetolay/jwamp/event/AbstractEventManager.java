@@ -75,7 +75,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 	public void onSubscribe(String sessionId, WampSubscribeMessage wampSubscribeMessage) {
 		EventAction e = eventMapping.getAction(wampSubscribeMessage.getTopicId());
 		if(e != null)
-			e.subscribe(sessionId, wampSubscribeMessage.getArguments());
+			e.subscribe(sessionId);
 		else if(log.isDebugEnabled())
 			log.debug("unable to subscribe : action name doesn't not exist " + wampSubscribeMessage.getTopicId());
 	}

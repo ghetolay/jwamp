@@ -15,18 +15,13 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
-import org.msgpack.annotation.Message;
-
-import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 /**
  * @author ghetolay
  *
  */
-@Message
+
 public class OutputWampSubscribeMessage extends WampSubscribeMessage {
-	
-	private Object args;
 	
 	public OutputWampSubscribeMessage(){}
 	
@@ -38,18 +33,5 @@ public class OutputWampSubscribeMessage extends WampSubscribeMessage {
 	
 	public void setTopicId(String topicId) {
 		this.topicId = topicId;
-	}
-	
-	public void setArgument(Object arg){
-		this.args = arg;
-	}
-	
-	public Object getArgument(){
-		return args;
-	}
-	
-	@Override
-	public WampArguments getArguments(){
-		throw new IllegalStateException("Use getArgument()");
 	}
 }

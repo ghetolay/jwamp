@@ -25,9 +25,6 @@ public interface WampSubscription {
 	//topicId is supposed to be fix, used on equals
 	public String getTopicId();
 	
-	//can change over time, if we re-subscribe.
-	public Object getSubscribeArguments();
-	
 	public class Impl implements WampSubscription{
 
 		String topicId;
@@ -47,10 +44,6 @@ public interface WampSubscription {
 		
 		public String getTopicId() {
 			return topicId;
-		}
-
-		public Object getSubscribeArguments() {
-			return args;
 		}
 	}
 }

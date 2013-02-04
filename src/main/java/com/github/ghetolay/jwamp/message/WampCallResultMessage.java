@@ -23,11 +23,7 @@ public class WampCallResultMessage extends WampMessage{
 	protected WampArguments result;
 	
 	protected WampCallResultMessage(){
-		this(true);
-	}
-	
-	protected WampCallResultMessage(boolean last) {
-		messageType = last?CALLRESULT:CALLMORERESULT;
+		messageType = CALLRESULT;
 	}
 	
 	public String getCallId() {
@@ -36,10 +32,6 @@ public class WampCallResultMessage extends WampMessage{
 	
 	public WampArguments getResults(){
 		return result;
-	}
-
-	public boolean isLast(){
-		return messageType != CALLMORERESULT;
 	}
 	
 	@Override

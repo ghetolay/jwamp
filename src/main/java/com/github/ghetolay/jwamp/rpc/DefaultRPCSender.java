@@ -108,7 +108,6 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	public boolean onMessage(String sessionId, WampMessage msg) {
 		if(msg.getMessageType() == WampMessage.CALLRESULT
-			|| msg.getMessageType() == WampMessage.CALLMORERESULT
 			|| msg.getMessageType() == WampMessage.CALLERROR){
 				onCallResult((WampCallResultMessage)msg);
 				return true;
@@ -119,11 +118,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	private void onCallResult(WampCallResultMessage msg) {
 		if(resultListeners.containsKey(msg.getCallId())){
-			ResultListener<WampCallResultMessage> listener;
-			if(msg.isLast() || msg.getMessageType() == WampMessage.CALLERROR)
-				listener = resultListeners.remove(msg.getCallId());
-			else
-				listener = resultListeners.get(msg.getCallId());
+			ResultListener<WampCallResultMessage> listener = resultListeners.get(msg.getCallId());
 			
 			if(listener != null)
 				listener.onResult(msg);

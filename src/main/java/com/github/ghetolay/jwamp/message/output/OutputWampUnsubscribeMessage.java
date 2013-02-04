@@ -15,15 +15,13 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
-import org.msgpack.annotation.Message;
-
 import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 
 /**
  * @author ghetolay
  *
  */
-@Message
+
 public class OutputWampUnsubscribeMessage extends WampUnsubscribeMessage{
 	
 	protected OutputWampUnsubscribeMessage(){}

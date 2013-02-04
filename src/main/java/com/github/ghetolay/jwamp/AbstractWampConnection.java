@@ -62,7 +62,6 @@ public abstract class AbstractWampConnection implements WampConnection{
 	}
 
 	public abstract void sendMessage(String data) throws IOException;
-	public abstract void sendMessage(byte[] data) throws IOException;
 
 	public void onClose(int closeCode, String message){
 		if(log.isDebugEnabled())
@@ -122,23 +121,6 @@ public abstract class AbstractWampConnection implements WampConnection{
 	}
 
 	public void sendMessage(WampMessage msg) throws SerializationException, IOException{
-		if(serializer.getDesiredFormat() == WampSerializer.format.BINARY)
-			sendAsBinaryMessage(msg);
-		else
-			sendAsTextMessage(msg);
-	}
-
-	public void sendAsBinaryMessage(WampMessage msg) throws SerializationException, IOException{
-
-		byte[] bytes = WampMessageSerializer.serialize(msg, serializer.getPacker());
-		
-		sendMessage(bytes);
-
-		if(log.isDebugEnabled())
-			log.debug("Send Binary Message " + msg.toString());
-	}
-
-	public void sendAsTextMessage(WampMessage msg) throws SerializationException, IOException{
 
 		String jsonMsg = WampMessageSerializer.serialize(msg, serializer.getObjectMapper());
 		sendMessage(jsonMsg);
@@ -169,32 +151,6 @@ public abstract class AbstractWampConnection implements WampConnection{
 			}
 		}
 
-	}
-
-	public void onMessage(byte[] data, int offset, int length) {
-
-		if(log.isDebugEnabled())
-			log.debug("Receive Binary Wamp Message. size : " + length );
-
-		try{
-			WampMessage msg = WampMessageDeserializer.deserialize(data, offset, length, serializer.getMessagepack());
-			
-			if(log.isTraceEnabled())
-				log.trace(" Message received : " + msg.toString());
-			
-			dispatch(msg);
-			
-		} catch(SerializationException e){
-			if(log.isWarnEnabled())
-				log.warn("Unable to deserialize message : " + data.toString());
-			if(log.isTraceEnabled())
-				log.trace("Warning error stacktrace : ", e);
-		} catch (Exception e){
-			if(log.isWarnEnabled())
-				log.warn("Message not handled because of internal error.\nmessage : " + data + "\nException : " + e.getLocalizedMessage());
-			if(log.isTraceEnabled())
-				log.trace("Warning error stacktrace : ", e);
-		}
 	}
 
 	private void dispatch(WampMessage msg) throws BadMessageFormException{

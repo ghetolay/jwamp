@@ -23,7 +23,6 @@ import java.util.List;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.msgpack.packer.Packer;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
 
@@ -61,42 +60,6 @@ public class ArgumentSerializer{
 			return argList.size();
 
 		return arg == null?0:1;
-	}
-
-	public void serialize(Packer pk)
-			throws IOException {
-
-		if(argList != null)
-			for(Object obj : argList)
-				pk.write(obj);
-			
-		else if(arg != null){
-			if(arg.getClass().isArray()){
-				Class<?> type = arg.getClass().getComponentType();
-				if(type.equals(int.class))
-					for(int obj : (int[])arg)
-						pk.write(obj);
-				else if(type.equals(short.class))
-					for(short obj : (short[])arg)
-						pk.write(obj);
-				else if(type.equals(float.class))
-					for(float obj : (float[])arg)
-						pk.write(obj);
-				else if(type.equals(long.class))
-					for(long obj : (long[])arg)
-						pk.write(obj);
-				else if(type.equals(boolean.class))
-					for(boolean obj : (boolean[])arg)
-						pk.write(obj);
-				else if(type.equals(byte.class))
-					for(byte obj : (byte[])arg)
-						pk.write(obj);
-				else
-					for(Object obj : (Object[])arg)
-						pk.write(obj);
-			}else
-				pk.write(arg);
-		}
 	}
 
 	public void serialize(StringBuffer result, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException {

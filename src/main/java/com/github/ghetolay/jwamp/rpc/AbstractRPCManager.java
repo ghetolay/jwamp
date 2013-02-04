@@ -68,14 +68,13 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 	 * 
 	 * @param callId
 	 * @param result
-	 * @param last
 	 * @throws IOException
 	 * @throws SerializationException
 	 * @see #sendResult(String, Object)
 	 */
-	private void sendResult(String callId, boolean last, Object... result) throws IOException, SerializationException{
+	private void sendResult(String callId, Object... result) throws IOException, SerializationException{
 
-		OutputWampCallResultMessage resultMsg = new OutputWampCallResultMessage(last);
+		OutputWampCallResultMessage resultMsg = new OutputWampCallResultMessage();
 
 		if(result != null && result.length > 0){
 			if(result.length == 1)

@@ -32,9 +32,6 @@ public abstract class WampMessage {
 	public transient final static int PUBLISH     = 7;
 	public transient final static int EVENT       = 8;
 	
-	//add by me
-	public transient final static int CALLMORERESULT = 300;
-	
 	protected int messageType;
 	
 	public int getMessageType(){

@@ -23,8 +23,8 @@ import com.github.ghetolay.jwamp.rpc.CallResultSender;
 public class TestAction extends SimpleEventAction implements CallAction{
 
 	@Override
-	public void subscribe(String sessionId, WampArguments args){
-		super.subscribe(sessionId, args);
+	public void subscribe(String sessionId){
+		super.subscribe(sessionId);
 
 		eventAll("EventAction");
 	}

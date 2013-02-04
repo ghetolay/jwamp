@@ -17,8 +17,6 @@ package com.github.ghetolay.jwamp;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.msgpack.MessagePack;
-import org.msgpack.packer.BufferPacker;
 
 /**
  * @author ghetolay
@@ -26,14 +24,7 @@ import org.msgpack.packer.BufferPacker;
  */
 public class WampSerializer {
 	
-	public static enum format { JSON, BINARY };
-	
 	private ObjectMapper mapper;
-	private MessagePack msgpack;
-	private BufferPacker packer;
-	
-	
-	private format desiredFormat = format.JSON;
 	
 	public ObjectMapper getObjectMapper() {
 		if( mapper == null){
@@ -46,29 +37,5 @@ public class WampSerializer {
 
 	public void setMapper(ObjectMapper mapper) {
 		this.mapper = mapper;
-	}
-
-	public MessagePack getMessagepack() {
-		if(msgpack == null)
-			setMessagepack(new MessagePack());
-		return msgpack;
-	}
-
-	BufferPacker getPacker(){
-		if(packer == null)
-			packer = getMessagepack().createBufferPacker();
-		return packer;
-	}
-	
-	public void setMessagepack(MessagePack msgpack) {
-		this.msgpack = msgpack;
-	}
-
-	public format getDesiredFormat() {
-		return desiredFormat;
-	}
-
-	public void setDesiredFormat(format desiredFormat) {
-		this.desiredFormat = desiredFormat;
 	}
 }

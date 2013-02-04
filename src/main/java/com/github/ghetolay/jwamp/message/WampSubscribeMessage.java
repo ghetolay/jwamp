@@ -15,28 +15,20 @@
  */
 package com.github.ghetolay.jwamp.message;
 
-import org.msgpack.annotation.Message;
-
 
 /**
  * @author ghetolay
  *
  */
-@Message
-public class WampSubscribeMessage extends WampUnsubscribeMessage {
 
-	protected WampArguments args;
+public class WampSubscribeMessage extends WampUnsubscribeMessage {
 
 	protected WampSubscribeMessage(){
 		super(SUBSCRIBE);
 	}
-
-	public WampArguments getArguments(){
-		return args;
-	}
 	
 	@Override
 	public String toString(){
-		return " WampSubscribehMessage { "+ topicId + " , " + args + " } ";
+		return " WampSubscribehMessage { "+ topicId + " } ";
 	}
 }

@@ -28,21 +28,13 @@ public class OutputWampCallResultMessage extends WampCallResultMessage{
 	private Object arg;
 	
 	public OutputWampCallResultMessage(){
-		super(true);
-	}
-	
-	public OutputWampCallResultMessage(WampCallMessage callMsg, boolean last){
-		super(last);
-		
-		setCallId(callMsg.getCallId());
+		super();
 	}
 	
 	public OutputWampCallResultMessage(WampCallMessage callMsg){
-		this(callMsg, true);
-	}
-	
-	public OutputWampCallResultMessage(boolean last){
-		super(last);	
+		super();
+		
+		setCallId(callMsg.getCallId());
 	}
 
 	public void setCallId(String callId) {

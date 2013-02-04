@@ -24,7 +24,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 
@@ -45,7 +44,7 @@ public class SimpleEventAction implements EventAction {
 		this.sender = sender;
 	}
 	
-	public void subscribe(String sessionId, WampArguments args) {
+	public void subscribe(String sessionId) {
 		subscriber.add(sessionId);
 	}
 

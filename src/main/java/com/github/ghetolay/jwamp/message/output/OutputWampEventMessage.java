@@ -15,8 +15,6 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
-import org.msgpack.annotation.Message;
-
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 
@@ -24,7 +22,6 @@ import com.github.ghetolay.jwamp.message.WampEventMessage;
  * @author ghetolay
  *
  */
-@Message
 public class OutputWampEventMessage extends WampEventMessage{
 
 	private Object arg;

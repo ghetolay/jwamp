@@ -18,8 +18,6 @@ package com.github.ghetolay.jwamp.utils;
 import java.util.List;
 import java.util.Map;
 
-import org.msgpack.type.Value;
-
 /**
  * @author ghetolay
  *
@@ -58,31 +56,6 @@ public class DynamicValueBuilder {
 			return new MapValue((Map<?, ?>)obj, true);
 		
 		throw new DynamicValueException("Unknow Value Type " + obj.getClass());
-	}
-
-	public static DynamicValue fromValue(Value v){
-		if(v.isBooleanValue())
-			return new BooleanValue(v.asBooleanValue().getBoolean());
-		
-		if(v.isIntegerValue())
-			return new IntegerValue(v.asIntegerValue().intValue());
-		
-		if(v.isFloatValue())
-			return new DoubleValue(v.asFloatValue().floatValue());
-		
-		//TODO More TEST needed
-		if(v.isRawValue())
-			return new StringValue(v.asRawValue().getString());
-		
-		//change it ?
-		if(v.isArrayValue())
-			return new ListValue(v.asArrayValue(), true);
-			
-		//change it ?
-		if(v.isMapValue())
-			return new MapValue(v.asMapValue(), false);
-		
-		throw new DynamicValueException();
 	}
 
 	private static class BooleanValue extends AbstractDynamicValue{

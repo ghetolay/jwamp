@@ -55,30 +55,6 @@ public interface WampConnection {
 	public void sendMessage(WampMessage msg) throws SerializationException, IOException;
 	
 	/**
-	 * Send a {@link WampMessage} to the other side of the connection using text format (JSON).
-	 * This method should not be called directly, use {@link WampWebSocket} methods or a specific {@Link WampMessageHandler} instead.
-	 * 
-	 * @param msg The {@link WampMessage} to send.
-	 * @throws IOException if a connection problem occurs.
-	 * @throws SerializationException if a error occurs during serialization.
-	 * @see WampWebSocket
-	 * 
-	 */
-	public void sendAsBinaryMessage(WampMessage msg) throws SerializationException, IOException;
-	
-	/**
-	 * Send a {@link WampMessage} to the other side of the connection using binary format (Message Pack).
-	 * This method should not be called directly, use {@link WampWebSocket} methods or a specific {@Link WampMessageHandler} instead.
-	 * 
-	 * @param msg The {@link WampMessage} to send.
-	 * @throws IOException if a connection problem occurs.
-	 * @throws SerializationException if a error occurs during serialization.
-	 * @see WampWebSocket
-	 * 
-	 */
-	public void sendAsTextMessage(WampMessage msg) throws SerializationException, IOException;
-	
-	/**
 	 * Set whether we should stop at the first successful handler or not.
 	 * So if multiple handlers are handling the same message type, exclusiveHandler should be false.
 	 * 

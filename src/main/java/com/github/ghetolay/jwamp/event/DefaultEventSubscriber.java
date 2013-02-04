@@ -101,8 +101,6 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	private void subscribe(SubSet s) throws IOException, SerializationException{
 		OutputWampSubscribeMessage msg = new OutputWampSubscribeMessage(s.sub.getTopicId());
 
-		msg.setArgument(s.sub.getSubscribeArguments());
-
 		conn.sendMessage(msg);
 	}
 

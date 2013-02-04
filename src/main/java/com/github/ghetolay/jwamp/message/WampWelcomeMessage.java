@@ -15,9 +15,6 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import org.msgpack.annotation.Message;
-
-@Message
 public class WampWelcomeMessage extends WampMessage{
 
 	protected String sessionId;
