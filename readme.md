@@ -37,18 +37,29 @@ then add jwamp dependency :
 	<version>0.0.1-SNAPSHOT</version>
 </dependency>
 ```
-To use jwamp with jetty-websocket (client&server) add : 
+To use jwamp with jetty-websocket add : 
 ```xml
   <dependency>
-     <groupId>org.eclipse.jetty</groupId>
-     <artifactId>jetty-websocket</artifactId> 
+     <groupId>org.eclipse.jetty.websocket</groupId>
+     <artifactId>websocket-client</artifactId> 
+     <version>9.0.0.RC2</version>
   </dependency>
 ```
+or
+```xml
+  <dependency>
+     <groupId>org.eclipse.jetty.websocket</groupId>
+     <artifactId>websocket-server</artifactId>
+     <version>9.0.0.RC2</version>
+  </dependency>
+```
+
 For an embedded jetty server add : 
 ```xml
   <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
+      <version>9.0.0.RC2</version>
    </dependency>
 ```
 Factory
@@ -64,11 +75,14 @@ Client connection
 
 for a client connection there is two way of connection : 
 
-The first one will block until the connection is made and a welcome message is received or a timeout expire :
+The first one will block until the connection is made and a welcome message is received or a timeout expire : 
 
 ```java
   WampWebSocket wamp = wampFact.connect(new URI("ws://URL"));
 ```
+You can configure 2 kind of timeout on the WampJettyFactory : 
+* IdleTimeout : Standard connection timeout.
+* waitTimeout : It's the amount of time we wait for a welcome message once the connection is made. It provide infinite waiting if the other side accept the connection but doesn't support WAMP protocol, in this case if you did not set a waitTimeout the connect function will wait forever... (default behavior)
 
 The second one will call the listener once the welcome message is received. There is no timeout for the welcome message but you can still close the connection if the listener is not called after a amout of time.  
 The WampConnection received should only be used to close the connection, use the WampWebSocket from the listener to start communication.
@@ -93,7 +107,7 @@ For the server just get the jetty handler (below explanation about wamp.xml):
 
 ```java
    InputStream is = new FileInputStream("wamp.xml");
-   WampJettyHandler wampHandler = wampFact.newJettyHandler(new DefaultWampParameter.SimpleServerParameter(is));
+   WampWebSocketHandler wampHandler = wampFact.newWebsocketHandler(new DefaultWampParameter.SimpleServerParameter(is));
 ```
 
 

@@ -25,15 +25,11 @@ public class ServerManagerAction implements CallAction{
 		try{
 			String arg = args.nextObject(String.class);
 			if("restart".equals(arg)){
-					try{
-						TestServer.server.stop();
-					}catch(Exception e){}
-					
-					TestServer.server.start();
+					TestServer.stopConnections();
 				
 			}else if("shutdown".equals(arg)){
 				try{
-					TestServer.server.stop();
+					TestServer.stop();
 				}catch(Exception e){}
 			}
 		}catch(Exception e){

@@ -31,7 +31,8 @@ public class MainClass {
 
 	public static void main(String[] args){
 		
-		new TestServer().test();
+		TestServer server = new TestServer();
+		server.test();
 		
 		TestClient client = new TestClient();
 		
@@ -39,7 +40,7 @@ public class MainClass {
 		
 		try {
 	
-			client.callArrayArg();
+			client.testAutoReconnectAutoResubscribe();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -50,6 +51,9 @@ public class MainClass {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SerializationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 

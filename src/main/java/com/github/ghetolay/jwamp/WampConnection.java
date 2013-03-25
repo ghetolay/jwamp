@@ -134,7 +134,7 @@ public interface WampConnection {
 	 * 
 	 * @param ms Time in millisecond.
 	 */
-	public void setMaxIdleTime(int ms);
+	public void setMaxIdleTime(long ms);
 	
 	/**
 	 * Return the max time in millisecond the connection can be in the idle state before it close.
@@ -142,7 +142,7 @@ public interface WampConnection {
 	 * 
 	 * @return Max time in millisecond the connection can be idle before it close.
 	 */
-	public int getMaxIdleTime();
+	public long getMaxIdleTime();
 	
 	/**
 	 * 

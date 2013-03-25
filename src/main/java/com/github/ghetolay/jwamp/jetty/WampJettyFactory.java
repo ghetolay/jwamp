@@ -18,36 +18,39 @@ package com.github.ghetolay.jwamp.jetty;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.jetty.websocket.WebSocketClient;
-import org.eclipse.jetty.websocket.WebSocketClientFactory;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampFactory;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.WampParameter;
-import com.github.ghetolay.jwamp.WampWebSocketListener;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class WampJettyFactory extends WampFactory{
 	
 	private static WampJettyFactory instance;
 	
-	private WebSocketClientFactory fact = new WebSocketClientFactory();
+	private WebSocketClient websocketClient;
 	
-	private WampJettyFactory(){}
-	
-	public WebSocketClientFactory getJettyFactory() {
-		return fact;
-	}
-
-	public void setJettyFactory(WebSocketClientFactory fact) {
-		this.fact = fact;
+	private WampJettyFactory(){
+		websocketClient = new WebSocketClient();
 	}
 		
+	public WebSocketClient getWebsocketClient() {
+		return websocketClient;
+	}
+
+	public void setWebsocketClient(WebSocketClient websocketClient) {
+		this.websocketClient = websocketClient;
+	}
+
 	protected WampConnection getConnection(URI uri, long timeout, ReconnectPolicy reconnectPolicy, Collection<WampMessageHandler> handlers, ResultListener<WampConnection> wr) throws TimeoutException, Exception{
 		JettyConnection connection = new JettyConnection(uri,getSerializer(),handlers,wr);
 		connection.setReconnectPolicy(reconnectPolicy);
@@ -58,32 +61,39 @@ public class WampJettyFactory extends WampFactory{
 	}
 	
 	protected void connect(URI uri, long timeout, JettyConnection connection) throws Exception{	
-		if(!fact.isStarted())
-			fact.start();
-			
-		WebSocketClient ws = fact.newWebSocketClient();
-		ws.setProtocol(getProtocolName());
+
+		if(!websocketClient.isStarted())
+			websocketClient.start();
 		
-		if(timeout > 0)
-			ws.open(uri, connection, timeout, TimeUnit.MILLISECONDS);
+		ClientUpgradeRequest request = new ClientUpgradeRequest();
+		request.setSubProtocols(WampFactory.getProtocolName());
+					
+		Future<Session> future = websocketClient.connect(connection, uri, request);
+		
+		if(timeout >0)
+			future.get(timeout, TimeUnit.MILLISECONDS);
 		else
-			ws.open(uri,connection);
+			future.get();
 	}
 	
-	public WampJettyHandler newJettyHandler(){
-		return newJettyHandler(getParameter(),null);
+	public void stopWebsocketClient() throws Exception{
+		websocketClient.stop();
 	}
 	
-	public WampJettyHandler newJettyHandler(WampParameter param){
-		return new WampJettyHandler(param, getSerializer(), null);
+	public WampWebSocketHandler newWebsocketHandler(){
+		return newWebsocketHandler(getParameter(),null);
 	}
 	
-	public WampJettyHandler newJettyHandler(WampWebSocketListener listener){
-		return new WampJettyHandler(getParameter(), getSerializer(), listener);
+	public WampWebSocketHandler newWebsocketHandler(WampParameter param){
+		return  newWebsocketHandler(param, null);
 	}
 	
-	public WampJettyHandler newJettyHandler(WampParameter param, WampWebSocketListener listener){
-		return new WampJettyHandler(param, getSerializer(), listener);
+	public WampWebSocketHandler newWebsocketHandler(JettyWebSocketListener listener){
+		return  newWebsocketHandler(getParameter(), listener);
+	}
+	
+	public WampWebSocketHandler newWebsocketHandler(WampParameter param, JettyWebSocketListener listener){
+		return new WampWebSocketHandler(getSerializer(),param,listener);
 	}
 	
 	public static WampJettyFactory getInstance(){

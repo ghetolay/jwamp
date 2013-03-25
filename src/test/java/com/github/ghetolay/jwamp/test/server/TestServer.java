@@ -17,23 +17,36 @@ package com.github.ghetolay.jwamp.test.server;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.github.ghetolay.jwamp.DefaultWampParameter;
 import com.github.ghetolay.jwamp.WampMessageHandler;
+import com.github.ghetolay.jwamp.WampWebSocket;
+import com.github.ghetolay.jwamp.jetty.JettyWebSocketListener;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
-import com.github.ghetolay.jwamp.jetty.WampJettyHandler;
+import com.github.ghetolay.jwamp.jetty.WampWebSocketHandler;
 import com.github.ghetolay.jwamp.rpc.DefinedMethodRPCManager;
 
-public class TestServer {
+public class TestServer implements JettyWebSocketListener {
 	
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
-	public static Server server;
+	private static Server server;
+	
+	private static Map<String,WampWebSocket> connections = new HashMap<String,WampWebSocket>();
+	
+	public static void main(String[] args){
+		new TestServer().test();
+	}
 	
 	@Test
 	public void test(){
@@ -45,9 +58,10 @@ public class TestServer {
 		try{
 			InputStream is = getClass().getResourceAsStream("/wamp-server.xml");
 			
-			WampJettyHandler wampHandler = wampFact.newJettyHandler(new Parameters(is));
+			WampWebSocketHandler wampHandler = wampFact.newWebsocketHandler(new Parameters(is),this);
 			
 			//wampFact.getSerializer().setDesiredFormat(WampSerializer.format.BINARY);
+	
 			
 			server.setHandler(wampHandler);
 	
@@ -58,6 +72,28 @@ public class TestServer {
 			e.printStackTrace();
 		}
 
+	}
+	
+	public static void stopConnections(){
+		for(Entry<String,WampWebSocket> entry: connections.entrySet())
+			entry.getValue().getConnection().close(StatusCode.SHUTDOWN, "");
+	}
+	
+	public static void stop(){
+		try {
+			server.stop();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void newWebSocket(UpgradeRequest request, WampWebSocket wws) {
+		connections.put(wws.getConnection().getSessionId(),wws);
+	}
+
+	public void closedWebSocket(String sessionId){
+		connections.remove(sessionId);
 	}
 	
 	private class Parameters extends DefaultWampParameter.SimpleServerParameter{

@@ -13,15 +13,17 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp;
+package com.github.ghetolay.jwamp.jetty;
 
-import javax.servlet.http.HttpServletRequest;
+import org.eclipse.jetty.websocket.api.UpgradeRequest;
 
-public interface WampWebSocketListener {
-	public void newWampWebSocket(HttpServletRequest request, WampWebSocket wws);
+import com.github.ghetolay.jwamp.WampWebSocket;
+
+public interface JettyWebSocketListener {
+	public void newWebSocket(UpgradeRequest request, WampWebSocket wws);
 
 	/**
 	 * @param sessionId
 	 */
-	public void closedWampWebSocket(String sessionId);
+	public void closedWebSocket(String sessionId);
 }

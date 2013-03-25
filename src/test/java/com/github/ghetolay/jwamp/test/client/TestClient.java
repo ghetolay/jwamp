@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -61,6 +62,9 @@ public class TestClient {
 	@Test
 	public void connect(){
 		try{
+			//give time to server to start
+			Thread.sleep(1000);
+			
 			WampJettyFactory wampFact = WampJettyFactory.getInstance();
 			
 			//wampFact.getSerializer().setDesiredFormat(WampSerializer.format.BINARY);
@@ -167,7 +171,7 @@ public class TestClient {
 			wamp.call("Manage", -1,"shutdown");
 		} catch (TimeoutException e){}
 		
-		wamp.getConnection().close(10000, "");
+		wamp.getConnection().close(StatusCode.SHUTDOWN, "");
 	}
 	
 	@Test(dependsOnMethods = {"testAutoSubscribeResponse"})
