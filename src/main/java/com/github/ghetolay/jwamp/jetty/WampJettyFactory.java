@@ -61,7 +61,7 @@ public class WampJettyFactory extends WampFactory{
 	
 	protected void connect(URI uri, long timeout, JettyConnection connection) throws Exception{	
 
-		if(!websocketClient.isStarted())
+		if(!getWebsocketClient().isStarted())
 			websocketClient.start();
 		
 		ClientUpgradeRequest request = new ClientUpgradeRequest();
@@ -76,7 +76,8 @@ public class WampJettyFactory extends WampFactory{
 	}
 	
 	public void stopWebsocketClient() throws Exception{
-		websocketClient.stop();
+		if(websocketClient != null)
+			websocketClient.stop();
 	}
 	
 	public WampWebSocketHandler newWebsocketHandler(){
