@@ -38,12 +38,11 @@ public class WampJettyFactory extends WampFactory{
 	private static WampJettyFactory instance;
 	
 	private WebSocketClient websocketClient;
-	
-	private WampJettyFactory(){
-		websocketClient = new WebSocketClient();
-	}
 		
 	public WebSocketClient getWebsocketClient() {
+		if( websocketClient == null)
+			websocketClient = new WebSocketClient();
+		
 		return websocketClient;
 	}
 
