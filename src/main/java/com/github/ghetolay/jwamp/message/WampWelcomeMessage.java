@@ -51,7 +51,7 @@ public class WampWelcomeMessage extends WampMessage{
 	
 	@Override
 	public String toString(){
-		return " WampWelcomehMessage { "+ sessionId + ", "  + protocolVersion + ", "  + implementation + " } ";
+		return " WampWelcomeMessage { "+ sessionId + ", "  + protocolVersion + ", "  + implementation + " } ";
 	}
 
 }

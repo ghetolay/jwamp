@@ -89,8 +89,9 @@ public class WampMessageDeserializer {
 			throw new BadMessageFormException("ErrorDescription is required and must be a string");
 		result.errorDesc = parser.getText();
 
-		if(parser.nextToken() != JsonToken.END_ARRAY){
-			if(parser.nextToken() != JsonToken.VALUE_STRING)
+		JsonToken nextToken = parser.nextToken();
+		if(nextToken != JsonToken.END_ARRAY){
+			if(nextToken != JsonToken.VALUE_STRING)
 				throw new BadMessageFormException("ErrorDetails must be a string");
 			result.errorDetails = parser.getText();
 		}

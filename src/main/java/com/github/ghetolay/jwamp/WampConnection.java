@@ -50,7 +50,6 @@ public interface WampConnection {
 	 * @throws IOException if a connection problem occurs.
 	 * @throws SerializationException if a error occurs during serialization.
 	 * @see WampWebSocket
-	 * @see WampConnection#setPreferBinaryMessaging(boolean)
 	 */
 	public void sendMessage(WampMessage msg) throws SerializationException, IOException;
 	

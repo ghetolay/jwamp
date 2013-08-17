@@ -94,7 +94,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			}
 		}
 		else if(globalListener != null)
-			globalListener.onResult(new EventResult(msg.getTopicId(), msg.getEvents()));
+			globalListener.onResult(new SimpleEventResult(msg.getTopicId(), msg.getEvents()));
 
 	}
 
@@ -104,11 +104,21 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		conn.sendMessage(msg);
 	}
 
-	public void subscribe(String topicId) throws IOException{
+	public void subscribe(String topicId) throws IOException, SerializationException{
 		try {
 			subscribe(new WampSubscription.Impl(topicId));
 		} catch (SerializationException e) {
 			log.error("Serialization error on unsubscribe message");
+			throw e;
+		}
+	}
+	
+	public void subscribe(String topicId, ResultListener<WampArguments> eventListener) throws IOException, SerializationException{
+		try{
+			subscribe(topicId);
+		}finally{
+			if(eventListener != null)
+				eventListeners.put(topicId, eventListener);
 		}
 	}
 
@@ -120,8 +130,6 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			try {
 				if(conn != null && conn.isConnected())
 					subscribe(s);
-			} catch (IOException e) {
-				throw e;
 			} finally{
 				topics.add(s);
 				if(log.isDebugEnabled())
@@ -135,9 +143,7 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 
 		try{
 			subscribe(subscription);
-		}catch(IOException e){
-			throw e;
-		} finally{
+		}finally{
 			if(eventListener != null)
 				eventListeners.put(subscription.getTopicId(), eventListener);
 		}
@@ -221,11 +227,11 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 		globalListener = listener;
 	}
 
-	public class EventResult{
+	public class SimpleEventResult implements EventResult{
 		private String topicId;
 		private WampArguments event;
 
-		private EventResult(String topicId, WampArguments event){
+		private SimpleEventResult(String topicId, WampArguments event){
 			this.topicId = topicId;
 			this.event = event;
 		}

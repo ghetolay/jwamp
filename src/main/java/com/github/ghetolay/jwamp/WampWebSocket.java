@@ -22,9 +22,11 @@ import java.util.concurrent.TimeoutException;
 
 import com.github.ghetolay.jwamp.event.WampEventSubscriber;
 import com.github.ghetolay.jwamp.event.WampSubscription;
+import com.github.ghetolay.jwamp.event.EventResult;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
+import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
@@ -63,29 +65,33 @@ public class WampWebSocket {
 		return eventSubscriber;
 	}
 	
-	public WampArguments simpleCall(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException{
+	public WampArguments simpleCall(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException{
 		return getRPCSender().call(procId, 5000, args);
 	}
 	
 	//TODO issue this method can be miss-call
-	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException{
+	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException{
 		return getRPCSender().call(procId, timeout, args);
 	}
 	
-	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, UnsupportedWampActionException, SerializationException{
+	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, UnsupportedWampActionException, SerializationException, CallException{
 		return getRPCSender().call(procId, listener, timeout, args);
 	}
 	
-	public WampArguments call(String procId, long timeout, Object args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException{
+	public WampArguments call(String procId, long timeout, Object args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException{
 		return getRPCSender().call(procId, timeout, args);
 	}
 	
-	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object args) throws IOException, UnsupportedWampActionException, SerializationException{
+	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object args) throws IOException, UnsupportedWampActionException, SerializationException, CallException{
 		return getRPCSender().call(procId, listener, timeout, args);
 	}
 	
-	public void subscribe(String topicId) throws IOException, UnsupportedWampActionException{
+	public void subscribe(String topicId) throws IOException, SerializationException, UnsupportedWampActionException{
 		getEventSubscriber().subscribe(topicId);
+	}
+	
+	public void subscribe(String topicId, ResultListener<WampArguments> listener) throws IOException, SerializationException, UnsupportedWampActionException{
+		getEventSubscriber().subscribe(topicId, listener);
 	}
 	
 	public void subscribe(WampSubscription subscription) throws IOException, UnsupportedWampActionException, SerializationException{
@@ -115,6 +121,10 @@ public class WampWebSocket {
 	}
 	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, UnsupportedWampActionException, SerializationException{
 		getEventSubscriber().publish(topicId, event, exclude, eligible);
+	}
+	
+	public void setGlobalEventListener(ResultListener<EventResult> listener){
+		getEventSubscriber().setGlobalListener(listener);
 	}
 	
 }

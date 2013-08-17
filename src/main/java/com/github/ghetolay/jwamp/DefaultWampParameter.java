@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.event.ClientEventManager;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber;
-import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
+import com.github.ghetolay.jwamp.event.EventResult;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.ServerEventManager;
 import com.github.ghetolay.jwamp.event.WampSubscription;

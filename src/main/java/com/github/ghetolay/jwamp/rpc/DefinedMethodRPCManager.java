@@ -15,6 +15,7 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
@@ -63,8 +64,12 @@ public class DefinedMethodRPCManager extends AbstractRPCManager{
 				log.trace("found matching method " + methodName + " of class " + objectClass.getClass().getName() + "for procId : " + message.getProcId());
 				
 			return new RunnableAction(sessionId, message){			
-				protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception {
-					method.invoke(objectClass, sessionID, args, sender);
+				protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws CallException, Throwable {
+					try{
+						method.invoke(objectClass, sessionID, args, sender);
+					} catch(InvocationTargetException e){
+						throw e.getTargetException();
+					}
 				}
 			};
 		}

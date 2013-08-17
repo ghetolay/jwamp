@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.github.ghetolay.jwamp.WampConnection;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
+import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallMessage;
@@ -53,7 +54,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	public void onClose(String sessionId, int closeCode) {}
 	
-	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException{
+	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException, CallException{
 		if(timeout == 0)
 			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args)");
 
@@ -62,17 +63,23 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 			
 			call(procId,wr,timeout,args);
 			
+			WampCallResultMessage result;
+			
 			try {
-				WampCallResultMessage result = wr.call();
-				if(result != null)
-					return result.getResults();
-				
+				result = wr.call();
 			} catch (Exception e) {
 				if(log.isErrorEnabled())
 					log.error("Error waiting call result : ",e);
 				return null;
 			}
 			
+			if(result != null){
+				if(result instanceof WampCallErrorMessage)
+					throw new CallException((WampCallErrorMessage)result);
+				else
+					return result.getResults();
+			}
+				
 			throw new TimeoutException();
 		}
 		

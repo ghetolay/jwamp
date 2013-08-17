@@ -13,31 +13,29 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.server;
+package com.github.ghetolay.jwamp.test.server.rpc;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.CallResultSender;
+import com.github.ghetolay.jwamp.test.server.TestServer;
 
-/**
- * @author ghetolay
- *
- */
-public class TestDefinedAction {
+public class ServerManagerAction implements CallAction{
 
-	
-	public void doEcho(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(arguments);
+	public void execute(String sessionId, WampArguments args, CallResultSender sender) {
+		try{
+			String arg = args.nextObject(String.class);
+			if("restart".equals(arg)){
+					TestServer.stopConnections();
+				
+			}else if("shutdown".equals(arg)){
+				try{
+					TestServer.stop();
+				}catch(Exception e){}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
-	
-	public void doOneList(String sessionId, WampArguments arguments, CallResultSender sender){		
-		sender.sendResult("lol","prout","youk");
-	}
-	
-	public void doSingleReturn(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(1);
-	}
-	
-	public void doArrayArgs(String sessionId, WampArguments arguments, CallResultSender sender){
-		sender.sendResult(new int[]{10,11,12,13});
-	}
+
 }

@@ -91,7 +91,6 @@ public class WampMessageSerializer {
 
 		StringBuffer result = startMsg(msg.getMessageType());
 
-		result.append(',');
 		appendString(result, msg.getCallId());
 		result.append(',');
 		appendString(result, msg.getErrorUri());
@@ -100,7 +99,7 @@ public class WampMessageSerializer {
 
 		if(msg.getErrorDetails() != null && !msg.getErrorDetails().isEmpty()){
 			result.append(',');
-			appendString(result, msg.getErrorUri());
+			appendString(result, msg.getErrorDetails());
 		}
 
 		return endMsg(result);

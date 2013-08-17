@@ -13,27 +13,17 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.test.server.event;
 
-import java.io.IOException;
+import com.github.ghetolay.jwamp.event.SimpleEventAction;
 
-/**
- * @author ghetolay
- *
- */
-public class SerializationException extends IOException{
-	
-	private static final long serialVersionUID = -1503325621576550801L;
+public class EventTestAction extends SimpleEventAction{
 
-	public SerializationException(String message){
-		super(message);
+	@Override
+	public void subscribe(String sessionId){
+		super.subscribe(sessionId);
+
+		eventAll("EventAction");
 	}
 	
-	public SerializationException(Throwable e){
-		super("Serialization error",e);
-	}
-	
-	public SerializationException(String message, Throwable e){
-		super("Serialization error", e);
-	}
 }

@@ -28,9 +28,8 @@ import com.github.ghetolay.jwamp.utils.ResultListener;
 public interface WampRPCSender extends WampMessageHandler{
 	
 	//TODO a voir seulement une fonction call
-	//how handle callerror : null ? exception ?
 	public WampArguments call(String procId, long timeout, Object... args) 
-			throws SerializationException, IOException, TimeoutException;
+			throws SerializationException, IOException, TimeoutException, CallException;
 	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) 
-			throws SerializationException, IOException;
+			throws SerializationException, IOException, CallException;
 }

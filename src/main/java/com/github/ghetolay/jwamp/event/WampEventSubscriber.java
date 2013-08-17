@@ -20,14 +20,14 @@ import java.io.IOException;
 import java.util.List;
 
 import com.github.ghetolay.jwamp.WampMessageHandler;
-import com.github.ghetolay.jwamp.event.DefaultEventSubscriber.EventResult;
-import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.SerializationException;
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public interface WampEventSubscriber extends WampMessageHandler{
 	
-	public void subscribe(String topicId) throws IOException;
+	public void subscribe(String topicId) throws IOException, SerializationException;
+	public void subscribe(String topicI, ResultListener<WampArguments> eventListener) throws IOException, SerializationException;
 	public void subscribe(WampSubscription subscription) throws IOException, SerializationException;
 	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, SerializationException;
 	public void unsubscribe(String topicId) throws IOException;

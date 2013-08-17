@@ -35,6 +35,7 @@ import com.github.ghetolay.jwamp.jetty.JettyWebSocketListener;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
 import com.github.ghetolay.jwamp.jetty.WampWebSocketHandler;
 import com.github.ghetolay.jwamp.rpc.DefinedMethodRPCManager;
+import com.github.ghetolay.jwamp.test.server.rpc.TestDefinedAction;
 
 public class TestServer implements JettyWebSocketListener {
 	

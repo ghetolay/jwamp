@@ -70,7 +70,6 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 	 * @param result
 	 * @throws IOException
 	 * @throws SerializationException
-	 * @see #sendResult(String, Object)
 	 */
 	private void sendResult(String callId, Object... result) throws IOException, SerializationException{
 
@@ -89,7 +88,11 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 		conn.sendMessage(resultMsg);
 	}
 
-	private void sendError(String callId, String procId, Throwable e) throws IOException, SerializationException{
+	private void sendError(String callId, String procId, CallException e) throws IOException, SerializationException{
+		conn.sendMessage( new OutputWampCallErrorMessage(callId, procId,e.getErrorDescription(), e.getErrorDetails()) );
+	}
+	
+	private void sendErrorFromException(String callId, String procId, Throwable e) throws IOException, SerializationException{
 		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage(callId, procId,e.getLocalizedMessage());
 		if(!e.getMessage().equals(e.getLocalizedMessage()))
 			errorMsg.setErrorDetails(e.getMessage());
@@ -109,18 +112,25 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 			this.message = message;
 		}
 
-		protected abstract void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception;
+		protected abstract void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws CallException, Throwable;
 
 		public void run(){ 
 
 			try{	
 				try {
 					excuteAction(sessionId, message.getArguments(), this);
-				} catch (Exception e) {
+				} catch (CallException ce){
+					if(log.isDebugEnabled())
+						log.debug("action " + message.getCallId() + " returning CallException " + ce.getErrorDescription() + ", " + ce.getErrorDetails());
+					
+					sendError(message.getCallId(), message.getProcId(), ce);
+					return;
+				} catch (Throwable e) {
+				
 					if(log.isDebugEnabled())
 						log.debug("Error on action " + message.getCallId(),e);
 
-					sendError(message.getCallId(), message.getProcId(), e);
+					sendErrorFromException(message.getCallId(), message.getProcId(), e);
 					return;
 				}
 			}catch(Exception e){
