@@ -3,13 +3,13 @@
 <suite name="ClientServer" verbose="1" parallel="tests" thread-count="2" time-out="60000">
   <test name="Server" time-out="60000">
     <classes>
-       <class name="com.github.ghetolay.jwamp.test.server.TestServer" />
+       <class name="com.github.ghetolay.jwamp.server.jetty.TestServer" />
     </classes>
   </test>
  
   <test name="Client">
     <classes>
-      <class name="com.github.ghetolay.jwamp.test.client.TestClient"/>
+      <class name="com.github.ghetolay.jwamp.client.jetty.TestClient"/>
     </classes>
   </test>
 </suite>
