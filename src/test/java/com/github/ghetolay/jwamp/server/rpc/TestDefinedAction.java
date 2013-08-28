@@ -13,10 +13,9 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.server.rpc;
+package com.github.ghetolay.jwamp.server.rpc;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
-import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.rpc.CallResultSender;
 
 /**
@@ -40,10 +39,6 @@ public class TestDefinedAction {
 	
 	public void doArrayArgs(String sessionId, WampArguments arguments, CallResultSender sender){
 		sender.sendResult(new int[]{10,11,12,13});
-	}
-	
-	public void doCallException(String sessionId, WampArguments arguments, CallResultSender sender) throws CallException{
-		throw new CallException("Test error", "details");
 	}
 	
 	public void doException(String sessionId, WampArguments arguments, CallResultSender sender) throws Exception{

@@ -159,6 +159,7 @@ public class WampMessageDeserializer {
 			throw new BadMessageFormException("TopicUri is required and must be a string");
 		result.topicId  = parser.getText();
 
+		parser.nextToken();
 		result.event = parser.readValueAs(Object.class);
 
 		//excludeme or exclude list

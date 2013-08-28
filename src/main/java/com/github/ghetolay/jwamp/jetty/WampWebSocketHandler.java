@@ -67,7 +67,10 @@ public class WampWebSocketHandler extends WebSocketHandler implements WebSocketC
 	}
 
 	public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
+		resp.setAcceptedSubProtocol(WampFactory.getProtocolName());
+		
 		if(req.hasSubProtocol(WampFactory.getProtocolName())){
+			
 			JettyServerConnection connection =  new JettyServerConnection(serializer, param.getHandlers());
 			
 			if(listener != null)

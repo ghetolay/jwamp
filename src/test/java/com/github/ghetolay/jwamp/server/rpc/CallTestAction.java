@@ -13,17 +13,19 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.server.event;
+package com.github.ghetolay.jwamp.server.rpc;
 
-import com.github.ghetolay.jwamp.event.SimpleEventAction;
+import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.rpc.CallAction;
+import com.github.ghetolay.jwamp.rpc.CallResultSender;
 
-public class EventTestAction extends SimpleEventAction{
-
-	@Override
-	public void subscribe(String sessionId){
-		super.subscribe(sessionId);
-
-		eventAll("EventAction");
-	}
+/**
+ * @author ghetolay
+ *
+ */
+public class CallTestAction implements CallAction{
 	
+	public void execute(String sessionId, WampArguments args, CallResultSender sender) {
+		sender.sendResult(true, (Object)null);
+	}
 }

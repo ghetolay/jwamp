@@ -5,7 +5,7 @@
 		<artifactId>oss-parent</artifactId>
 		<version>7</version>
 	</parent>
-	
+
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.ghetolay</groupId>
 	<artifactId>jwamp</artifactId>
@@ -46,7 +46,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.6.5</version>
-			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>stax</groupId>
@@ -57,7 +56,6 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.6.6</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testng</groupId>
@@ -126,6 +124,44 @@
 						<suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
 					</suiteXmlFiles>
 				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<!-- explicitly define maven-deploy-plugin after other to force exec 
+					order -->
+				<artifactId>maven-deploy-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>deploy</id>
+						<phase>deploy</phase>
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

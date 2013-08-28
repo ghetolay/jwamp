@@ -13,7 +13,7 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.client;
+package com.github.ghetolay.jwamp.client.jetty;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -32,6 +32,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import com.github.ghetolay.jwamp.DefaultWampParameter;
+import com.github.ghetolay.jwamp.SomeObject;
 import com.github.ghetolay.jwamp.UnsupportedWampActionException;
 import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampWebSocket;
@@ -39,7 +40,6 @@ import com.github.ghetolay.jwamp.event.EventResult;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.rpc.CallException;
-import com.github.ghetolay.jwamp.test.server.SomeObject;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 public class TestClient {

@@ -13,28 +13,17 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.client;
+package com.github.ghetolay.jwamp.server.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.ghetolay.jwamp.event.SimpleEventAction;
 
-class WaitThread extends Thread{
-	
-	protected static final Logger log = LoggerFactory.getLogger(TestClient.class);
-	
-	public boolean done = false;
-	public long waitFor = 0;
-	
-	public WaitThread(long waitFor){
-		this.waitFor = waitFor;
+public class EventTestAction extends SimpleEventAction{
+
+	@Override
+	public void subscribe(String sessionId){
+		super.subscribe(sessionId);
+
+		eventAll("EventAction");
 	}
 	
-	public synchronized void run(){
-		try{
-			wait(waitFor);
-		}catch(Exception e){
-			log.debug("WaitThread Exception",e);
-			done = false;
-		}
-	}
 }

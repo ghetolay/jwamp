@@ -19,9 +19,10 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import com.github.ghetolay.jwamp.UnsupportedWampActionException;
+import com.github.ghetolay.jwamp.client.jetty.TestClient;
 import com.github.ghetolay.jwamp.message.SerializationException;
-import com.github.ghetolay.jwamp.test.client.TestClient;
-import com.github.ghetolay.jwamp.test.server.TestServer;
+import com.github.ghetolay.jwamp.rpc.CallException;
+import com.github.ghetolay.jwamp.server.jetty.TestServer;
 
 /**
  * @author ghetolay
@@ -40,7 +41,10 @@ public class MainClass {
 		
 		try {
 	
-			client.testAutoReconnectAutoResubscribe();
+			client.throwCallExceptionOncall();
+		}catch (SerializationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -48,12 +52,6 @@ public class MainClass {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SerializationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 

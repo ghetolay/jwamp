@@ -94,7 +94,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 		if(e != null){
 			OutputWampEventMessage msg = new OutputWampEventMessage();
 			msg.setTopicId(wampPublishMessage.getTopicId());
-			//msg.setEvent( wampPublishMessage.getEvent() );
+			msg.setEvent( wampPublishMessage.getEvents() );
 			
 			List<String> publishTo = e.publish(sessionId, wampPublishMessage, msg);
 			if(publishTo != null)

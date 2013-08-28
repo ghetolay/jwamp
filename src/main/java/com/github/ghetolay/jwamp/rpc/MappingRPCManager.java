@@ -50,7 +50,7 @@ public class MappingRPCManager extends AbstractRPCManager{
 			this.action = action;
 		}
 
-		protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws Exception {
+		protected void excuteAction(String sessionID, WampArguments args, CallResultSender sender) throws CallException, Exception {
 			action.execute(sessionID, args, sender);
 		}		
 	}

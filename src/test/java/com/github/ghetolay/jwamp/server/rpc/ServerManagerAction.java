@@ -13,11 +13,29 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.rpc;
+package com.github.ghetolay.jwamp.server.rpc;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.rpc.CallAction;
+import com.github.ghetolay.jwamp.rpc.CallResultSender;
+import com.github.ghetolay.jwamp.server.jetty.TestServer;
 
-public interface CallAction {
+public class ServerManagerAction implements CallAction{
 
-	void execute(String sessionId, WampArguments args, CallResultSender sender) throws CallException, Exception;
+	public void execute(String sessionId, WampArguments args, CallResultSender sender) {
+		try{
+			String arg = args.nextObject(String.class);
+			if("restart".equals(arg)){
+					TestServer.stopConnections();
+				
+			}else if("shutdown".equals(arg)){
+				try{
+					TestServer.stop();
+				}catch(Exception e){}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
 }

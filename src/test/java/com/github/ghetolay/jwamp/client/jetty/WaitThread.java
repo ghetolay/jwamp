@@ -13,19 +13,28 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.test.server.rpc;
+package com.github.ghetolay.jwamp.client.jetty;
 
-import com.github.ghetolay.jwamp.message.WampArguments;
-import com.github.ghetolay.jwamp.rpc.CallAction;
-import com.github.ghetolay.jwamp.rpc.CallResultSender;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * @author ghetolay
- *
- */
-public class CallTestAction implements CallAction{
-	//RPC
-	public void execute(String sessionId, WampArguments args, CallResultSender sender) {
-		sender.sendResult(true, (Object)null);
+class WaitThread extends Thread{
+	
+	protected static final Logger log = LoggerFactory.getLogger(TestClient.class);
+	
+	public boolean done = false;
+	public long waitFor = 0;
+	
+	public WaitThread(long waitFor){
+		this.waitFor = waitFor;
+	}
+	
+	public synchronized void run(){
+		try{
+			wait(waitFor);
+		}catch(Exception e){
+			log.debug("WaitThread Exception",e);
+			done = false;
+		}
 	}
 }

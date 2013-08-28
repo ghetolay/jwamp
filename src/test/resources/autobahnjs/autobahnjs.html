@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)http://autobahn.ws/static/file/autobahnjs.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+      <!-- include AutobahnJS .. that's all you need -->
+      <script src="./autobahnjs_files/autobahn.js">
+      </script><style type="text/css"></style>
+      <script>
+         // WAMP session object
+         var sess;
+         var wsuri = "ws://localhost:8080";
+
+         window.onload = function() {
+
+            // connect to WAMP server
+            ab.connect(wsuri,
+
+               // WAMP session was established
+               function (session) {
+
+                  sess = session;
+                  console.log("Connected to " + wsuri);
+
+                  // subscribe to topic, providing an event handler
+                  sess.subscribe("EventTest", onEvent);
+               },
+
+               // WAMP session is gone
+               function (code, reason) {
+
+                  sess = null;
+                  console.log("Connection lost (" + reason + ")");
+               }
+            );
+         };
+
+         function onEvent(topic, event) {
+            console.log(topic);
+            console.log(event);
+         }
+
+         function publishEvent()
+         {
+            sess.publish("EventTest", {a: "foo", b: "bar", c: 23});
+         }
+
+         function callProcedure() {
+            // issue an RPC, returns promise object
+            sess.call("CallTest", 23, 7).then(
+
+               // RPC success callback
+               function (res) {
+                  console.log("got result: " + res);
+               },
+
+               // RPC error callback
+               function (error) {
+                  console.log("error: " + error.desc);
+               }
+            );
+         }
+         
+         function callError() {
+             // issue an RPC, returns promise object
+             sess.call("CallException", 23, 7).then(
+
+                // RPC success callback
+                function (res) {
+                   console.log("got result: " + res);
+                },
+
+                // RPC error callback
+                function (error) {
+                   console.log("error: " + error.desc);
+                }
+             );
+          }
+     </script>
+   </head>
+   <body>
+      <h1>AutobahnJS WAMP Client</h1>
+      <button onclick="publishEvent();">Publish Event</button>
+      <button onclick="callProcedure();">Call Procedure</button>
+      <button onclick="callError();">Call Procedure with error</button>
+   
+ 
+</body></html>

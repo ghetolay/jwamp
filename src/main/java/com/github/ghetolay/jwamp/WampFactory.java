@@ -51,7 +51,7 @@ public abstract class WampFactory {
 	private long timeout = 5000;
 	private long waitTimeout = 5000;
 	
-	private static final String protocolName = "WAMP";
+	private static final String protocolName = "wamp";
 	private static final int protocolVersion = 1;
 	private static final String implementation = "jwamp/0.1";//"jwamp/${project.version}";
 	
