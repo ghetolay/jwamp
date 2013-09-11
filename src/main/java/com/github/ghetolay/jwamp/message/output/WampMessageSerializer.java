@@ -144,19 +144,25 @@ public class WampMessageSerializer {
 
 		appendString(result, msg.getTopicId());
 
-		if(msg.getEvents() != null)
-			result.append(objectMapper.writeValueAsString(msg.getEvents()));
+		if(msg.getEvent() != null)
+			result.append(','+objectMapper.writeValueAsString(msg.getEvent()));
 		
 		if(msg.isExcludeMe())
 			result.append(",true");
-		else
-			if( msg.getEligible() != null || msg.getExclude() != null ){
+		else{
+			boolean hasEligible = msg.getEligible() != null && !msg.getEligible().isEmpty();
+			boolean hasExclude = msg.getExclude()  != null && !msg.getExclude().isEmpty();
+			
+			if( hasEligible || hasExclude ){
 				result.append(',');
-				result.append(msg.getExclude()==null?"[]":objectMapper.writeValueAsString(msg.getExclude()));
+				result.append( hasExclude?objectMapper.writeValueAsString(msg.getExclude()):"[]" );
 
-				result.append(',');
-				result.append(msg.getEligible()==null?"[]":objectMapper.writeValueAsString(msg.getEligible()));
+				if( hasEligible ){	
+					result.append(',');
+					result.append(objectMapper.writeValueAsString(msg.getEligible()));
+				}
 			}
+		}
 		
 		return endMsg(result);
 	}

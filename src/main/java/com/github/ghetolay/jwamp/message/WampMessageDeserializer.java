@@ -163,7 +163,7 @@ public class WampMessageDeserializer {
 		result.event = parser.readValueAs(Object.class);
 
 		//excludeme or exclude list
-		if(parser.getCurrentToken() == JsonToken.VALUE_TRUE)
+		if(parser.nextToken() == JsonToken.VALUE_TRUE)
 			result.excludeMe = true;
 		else if(parser.getCurrentToken() == JsonToken.START_ARRAY){
 			result.exclude = new ArrayList<String>();
@@ -181,8 +181,7 @@ public class WampMessageDeserializer {
 						throw new BadMessageFormException("Fifth element must be an array of string");
 					result.eligible.add(parser.getText());
 				}
-			}else
-				throw new BadMessageFormException("Exclude List found but Eligible list missing");
+			}
 		}
 
 		return result;

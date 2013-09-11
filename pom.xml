@@ -122,6 +122,7 @@
 				<configuration>
 					<suiteXmlFiles>
 						<suiteXmlFile>src/test/resources/jetty_client-server.xml</suiteXmlFile>
+						<suiteXmlFile>src/test/resources/serialization.xml</suiteXmlFile>
 					</suiteXmlFiles>
 				</configuration>
 			</plugin>

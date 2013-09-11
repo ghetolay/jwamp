@@ -33,7 +33,7 @@ public class WampPublishMessage extends WampMessage{
 		return topicId;
 	}
 
-	public Object getEvents() {
+	public Object getEvent() {
 		return event;
 	}
 
