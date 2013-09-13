@@ -15,10 +15,7 @@
 */
 package com.github.ghetolay.jwamp.event;
 
-import java.util.List;
-
-import com.github.ghetolay.jwamp.message.WampEventMessage;
-import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import java.util.Set;
 
 public interface EventAction {
 	
@@ -28,5 +25,5 @@ public interface EventAction {
 	public void subscribe(String sessionId);
 	public void unsubscribe(String sessionId);
 
-	public List<String> publish(String sessionId, WampPublishMessage wampPublishMessage, WampEventMessage msg);
+	public Set<String> getSubscriber();
 }

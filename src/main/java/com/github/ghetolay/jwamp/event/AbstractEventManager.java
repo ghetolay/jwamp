@@ -17,6 +17,7 @@ package com.github.ghetolay.jwamp.event;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -96,7 +97,7 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			msg.setTopicId(wampPublishMessage.getTopicId());
 			msg.setEvent( wampPublishMessage.getEvent() );
 			
-			List<String> publishTo = e.publish(sessionId, wampPublishMessage, msg);
+			List<String> publishTo = getPublishList(e, sessionId, wampPublishMessage);
 			if(publishTo != null)
 				for(String s : publishTo)
 					sendEvent(s, msg);
@@ -104,6 +105,27 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}
 	
+	private List<String> getPublishList(EventAction e, String sessionId,WampPublishMessage wampPublishMessage){
+		if(wampPublishMessage.getEligible() != null)
+			return wampPublishMessage.getEligible();
+		
+		List<String> res;
+		if(wampPublishMessage.getExclude() != null){
+			res = new ArrayList<String>(e.getSubscriber());
+			for(String s : wampPublishMessage.getExclude())
+				res.remove(s);
+		}
+		else{ 
+			if(wampPublishMessage.isExcludeMe()){
+				res = new ArrayList<String>(e.getSubscriber());
+				res.remove(sessionId);
+			}else 
+				res = new ArrayList<String>(e.getSubscriber());
+		}
+		
+		return res;	
+	}
+	 
 	public void sendEvent(String sessionId, String eventId, Object event) throws SerializationException{		
 		OutputWampEventMessage msg = new OutputWampEventMessage();
 		msg.setTopicId(eventId);

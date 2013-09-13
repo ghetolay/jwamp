@@ -16,16 +16,12 @@
 package com.github.ghetolay.jwamp.event;
 
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.github.ghetolay.jwamp.message.WampEventMessage;
-import com.github.ghetolay.jwamp.message.WampPublishMessage;
 
 public class SimpleEventAction implements EventAction {
 
@@ -52,25 +48,8 @@ public class SimpleEventAction implements EventAction {
 		subscriber.remove(sessionId);
 	}
 
-	public List<String> publish(String sessionId, WampPublishMessage wampPublishMessage, WampEventMessage msg) {
-		if(wampPublishMessage.getEligible() != null)
-			return wampPublishMessage.getEligible();
-		
-		List<String> res;
-		if(wampPublishMessage.getExclude() != null){
-			res = new ArrayList<String>(subscriber);
-			for(String s : wampPublishMessage.getExclude())
-				res.remove(s);
-		}
-		else{ 
-			if(wampPublishMessage.isExcludeMe()){
-				res = new ArrayList<String>(subscriber);
-				res.remove(sessionId);
-			}else 
-				res = new ArrayList<String>(subscriber);
-		}
-		
-		return res;	
+	public Set<String> getSubscriber(){
+		return Collections.unmodifiableSet(subscriber);
 	}
 	
 	public void eventAll(Object event){

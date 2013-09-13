@@ -69,6 +69,7 @@ public class DefaultWampParameter{
 		}
 		
 		//TODO update topic element to add arguments
+		//need some rework
 		private void mapFromFile(InputStream is) throws Exception{
 			
 			topics.clear();
@@ -166,6 +167,16 @@ public class DefaultWampParameter{
 					event = null;
 			}
 		}
+		
+		public CallAction getCallAction(String actionId){
+			return actionMapping !=null ?actionMapping.getAction(actionId):null;
+		}
+		
+		public EventAction getEventAction(String actionId){
+			return eventMapping != null ?eventMapping.getAction(actionId):null;
+		}
+		
+		//TODO add/remove actions ?
 	}
 	
 	public static class SimpleClientParameter extends FileMappingParameter{
@@ -217,21 +228,18 @@ public class DefaultWampParameter{
 		}
 	}
 	
+	//TODO: it's tricky to get the eventManager in order to send event messages directly
 	public static class SimpleServerParameter extends FileMappingParameter{ 
-		
-		private WampMessageHandler eventManager;
 		
 		public SimpleServerParameter(InputStream is) throws Exception{
 			super(is);
-			
-			eventManager = new ServerEventManager(eventMapping);
 		}
 		
 		public Collection<WampMessageHandler> getHandlers(){
 			ArrayList<WampMessageHandler> handlers = new ArrayList<WampMessageHandler>(2);
 			
 			handlers.add(new MappingRPCManager(actionMapping));
-			handlers.add(eventManager);
+			handlers.add(new ServerEventManager(eventMapping));
 			
 			return handlers; 
 		}
