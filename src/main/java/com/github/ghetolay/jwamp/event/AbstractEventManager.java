@@ -97,10 +97,12 @@ public abstract class AbstractEventManager implements WampMessageHandler, EventS
 			msg.setTopicId(wampPublishMessage.getTopicId());
 			msg.setEvent( wampPublishMessage.getEvent() );
 			
-			List<String> publishTo = getPublishList(e, sessionId, wampPublishMessage);
-			if(publishTo != null)
-				for(String s : publishTo)
-					sendEvent(s, msg);
+			//e.publishTo think about it
+			List<String> publishList = e.publishTo( getPublishList(e, sessionId, wampPublishMessage), wampPublishMessage, msg);
+			if(publishList != null)
+				for(String s : publishList)
+						sendEvent(s, msg);
+			
 		}else if(log.isDebugEnabled())
 			log.debug("unable to publish : action name doesn't not exist " + wampPublishMessage.getTopicId());
 	}

@@ -15,7 +15,11 @@
 */
 package com.github.ghetolay.jwamp.event;
 
+import java.util.List;
 import java.util.Set;
+
+import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.output.OutputWampEventMessage;
 
 public interface EventAction {
 	
@@ -26,4 +30,16 @@ public interface EventAction {
 	public void unsubscribe(String sessionId);
 
 	public Set<String> getSubscriber();
+	
+	//TODO made in a urge. let's think about it a bit more :)
+	/**
+	 * Method called before sending an event after a publish message.
+	 * It permits filtering subscribers and editing eventMessage.
+	 * 
+	 * @param subscribers Current list of subscribers
+	 * @param publishMessage Original publish message
+	 * @param eventMessage Current event message, can be modified
+	 * @return The final list of subscribers event message will be sent to
+	 */
+	public List<String> publishTo(List<String> subscribers, WampPublishMessage publishMessage, OutputWampEventMessage eventMessage);
 }

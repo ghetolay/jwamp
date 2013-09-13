@@ -18,10 +18,14 @@ package com.github.ghetolay.jwamp.event;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.ghetolay.jwamp.message.WampPublishMessage;
+import com.github.ghetolay.jwamp.message.output.OutputWampEventMessage;
 
 public class SimpleEventAction implements EventAction {
 
@@ -50,6 +54,10 @@ public class SimpleEventAction implements EventAction {
 
 	public Set<String> getSubscriber(){
 		return Collections.unmodifiableSet(subscriber);
+	}
+	
+	public List<String> publishTo(List<String> subscribers, WampPublishMessage publishMessage, OutputWampEventMessage eventMessage){
+		return subscribers;
 	}
 	
 	public void eventAll(Object event){
