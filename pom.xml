@@ -27,6 +27,10 @@
 			<timezone>+1</timezone>
 		</developer>
 	</developers>
+    
+    <properties>
+      <jetty-version>9.1.0.v20131115</jetty-version>
+    </properties>
 
 	<licenses>
 		<license>
@@ -63,22 +67,25 @@
 			<version>6.8</version>
 			<scope>test</scope>
 		</dependency>
+        <!-- for setting up a test server -->
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-webapp</artifactId>
-			<version>9.0.0.RC2</version>
+			<version>${jetty-version}</version>
 			<scope>provided</scope>
 		</dependency>
+        <!-- for javax.websocket client -->
 		<dependency>
 			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>websocket-client</artifactId>
-			<version>9.0.0.RC2</version>
+			<artifactId>javax-websocket-client-impl</artifactId>
+            <version>${jetty-version}</version>
 			<scope>provided</scope>
 		</dependency>
+        <!-- for javax.websocket.server -->
 		<dependency>
 			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>websocket-server</artifactId>
-			<version>9.0.0.v20130308</version>
+			<artifactId>javax-websocket-server-impl</artifactId>
+            <version>${jetty-version}</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
@@ -115,6 +122,15 @@
 
 	<build>
 		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
