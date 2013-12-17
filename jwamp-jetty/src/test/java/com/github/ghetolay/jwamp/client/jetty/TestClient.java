@@ -15,20 +15,15 @@
 */
 package com.github.ghetolay.jwamp.client.jetty;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.testng.AssertJUnit.*;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.jetty.websocket.api.StatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.github.ghetolay.jwamp.DefaultWampParameter;
@@ -37,6 +32,7 @@ import com.github.ghetolay.jwamp.UnsupportedWampActionException;
 import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampWebSocket;
 import com.github.ghetolay.jwamp.event.EventResult;
+import com.github.ghetolay.jwamp.jetty.TestServer;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.rpc.CallException;
@@ -58,6 +54,8 @@ public class TestClient {
 	static WaitThread waitAfterRestart = new WaitThread(waitAfterRestartTimeout);
 	
 	static WampWebSocket wamp;
+
+        private static TestServer server;
 	
 	@Test
 	public void connect(){
@@ -70,7 +68,7 @@ public class TestClient {
 			//wampFact.getSerializer().setDesiredFormat(WampSerializer.format.BINARY);
 			
 			wampFact.setWampParameter(new DefaultWampParameter.SimpleClientParameter(getClass().getResourceAsStream("/wamp-client.xml"), getEventListener()));
-			wamp = wampFact.connect(new URI("ws://localhost:8080"), 1000, 1000, ReconnectPolicy.YES);
+			wamp = wampFact.connect(server.getServerURI(), 1000, 1000, ReconnectPolicy.YES);
 			
 			waitEventResponse.start();
 			
@@ -190,21 +188,21 @@ public class TestClient {
 		
 	}
 	
+	@BeforeClass()
+	public static void startServer() throws Exception {
+	    server = new TestServer();
+	    server.start();
+	}
+	
 	@AfterClass()
-	public void shutdownServer() throws IOException, UnsupportedWampActionException, CallException{		
-		try {
-			wamp.call("Manage", -1,"shutdown");
-		} catch (TimeoutException e){}
-		
-		wamp.getConnection().close(StatusCode.SHUTDOWN, "");
+	public static void shutdownServer() throws Exception {
+	    server.stop();
 	}
 	
 	@Test(dependsOnMethods = {"testAutoSubscribeResponse"})
-	public void testAutoReconnectAutoResubscribe() throws IOException, UnsupportedWampActionException, InterruptedException, TimeoutException, CallException{
-		try {
-			wamp.call("Manage", -1, "restart");
-		} catch (TimeoutException e){}
-		
+	public void testAutoReconnectAutoResubscribe() throws Exception{
+	    server.restart();
+	    
 		disconnected = true;
 		waitAfterRestart.start();
 		waitAfterRestart.join();

@@ -8,9 +8,9 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.ghetolay</groupId>
-	<artifactId>jwamp</artifactId>
+	<artifactId>jwamp-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 	<name>jwamp</name>
 	<description>A server/client java implementation of the WebSocket subprotocol WAMP. More information about WAMP at http://wamp.ws/.</description>
 	<url>https://github.com/ghetolay/jwamp</url>
@@ -27,11 +27,13 @@
 			<timezone>+1</timezone>
 		</developer>
 	</developers>
-    
-    <properties>
-      <jetty-version>9.1.0.v20131115</jetty-version>
-    </properties>
 
+  <modules>
+    <module>jwamp-core</module>
+    <module>jwamp-jetty</module>
+    <module>jwamp-javax-websocket</module>
+  </modules>
+    
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -39,56 +41,6 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-
-	<dependencies>
-		<dependency>
-			<groupId>com.fasterxml.jackson</groupId>
-			<artifactId>jackson-datatype-json-org</artifactId>
-			<version>1.8.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.6.5</version>
-		</dependency>
-		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax</artifactId>
-			<version>1.2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.6.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.testng</groupId>
-			<artifactId>testng</artifactId>
-			<version>6.8</version>
-			<scope>test</scope>
-		</dependency>
-        <!-- for setting up a test server -->
-		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${jetty-version}</version>
-			<scope>provided</scope>
-		</dependency>
-        <!-- for javax.websocket client -->
-		<dependency>
-			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>javax-websocket-client-impl</artifactId>
-            <version>${jetty-version}</version>
-			<scope>provided</scope>
-		</dependency>
-        <!-- for javax.websocket.server -->
-		<dependency>
-			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>javax-websocket-server-impl</artifactId>
-            <version>${jetty-version}</version>
-			<scope>provided</scope>
-		</dependency>
-	</dependencies>
 
 	<profiles>
 		<profile>
@@ -122,26 +74,15 @@
 
 	<build>
 		<plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
-                </configuration>
-            </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.12</version>
-				<configuration>
-					<suiteXmlFiles>
-						<suiteXmlFile>src/test/resources/jetty_client-server.xml</suiteXmlFile>
-						<suiteXmlFile>src/test/resources/serialization.xml</suiteXmlFile>
-					</suiteXmlFiles>
-				</configuration>
-			</plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
 			<plugin>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>2.2.1</version>
@@ -164,21 +105,6 @@
 						<phase>deploy</phase>
 						<goals>
 							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<!-- explicitly define maven-deploy-plugin after other to force exec 
-					order -->
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.7</version>
-				<executions>
-					<execution>
-						<id>deploy</id>
-						<phase>deploy</phase>
-						<goals>
-							<goal>deploy</goal>
 						</goals>
 					</execution>
 				</executions>

@@ -21,7 +21,6 @@ import java.util.concurrent.TimeoutException;
 import com.github.ghetolay.jwamp.UnsupportedWampActionException;
 import com.github.ghetolay.jwamp.client.jetty.TestClient;
 import com.github.ghetolay.jwamp.message.SerializationException;
-import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.server.jetty.TestServer;
 
 /**
