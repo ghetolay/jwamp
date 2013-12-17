@@ -23,6 +23,8 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.UpgradeRequest;
 import org.eclipse.jetty.websocket.api.UpgradeResponse;
 import org.eclipse.jetty.websocket.server.WebSocketHandler;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeRequest;
+import org.eclipse.jetty.websocket.servlet.ServletUpgradeResponse;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 
@@ -66,7 +68,7 @@ public class WampWebSocketHandler extends WebSocketHandler implements WebSocketC
 		this.param = param;
 	}
 
-	public Object createWebSocket(UpgradeRequest req, UpgradeResponse resp) {
+	public Object createWebSocket(ServletUpgradeRequest req, ServletUpgradeResponse resp) {
 		resp.setAcceptedSubProtocol(WampFactory.getProtocolName());
 		
 		if(req.hasSubProtocol(WampFactory.getProtocolName())){
@@ -81,7 +83,7 @@ public class WampWebSocketHandler extends WebSocketHandler implements WebSocketC
 		else
 			return null;
 	}
-
+	
 	public void configure(WebSocketServletFactory factory) {
 		factory.setCreator(this);
 	}

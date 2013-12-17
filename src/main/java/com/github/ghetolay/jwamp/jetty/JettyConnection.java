@@ -94,9 +94,7 @@ public class JettyConnection extends AbstractWampConnection implements WebSocket
 	
 	public void close(int closeCode, String message){
 		intentionallyClosed = true;
-		try {
-			connection.close(closeCode, message);
-		} catch (IOException e) {}
+		connection.close(closeCode, message);
 	}
 	
 	public void setMaxIdleTime(long ms) {
