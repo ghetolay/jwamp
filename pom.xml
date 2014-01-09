@@ -30,7 +30,7 @@
 
   <modules>
     <module>jwamp-core</module>
-    <module>jwamp-jetty</module>
+    <module>jwamp-jee6-jetty</module>
     <module>jwamp-javax-websocket</module>
   </modules>
     
