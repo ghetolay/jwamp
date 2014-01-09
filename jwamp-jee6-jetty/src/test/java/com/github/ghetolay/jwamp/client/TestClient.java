@@ -32,7 +32,7 @@ import com.github.ghetolay.jwamp.UnsupportedWampActionException;
 import com.github.ghetolay.jwamp.WampConnection.ReconnectPolicy;
 import com.github.ghetolay.jwamp.WampWebSocket;
 import com.github.ghetolay.jwamp.event.EventResult;
-import com.github.ghetolay.jwamp.jetty.TestServer;
+import com.github.ghetolay.jwamp.server.TestServer;
 import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.rpc.CallException;

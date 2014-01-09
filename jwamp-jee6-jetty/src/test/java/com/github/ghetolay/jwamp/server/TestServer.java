@@ -32,6 +32,9 @@ import org.slf4j.LoggerFactory;
 import com.github.ghetolay.jwamp.DefaultWampParameter;
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.WampWebSocket;
+import com.github.ghetolay.jwamp.jetty.JettyWebSocketListener;
+import com.github.ghetolay.jwamp.jetty.WampJettyFactory;
+import com.github.ghetolay.jwamp.jetty.WampWebSocketHandler;
 import com.github.ghetolay.jwamp.rpc.DefinedMethodRPCManager;
 import com.github.ghetolay.jwamp.server.rpc.TestDefinedAction;
 
