@@ -9,7 +9,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jwamp-javax-websocket</artifactId>
   <packaging>jar</packaging>
-  <description>jwamp :: javax.websocket (JSR-356) implementation</description>
+  <description>jwamp :: javax.websocket (JSR-356) implementation part of jee7</description>
   <url>https://github.com/ghetolay/jwamp</url>
 
   <properties>
