@@ -102,8 +102,10 @@ public class TimeoutHashMap<K,V> extends HashMap<K,V>{
 		public synchronized void run() {
 			try{
 				while(!isInterrupted()){
-					if(toRemove.isEmpty())
+					if(toRemove.isEmpty()){
+						minimalWait = -1;
 						wait();
+					}
 
 					//if minimalWait is >0 it means it has been set by add(key,timeout)
 					if(minimalWait < 0){
