@@ -23,6 +23,8 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -56,9 +58,9 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	
 	/////////////////// 1 //////////////////////
 	@Test
-	public void publish1_encode() throws EncodeException, IOException{
+	public void publish1_encode() throws EncodeException, IOException, URISyntaxException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicURI("http://example.com/simple");
+		msg.setTopicURI(new URI("http://example.com/simple"));
 		msg.setEvent("Hello, world!");
 		
 		StringWriter sw = new StringWriter();
@@ -69,7 +71,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	}
 	
 	@Test
-	public void publish1_decode() throws IOException, DecodeException{
+	public void publish1_decode() throws IOException, DecodeException, URISyntaxException{
 		
 		WampMessage msg = decoder.decode(
 				new StringReader("[7,\"http://example.com/simple\",\"Hello, world!\"]"));
@@ -79,15 +81,15 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/simple", pMsg.getTopicURI());
+		assertEquals(new URI("http://example.com/simple"), pMsg.getTopicURI());
 		assertEquals("Hello, world!", pMsg.getEvent());
 	}
 	
 	/////////////////// 2 //////////////////////
 	@Test
-	public void publish2_encode() throws EncodeException, IOException{
+	public void publish2_encode() throws EncodeException, IOException, URISyntaxException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicURI("http://example.com/simple");
+		msg.setTopicURI(new URI("http://example.com/simple"));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -97,7 +99,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	}
 	
 	@Test
-	public void publish2_decode() throws DecodeException, IOException{
+	public void publish2_decode() throws DecodeException, IOException, URISyntaxException{
 		WampMessage msg = decoder.decode(
 				new StringReader("[7,\"http://example.com/simple\",null]"));
 				
@@ -106,16 +108,16 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/simple", pMsg.getTopicURI());
+		assertEquals(new URI("http://example.com/simple"), pMsg.getTopicURI());
 		assertNull(pMsg.getEvent());
 	}
 		
 	/////////////////// 3 //////////////////////
 	@Test
-	public void publish3_encode() throws EncodeException, IOException{
+	public void publish3_encode() throws EncodeException, IOException, URISyntaxException{
 		
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicURI("http://example.com/event#myevent2");
+		msg.setTopicURI(new URI("http://example.com/event#myevent2"));
 		
 		SomeObject obj = new SomeObject();
 		obj.setRand(0.09187032734575862);
@@ -147,7 +149,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	}
 	
 	@Test
-	public void publish3_decode() throws DecodeException, IOException, ParseException{
+	public void publish3_decode() throws DecodeException, IOException, ParseException, URISyntaxException{
 		WampMessage msg = decoder.decode(
 				new StringReader("[7, \"http://example.com/event#myevent2\","
 					+	"{" 
@@ -164,7 +166,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/event#myevent2", pMsg.getTopicURI());
+		assertEquals(new URI("http://example.com/event#myevent2"), pMsg.getTopicURI());
 		
 		Object event = pMsg.getEvent();
 		if(event == null || !(event instanceof Map))
@@ -187,9 +189,9 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	
 	/////////////////// 4 //////////////////////
 	@Test
-	public void publish4_encode() throws EncodeException, IOException{
+	public void publish4_encode() throws EncodeException, IOException, URISyntaxException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicURI("event:myevent1");
+		msg.setTopicURI(new URI("event:myevent1"));
 		msg.setEvent("hello");
 		msg.setExclude( Arrays.asList("NwtXQ8rdfPsy-ewS","dYqgDl0FthI6_hjb") );
 		
@@ -203,7 +205,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	}
 	
 	@Test
-	public void publish4_decode() throws DecodeException, IOException{
+	public void publish4_decode() throws DecodeException, IOException, URISyntaxException{
 		WampMessage msg = decoder.decode(
 				new StringReader("[7,\"event:myevent1\","
 									+ "\"hello\","
@@ -214,7 +216,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("event:myevent1", pMsg.getTopicURI());
+		assertEquals(new URI("event:myevent1"), pMsg.getTopicURI());
 		assertEquals("hello", pMsg.getEvent());
 		
 		List<String> excludeList = pMsg.getExclude();
@@ -225,9 +227,9 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	
 	/////////////////// 5 //////////////////////
 	@Test
-	public void publish5_encode() throws EncodeException, IOException{
+	public void publish5_encode() throws EncodeException, IOException, URISyntaxException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicURI("event:myevent1");
+		msg.setTopicURI(new URI("event:myevent1"));
 		msg.setEvent("hello");
 		
 		msg.setEligible(Arrays.asList("NwtXQ8rdfPsy-ewS"));
@@ -243,7 +245,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	}
 	
 	@Test
-	public void publish5_decode() throws JsonParseException, DecodeException, IOException{
+	public void publish5_decode() throws JsonParseException, DecodeException, IOException, URISyntaxException{
 		WampMessage msg = decoder.decode(
 				new StringReader("[7,\"event:myevent1\","
 									+ "\"hello\","
@@ -255,7 +257,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("event:myevent1", pMsg.getTopicURI());
+		assertEquals(new URI("event:myevent1"), pMsg.getTopicURI());
 		assertEquals("hello", pMsg.getEvent());
 		
 		assertTrue(pMsg.getExclude().isEmpty());

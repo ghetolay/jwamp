@@ -1,4 +1,7 @@
 JSR-356 compliant
+	improve WampArgument and output messages using it.
+	Test on embedded server (maybe scan issue).
+	Redefine WampFactory usage and rename according 
 start versioning
 more test (arquillian)
 update readme.md
