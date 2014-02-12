@@ -21,7 +21,7 @@ public class WampPrefixMessage extends WampMessage{
 	protected String prefix;
 	protected String uri;
 	
-	WampPrefixMessage(){
+	public WampPrefixMessage(){
 		messageType = PREFIX;
 	}
 

@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 /**
  * @author ghetolay
@@ -25,13 +27,13 @@ public class OutputWampSubscribeMessage extends WampSubscribeMessage {
 	
 	public OutputWampSubscribeMessage(){}
 	
-	public OutputWampSubscribeMessage(String topicId){
+	public OutputWampSubscribeMessage(URI topicURI){
 		super();
 		
-		this.topicId = topicId;
+		this.topicURI = topicURI;
 	}
 	
-	public void setTopicId(String topicId) {
-		this.topicId = topicId;
+	public void setTopicId(URI topicURI) {
+		this.topicURI = topicURI;
 	}
 }

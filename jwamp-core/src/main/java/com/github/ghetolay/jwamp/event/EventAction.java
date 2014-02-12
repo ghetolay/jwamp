@@ -15,6 +15,7 @@
 */
 package com.github.ghetolay.jwamp.event;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ import com.github.ghetolay.jwamp.message.output.OutputWampEventMessage;
 
 public interface EventAction {
 	
-	public void setEventId(String id);
+	public void setEventURI(URI uri);
 	public void setEventSender(EventSender eventSender);
 	
 	public void subscribe(String sessionId);

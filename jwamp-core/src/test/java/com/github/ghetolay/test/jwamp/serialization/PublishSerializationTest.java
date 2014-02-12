@@ -13,123 +13,109 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.serialization;
+package com.github.ghetolay.test.jwamp.serialization;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.testng.annotations.Test;
+import javax.websocket.DecodeException;
+import javax.websocket.EncodeException;
 
-import com.github.ghetolay.jwamp.WampSerializer;
-import com.github.ghetolay.jwamp.message.SerializationException;
+import org.junit.Test;
+
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampMessageDeserializer;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampPublishMessage;
-import com.github.ghetolay.jwamp.message.output.WampMessageSerializer;
 
 
 
 /**
+ * Test of publish message according to wamp specification examples
+ * http://wamp.ws/spec/#publish_message
+ * 
  * @author ghetolay
  *
  */
-public class TestSerialization {
-
-	/**
-	*Copyright [2012] [Ghetolay]
-	*
-	*Licensed under the Apache License, Version 2.0 (the "License");
-	*you may not use this file except in compliance with the License.
-	*You may obtain a copy of the License at
-	*
-	*http://www.apache.org/licenses/LICENSE-2.0
-	*
-	*Unless required by applicable law or agreed to in writing, software
-	*distributed under the License is distributed on an "AS IS" BASIS,
-	*WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	*See the License for the specific language governing permissions and
-	*limitations under the License.
-	*/
+public class PublishSerializationTest extends AbstractSerializationTest{
 	
-	WampSerializer serializer = new WampSerializer();
-	
-	//Tests are from wamp specification
+	/////////////////// 1 //////////////////////
 	@Test
-	public void serialize1() throws SerializationException{
+	public void publish1_encode() throws EncodeException, IOException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId("http://example.com/simple");
+		msg.setTopicURI("http://example.com/simple");
 		msg.setEvent("Hello, world!");
 		
+		StringWriter sw = new StringWriter();
+		encoder.encode(msg, sw);
+		
 		assertEquals("[7,\"http://example.com/simple\",\"Hello, world!\"]",
-				WampMessageSerializer.serialize(msg, serializer.getObjectMapper()));
+				sw.toString());
 	}
 	
 	@Test
-	public void deserialize1() throws JsonParseException, SerializationException, IOException{
-		WampMessage msg = WampMessageDeserializer.deserialize(serializer.getObjectMapper().getJsonFactory().createJsonParser(
-				"[7,\"http://example.com/simple\",\"Hello, world!\"]"));
+	public void publish1_decode() throws IOException, DecodeException{
+		
+		WampMessage msg = decoder.decode(
+				new StringReader("[7,\"http://example.com/simple\",\"Hello, world!\"]"));
 				
 		if( !(msg instanceof WampPublishMessage) )
 			fail("Wrong message type");
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/simple", pMsg.getTopicId());
+		assertEquals("http://example.com/simple", pMsg.getTopicURI());
 		assertEquals("Hello, world!", pMsg.getEvent());
 	}
 	
-	//in the example event is null
-	//does empty event is permit instead ?
+	/////////////////// 2 //////////////////////
 	@Test
-	public void serialize2() throws SerializationException{
+	public void publish2_encode() throws EncodeException, IOException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId("http://example.com/simple");
+		msg.setTopicURI("http://example.com/simple");
 		
-		assertEquals("[7,\"http://example.com/simple\"]",
-				WampMessageSerializer.serialize(msg, serializer.getObjectMapper()));
+		StringWriter sw = new StringWriter();
+		encoder.encode(msg, sw);
+		
+		assertEquals("[7,\"http://example.com/simple\",null]",
+				sw.toString());
 	}
 	
 	@Test
-	public void deserialize2() throws JsonParseException, SerializationException, IOException{
-		WampMessage msg = WampMessageDeserializer.deserialize(serializer.getObjectMapper().getJsonFactory().createJsonParser(
-				"[7,\"http://example.com/simple\", null]"));
+	public void publish2_decode() throws DecodeException, IOException{
+		WampMessage msg = decoder.decode(
+				new StringReader("[7,\"http://example.com/simple\",null]"));
 				
 		if( !(msg instanceof WampPublishMessage) )
 			fail("Wrong message type");
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/simple", pMsg.getTopicId());
+		assertEquals("http://example.com/simple", pMsg.getTopicURI());
 		assertNull(pMsg.getEvent());
 	}
 		
+	/////////////////// 3 //////////////////////
 	@Test
-	public void serialize3() throws SerializationException{
-		
-		//it's set to NON_DEFAULT in WampSerialize to reducing data size. Maybe it shouldn"t
-		serializer.getObjectMapper().getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.ALWAYS);
+	public void publish3_encode() throws EncodeException, IOException{
 		
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId("http://example.com/event#myevent2");
+		msg.setTopicURI("http://example.com/event#myevent2");
 		
 		SomeObject obj = new SomeObject();
 		obj.setRand(0.09187032734575862);
@@ -137,14 +123,16 @@ public class TestSerialization {
 		obj.setNum(23);
 		obj.setName("Kross");
 		
-		Calendar cal = Calendar.getInstance();
 		//Seriously month 0-based !!! ?
-		cal.set(2012, 2, 29, 10, 41, 9);
-		cal.set(Calendar.MILLISECOND, 864);
+		calendar.set(2012, 2, 29, 10, 41, 9);
+		calendar.set(Calendar.MILLISECOND, 864);
 
-		obj.setCreated(cal.getTime()); 
+		obj.setCreated(calendar.getTime()); 
 		
 		msg.setEvent(obj);
+		
+		StringWriter sw = new StringWriter();
+		encoder.encode(msg, sw);
 		
 		assertEquals("[7,\"http://example.com/event#myevent2\","
 						+	"{" 
@@ -154,14 +142,14 @@ public class TestSerialization {
 		                +	  "\"name\":\"Kross\","
 		                +	  "\"created\":\"2012-03-29T10:41:09.864Z\""
 		               	+	"}]",
-		             WampMessageSerializer.serialize(msg, serializer.getObjectMapper())
+		             sw.toString()
 		);
 	}
 	
 	@Test
-	public void deserialize3() throws JsonParseException, SerializationException, IOException, ParseException{
-		WampMessage msg = WampMessageDeserializer.deserialize(serializer.getObjectMapper().getJsonFactory().createJsonParser(
-				"[7, \"http://example.com/event#myevent2\","
+	public void publish3_decode() throws DecodeException, IOException, ParseException{
+		WampMessage msg = decoder.decode(
+				new StringReader("[7, \"http://example.com/event#myevent2\","
 					+	"{" 
 	                +	  "\"rand\": 0.09187032734575862,"
 	                +	  "\"flag\": false,"
@@ -176,7 +164,7 @@ public class TestSerialization {
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("http://example.com/event#myevent2", pMsg.getTopicId());
+		assertEquals("http://example.com/event#myevent2", pMsg.getTopicURI());
 		
 		Object event = pMsg.getEvent();
 		if(event == null || !(event instanceof Map))
@@ -190,39 +178,43 @@ public class TestSerialization {
 		assertEquals(23, evtObject.get("num"));
 		assertEquals("Kross", evtObject.get("name"));
 		
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 		cal.set(2012, 2, 29, 10, 41, 9);
 		cal.set(Calendar.MILLISECOND, 864);
 		
-		assertEquals(JsonDateSerializer.format.parse((String)evtObject.get("created")), cal.getTime());
+		assertEquals(dateFormat.parse((String)evtObject.get("created")), cal.getTime());
 	}
 	
+	/////////////////// 4 //////////////////////
 	@Test
-	public void serialize4() throws SerializationException{
+	public void publish4_encode() throws EncodeException, IOException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId("event:myevent1");
+		msg.setTopicURI("event:myevent1");
 		msg.setEvent("hello");
 		msg.setExclude( Arrays.asList("NwtXQ8rdfPsy-ewS","dYqgDl0FthI6_hjb") );
+		
+		StringWriter sw = new StringWriter();
+		encoder.encode(msg, sw);
 		
 		assertEquals("[7,\"event:myevent1\","
 						+ "\"hello\","
 						+ "[\"NwtXQ8rdfPsy-ewS\",\"dYqgDl0FthI6_hjb\"]]",
-				WampMessageSerializer.serialize(msg, serializer.getObjectMapper()));
+				  sw.toString());
 	}
 	
 	@Test
-	public void deserialize4() throws JsonParseException, SerializationException, IOException{
-		WampMessage msg = WampMessageDeserializer.deserialize(serializer.getObjectMapper().getJsonFactory().createJsonParser(
-				"[7,\"event:myevent1\","
-					+ "\"hello\","
-					+ "[\"NwtXQ8rdfPsy-ewS\",\"dYqgDl0FthI6_hjb\"]]"));
+	public void publish4_decode() throws DecodeException, IOException{
+		WampMessage msg = decoder.decode(
+				new StringReader("[7,\"event:myevent1\","
+									+ "\"hello\","
+									+ "[\"NwtXQ8rdfPsy-ewS\",\"dYqgDl0FthI6_hjb\"]]"));
 				
 		if( !(msg instanceof WampPublishMessage) )
 			fail("Wrong message type");
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("event:myevent1", pMsg.getTopicId());
+		assertEquals("event:myevent1", pMsg.getTopicURI());
 		assertEquals("hello", pMsg.getEvent());
 		
 		List<String> excludeList = pMsg.getExclude();
@@ -231,35 +223,39 @@ public class TestSerialization {
 		assertEquals("dYqgDl0FthI6_hjb", excludeList.get(1));
 	}
 	
+	/////////////////// 5 //////////////////////
 	@Test
-	public void serialize5() throws SerializationException{
+	public void publish5_encode() throws EncodeException, IOException{
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId("event:myevent1");
+		msg.setTopicURI("event:myevent1");
 		msg.setEvent("hello");
 		
 		msg.setEligible(Arrays.asList("NwtXQ8rdfPsy-ewS"));
+		
+		StringWriter sw = new StringWriter();
+		encoder.encode(msg, sw);
 		
 		assertEquals("[7,\"event:myevent1\","
 						+ "\"hello\","
 						+ "[],"
 						+ "[\"NwtXQ8rdfPsy-ewS\"]]",
-				WampMessageSerializer.serialize(msg, serializer.getObjectMapper()));
+					sw.toString());
 	}
 	
 	@Test
-	public void deserialize5() throws JsonParseException, SerializationException, IOException{
-		WampMessage msg = WampMessageDeserializer.deserialize(serializer.getObjectMapper().getJsonFactory().createJsonParser(
-				"[7,\"event:myevent1\","
-					+ "\"hello\","
-					+ "[],"
-					+ "[\"NwtXQ8rdfPsy-ewS\"]]"));
+	public void publish5_decode() throws JsonParseException, DecodeException, IOException{
+		WampMessage msg = decoder.decode(
+				new StringReader("[7,\"event:myevent1\","
+									+ "\"hello\","
+									+ "[],"
+									+ "[\"NwtXQ8rdfPsy-ewS\"]]"));
 				
 		if( !(msg instanceof WampPublishMessage) )
 			fail("Wrong message type");
 		assertEquals(WampMessage.PUBLISH, msg.getMessageType());
 		
 		WampPublishMessage pMsg = (WampPublishMessage)msg;
-		assertEquals("event:myevent1", pMsg.getTopicId());
+		assertEquals("event:myevent1", pMsg.getTopicURI());
 		assertEquals("hello", pMsg.getEvent());
 		
 		assertTrue(pMsg.getExclude().isEmpty());
@@ -315,19 +311,6 @@ public class TestSerialization {
 		
 		public void setCreated(Date created) {
 			this.created = created;
-		}
-	}
-	
-	static private class JsonDateSerializer extends JsonSerializer<Date>{
-		
-		public static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-		
-		@Override
-		public void serialize(Date value, JsonGenerator jgen,
-				SerializerProvider provider) throws IOException,
-				JsonProcessingException {
-			
-			jgen.writeString( format.format(value) );
 		}
 	}
 }

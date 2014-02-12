@@ -15,7 +15,10 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
+import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 /**
  * @author ghetolay
@@ -25,17 +28,29 @@ public class CallException extends Throwable {
 
 	private static final long serialVersionUID = -6836214026673216476L;
 
-	private String details;
+	public static final URI generic = URIBuilder.newURI("ws://wamp.ws/error#generic");
 	
-	public CallException(String errorDesc, String errorDetails){
+	private URI errorURI;
+	private Object details;
+	
+	public CallException(URI errorURI, String errorDesc) {
+		super(errorDesc);
+	}
+	
+	public CallException(URI errorURI, String errorDesc, Object errorDetails){
 		super(errorDesc);
 		details = errorDetails;
 	}
 	
 	public CallException(WampCallErrorMessage msg){
-		super(msg.getErrorDesc());
+		this(msg.getErrorUri(), msg.getErrorDesc());
 		details = msg.getErrorDetails();
 	}
+
+	public URI getErrorURI(){
+		return errorURI;
+	}
+	
 	
 	/**
 	 * Equivalent to Throwable.getMessage()
@@ -47,7 +62,7 @@ public class CallException extends Throwable {
 	}
 	
 	
-	public String getErrorDetails(){
+	public Object getErrorDetails(){
 		return details;
 	}
 }

@@ -53,4 +53,9 @@ public class OutputWampCallResultMessage extends WampCallResultMessage{
 	public WampArguments getResults(){
 		throw new IllegalStateException("Use getResult()");
 	}
+	
+	@Override
+	public String toString(){
+		return " WampCallResultMessage { "+ callId+ " , " + arg + " } ";
+	}
 }

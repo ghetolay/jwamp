@@ -1,9 +1,0 @@
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
-  
-<suite name="serialization" verbose="1">
-  <test name="serialization">
-    <classes>
-       <class name="com.github.ghetolay.jwamp.serialization.TestSerialization" />
-    </classes>
-  </test>
-</suite>

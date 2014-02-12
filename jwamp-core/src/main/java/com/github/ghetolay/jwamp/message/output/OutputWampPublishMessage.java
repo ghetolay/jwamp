@@ -15,6 +15,7 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
 import java.util.List;
 
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
@@ -24,8 +25,8 @@ import com.github.ghetolay.jwamp.message.WampPublishMessage;
  */
 public class OutputWampPublishMessage extends WampPublishMessage{
 	
-	public void setTopicId(String topicId) {
-		this.topicId = topicId;
+	public void setTopicURI(URI topicURI) {
+		this.topicURI = topicURI;
 	}
 
 	public void setEligible(List<String> eligible) {

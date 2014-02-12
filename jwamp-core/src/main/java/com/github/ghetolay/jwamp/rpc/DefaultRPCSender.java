@@ -17,18 +17,20 @@ package com.github.ghetolay.jwamp.rpc;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
+
+import javax.websocket.CloseReason;
+import javax.websocket.EncodeException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.WampConnection;
+import com.github.ghetolay.jwamp.endpoint.SessionManager;
 import com.github.ghetolay.jwamp.message.WampArguments;
-import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
@@ -37,9 +39,10 @@ import com.github.ghetolay.jwamp.utils.WaitResponse;
 
 public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, ResultListener<WampCallResultMessage>>{
 	
-	protected final Logger log = LoggerFactory.getLogger(getClass());
+	protected static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
 	
-	private WampConnection conn;
+	private SessionManager sessionManager;
+	private String sessionId;
 	
 	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
 	
@@ -48,20 +51,26 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		resultListeners.addListener(this);
 	}
 	
-	public void onConnected(WampConnection connection) {
-		conn = connection;
+	@Override
+	public void init(SessionManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
+
+	@Override
+	public void onOpen(String sessionId) {
+		this.sessionId = sessionId;
 	}
 	
-	public void onClose(String sessionId, int closeCode) {}
+	public void onClose(String sessionId, CloseReason closeReason) {}
 	
-	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException, CallException{
+	public WampArguments call(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException{
 		if(timeout == 0)
 			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args)");
 
 		if(timeout > 0){
 			WaitResponse<WampCallResultMessage> wr = new WaitResponse<WampCallResultMessage>();
 			
-			call(procId,wr,timeout,args);
+			call(procURI,wr,timeout,args);
 			
 			WampCallResultMessage result;
 			
@@ -83,15 +92,15 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 			throw new TimeoutException();
 		}
 		
-		call(procId,null,-1,args);
+		call(procURI,null,-1,args);
 		return null;
 	}
 	
-	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, SerializationException{
+	public String call(URI procURI, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, EncodeException{
 		String callId = generateCallId();
 		
 		OutputWampCallMessage msg = new OutputWampCallMessage();
-		msg.setProcId(procId);
+		msg.setProcURI(procURI);
 		msg.setCallId(callId);
 		
 		if(args.length > 0){
@@ -101,7 +110,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 				msg.setArgument(args);
 		}
 			
-		conn.sendMessage(msg);
+		sessionManager.sendMessageTo(sessionId, msg);
 			
 		if(listener != null)
 			if(timeout >= 0)
@@ -113,17 +122,11 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		return callId;
 	}
 	
-	public boolean onMessage(String sessionId, WampMessage msg) {
-		if(msg.getMessageType() == WampMessage.CALLRESULT
-			|| msg.getMessageType() == WampMessage.CALLERROR){
-				onCallResult((WampCallResultMessage)msg);
-				return true;
-			}
-			
-		return false;
+	public void onMessage(String sessionId, WampCallErrorMessage msg) {
+		onMessage(sessionId, (WampCallResultMessage)msg);
 	}
 	
-	private void onCallResult(WampCallResultMessage msg) {
+	public void onMessage(String sessionId, WampCallResultMessage msg) {
 		if(resultListeners.containsKey(msg.getCallId())){
 			ResultListener<WampCallResultMessage> listener = resultListeners.get(msg.getCallId());
 			

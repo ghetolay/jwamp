@@ -15,11 +15,13 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 
 public class WampCallMessage extends WampMessage{
 
 	protected String callId;
-	protected String procId;
+	protected URI procURI;
 	
 	protected WampArguments args;
 	
@@ -31,8 +33,8 @@ public class WampCallMessage extends WampMessage{
 		return callId;
 	}
 
-	public String getProcId() {
-		return procId;
+	public URI getProcURI() {
+		return procURI;
 	}
 	
 	public WampArguments getArguments(){
@@ -41,6 +43,6 @@ public class WampCallMessage extends WampMessage{
 	
 	@Override
 	public String toString(){
-		return " WampCallMessage { "+ callId+ ", " + procId + ", " + args.size() + " arguments} ";
+		return " WampCallMessage { "+ callId+ ", " + procURI + ", " + (args != null ? args.size() : "no") + " arguments} ";
 	}
 }

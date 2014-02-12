@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 
@@ -31,8 +33,8 @@ public class OutputWampCallMessage extends WampCallMessage{
 		this.callId = callId;
 	}
 	
-	public void setProcId(String procId) {
-		this.procId = procId;
+	public void setProcURI(URI procURI) {
+		this.procURI = procURI;
 	}
 	
 	public void setArgument(Object arg){

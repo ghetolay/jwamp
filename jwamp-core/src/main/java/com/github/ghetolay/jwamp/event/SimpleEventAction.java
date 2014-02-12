@@ -16,6 +16,7 @@
 package com.github.ghetolay.jwamp.event;
 
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -34,10 +35,10 @@ public class SimpleEventAction implements EventAction {
 	protected EventSender sender; 
 	protected Set<String> subscriber = new HashSet<String>();
 	
-	private String eventId;
+	private URI eventURI;
 	
-	public void setEventId(String eventId){
-		this.eventId = eventId;
+	public void setEventURI(URI eventURI){
+		this.eventURI = eventURI;
 	}
 	
 	public void setEventSender(EventSender sender) {
@@ -64,7 +65,7 @@ public class SimpleEventAction implements EventAction {
 		for(String s : subscriber)
 			if(sender != null)
 				try{
-					sender.sendEvent(s, eventId, event);
+					sender.sendEvent(s, eventURI, event);
 				}catch(Exception e){
 					//TODO log
 					log.trace("eventall ",e);

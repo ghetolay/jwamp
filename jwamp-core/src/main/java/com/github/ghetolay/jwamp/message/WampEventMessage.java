@@ -15,10 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 
 public class WampEventMessage extends WampMessage{
 
-	protected String topicId;
+	protected URI topicURI;
 	
 	protected WampArguments event;
 	
@@ -26,8 +28,8 @@ public class WampEventMessage extends WampMessage{
 		messageType = EVENT;
 	}
 
-	public String getTopicId() {
-		return topicId;
+	public URI getTopicURI() {
+		return topicURI;
 	}
 
 	public WampArguments getEvents(){
@@ -36,7 +38,7 @@ public class WampEventMessage extends WampMessage{
 	
 	@Override
 	public String toString(){
-		return " WampEventMessage { "+ topicId+ " , " + event  + " } ";
+		return " WampEventMessage { "+ topicURI+ " , " + event  + " } ";
 	}
 
 }

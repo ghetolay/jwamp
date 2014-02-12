@@ -16,20 +16,22 @@
 package com.github.ghetolay.jwamp.rpc;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.TimeoutException;
+
+import javax.websocket.EncodeException;
 
 import com.github.ghetolay.jwamp.WampMessageHandler;
 import com.github.ghetolay.jwamp.message.WampArguments;
-import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 
-public interface WampRPCSender extends WampMessageHandler{
+public interface WampRPCSender extends WampMessageHandler, WampMessageHandler.CallResult, WampMessageHandler.CallError {
 	
 	//TODO a voir seulement une fonction call
-	public WampArguments call(String procId, long timeout, Object... args) 
-			throws SerializationException, IOException, TimeoutException, CallException;
-	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) 
-			throws SerializationException, IOException, CallException;
+	public WampArguments call(URI procURI, long timeout, Object... args) 
+			throws EncodeException, IOException, TimeoutException, CallException;
+	public String call(URI procURI, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) 
+			throws EncodeException, IOException, CallException;
 }

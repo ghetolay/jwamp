@@ -15,35 +15,37 @@
 */
 package com.github.ghetolay.jwamp.event;
 
+import java.net.URI;
+
 
 /**
  * @author ghetolay
  *
  */
-public interface WampSubscription {
+public interface EventSubscription {
 	
 	//topicId is supposed to be fix, used on equals
-	public String getTopicId();
+	public URI getTopicURI();
 	
-	public class Impl implements WampSubscription{
+	public class Impl implements EventSubscription{
 
-		String topicId;
+		URI topicURI;
 		Object args;
 		
-		public Impl(String topicId){
-			if(topicId ==null || topicId.isEmpty())
-				throw new IllegalArgumentException("TopicId can't be null or empty");
+		public Impl(URI topicURI){
+			if(topicURI ==null)
+				throw new IllegalArgumentException("TopicURI can't be null or empty");
 			
-			this.topicId = topicId;
+			this.topicURI = topicURI;
 		}
 		
-		public Impl(String topicId, Object args){
-			this(topicId);
+		public Impl(URI topicURI, Object args){
+			this(topicURI);
 			this.args = args;
 		}
 		
-		public String getTopicId() {
-			return topicId;
+		public URI getTopicURI() {
+			return topicURI;
 		}
 	}
 }

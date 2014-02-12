@@ -12,9 +12,9 @@
 	<description>Core WAMP.</description>
 	<url>https://github.com/ghetolay/jwamp</url>
 
-    <properties>
-      <jetty-version>9.1.0.v20131115</jetty-version>
-    </properties>
+	<properties>
+		<jetty-version>9.1.0.v20131115</jetty-version>
+	</properties>
 
 	<licenses>
 		<license>
@@ -26,53 +26,50 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.fasterxml.jackson</groupId>
-			<artifactId>jackson-datatype-json-org</artifactId>
-			<version>1.8.0</version>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.6.5</version>
 		</dependency>
 		<dependency>
-			<groupId>stax</groupId>
-			<artifactId>stax</artifactId>
-			<version>1.2.0</version>
+			<groupId>javax.websocket</groupId>
+			<artifactId>javax.websocket-api</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.6.6</version>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.testng</groupId>
-			<artifactId>testng</artifactId>
-			<version>6.8</version>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
-        <!-- for setting up a test server -->
 		<dependency>
-			<groupId>org.eclipse.jetty</groupId>
-			<artifactId>jetty-webapp</artifactId>
-			<version>${jetty-version}</version>
-			<scope>provided</scope>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<scope>test</scope>
 		</dependency>
-        <!-- for javax.websocket client -->
 		<dependency>
-			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>javax-websocket-client-impl</artifactId>
-            <version>${jetty-version}</version>
-			<scope>provided</scope>
-		</dependency>
-        <!-- for javax.websocket.server -->
-		<dependency>
-			<groupId>org.eclipse.jetty.websocket</groupId>
-			<artifactId>javax-websocket-server-impl</artifactId>
-            <version>${jetty-version}</version>
-			<scope>provided</scope>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.1</version>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.jboss.arquillian</groupId>
+				<artifactId>arquillian-bom</artifactId>
+				<version>1.1.2.Final</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -82,9 +79,7 @@
 				<version>2.12</version>
 				<configuration>
 					<suiteXmlFiles>
-          <!--  
-						<suiteXmlFile>src/test/resources/jetty_client-server.xml</suiteXmlFile>
-            -->
+						<!-- <suiteXmlFile>src/test/resources/jetty_client-server.xml</suiteXmlFile> -->
 						<suiteXmlFile>src/test/resources/serialization.xml</suiteXmlFile>
 					</suiteXmlFiles>
 				</configuration>
@@ -130,8 +125,124 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.12</version>
+			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>jetty-to-jetty</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+					<version>1.7.5</version>
+				</dependency>
+
+				<dependency>
+					<groupId>org.glassfish.tyrus.bundles</groupId>
+					<artifactId>tyrus-standalone-client</artifactId>
+					<version>1.4</version>
+				</dependency>
+				<!-- <dependency> <groupId>org.eclipse.jetty.websocket</groupId> <artifactId>javax-websocket-client-impl</artifactId> 
+					<version>${jetty-version}</version> </dependency> -->
+				<dependency>
+					<groupId>org.jboss.arquillian.container</groupId>
+					<artifactId>arquillian-jetty-embedded-9</artifactId>
+					<version>1.0.0.CR2</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.eclipse.jetty.websocket</groupId>
+					<artifactId>javax-websocket-server-impl</artifactId>
+					<version>${jetty-version}</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-webapp</artifactId>
+					<version>${jetty-version}</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>wildfly</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.glassfish.tyrus</groupId>
+					<artifactId>tyrus-client</artifactId>
+					<version>1.3.1</version>
+				</dependency>
+				<dependency>
+					<groupId>org.wildfly</groupId>
+					<artifactId>wildfly-arquillian-container-embedded</artifactId>
+					<version>8.0.0.Beta1</version>
+				</dependency>
+				<dependency>
+					<groupId>org.wildfly</groupId>
+					<artifactId>wildfly-embedded</artifactId>
+					<version>8.0.0.Beta1</version>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>jetty-to-glassfish</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.glassfish.tyrus.bundles</groupId>
+					<artifactId>tyrus-standalone-client</artifactId>
+					<version>1.4</version>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.arquillian.container</groupId>
+					<artifactId>arquillian-glassfish-embedded-3.1</artifactId>
+					<version>1.0.0.CR4</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.glassfish.main.extras</groupId>
+					<artifactId>glassfish-embedded-all</artifactId>
+					<version>4.0</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>client</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.glassfish.tyrus.bundles</groupId>
+					<artifactId>tyrus-standalone-client</artifactId>
+					<version>1.4</version>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>server</id>
+			<dependencies>
+				<dependency>
+					<groupId>org.eclipse.jetty.websocket</groupId>
+					<artifactId>javax-websocket-server-impl</artifactId>
+					<version>${jetty-version}</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.eclipse.jetty</groupId>
+					<artifactId>jetty-webapp</artifactId>
+					<version>${jetty-version}</version>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
 
 	<scm>
 		<connection>scm:git:git@github.com:ghetolay/jwamp.git</connection>

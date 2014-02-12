@@ -17,28 +17,30 @@ package com.github.ghetolay.jwamp.event;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.List;
 
+import javax.websocket.EncodeException;
+
 import com.github.ghetolay.jwamp.WampMessageHandler;
-import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
-public interface WampEventSubscriber extends WampMessageHandler{
+public interface WampEventSubscriber extends WampMessageHandler, WampMessageHandler.Event{
 	
-	public void subscribe(String topicId) throws IOException, SerializationException;
-	public void subscribe(String topicI, ResultListener<WampArguments> eventListener) throws IOException, SerializationException;
-	public void subscribe(WampSubscription subscription) throws IOException, SerializationException;
-	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, SerializationException;
-	public void unsubscribe(String topicId) throws IOException;
+	public void subscribe(URI topicURI) throws IOException, EncodeException;
+	public void subscribe(URI topicURI, ResultListener<WampArguments> eventListener) throws IOException, EncodeException;
+	public void subscribe(EventSubscription subscription) throws IOException, EncodeException;
+	public void subscribe(EventSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, EncodeException;
+	public void unsubscribe(URI topicURI) throws IOException;
 	public void unsubscribeAll() throws IOException;
 	
-	public void publish(String topicId, Object event) throws IOException, SerializationException;
-	public void publish(String topicId, Object event, boolean excludeMe) throws IOException, SerializationException;
-	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException, SerializationException;
-	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, SerializationException;
+	public void publish(URI topicURI, Object event) throws IOException, EncodeException;
+	public void publish(URI topicURI, Object event, boolean excludeMe) throws IOException, EncodeException;
+	public void publish(URI topicURI, Object event, boolean excludeMe, List<String> eligible) throws IOException, EncodeException;
+	public void publish(URI topicURI, Object event, List<String> exclude, List<String> eligible) throws IOException, EncodeException;
 	
-	public ResultListener<EventResult> getGlobalListener();
-	public void setGlobalListener(ResultListener<EventResult> listener);
+	//public ResultListener<EventResult> getGlobalListener();
+	//public void setGlobalListener(ResultListener<EventResult> listener);
 	
 }

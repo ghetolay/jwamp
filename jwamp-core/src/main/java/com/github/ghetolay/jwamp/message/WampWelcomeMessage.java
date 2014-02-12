@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import com.github.ghetolay.jwamp.WampFactory;
+
 public class WampWelcomeMessage extends WampMessage{
 
 	protected String sessionId;
@@ -47,6 +49,15 @@ public class WampWelcomeMessage extends WampMessage{
 
 	public void setImplementation(String implementation) {
 		this.implementation = implementation;
+	}
+	
+	public static WampWelcomeMessage newJWamp(String sessionId){
+		WampWelcomeMessage msg = new WampWelcomeMessage();
+		msg.setImplementation(WampFactory.getImplementation());
+		msg.setProtocolVersion(WampFactory.getProtocolVersion());
+		msg.setSessionId(sessionId);
+		
+		return msg;
 	}
 	
 	@Override

@@ -17,7 +17,22 @@ package com.github.ghetolay.jwamp.rpc;
 
 import com.github.ghetolay.jwamp.message.WampArguments;
 
-public interface CallAction {
+public interface CallAction extends Action{
 
-	void execute(String sessionId, WampArguments args, CallResultSender sender) throws CallException, Exception;
+	/**
+	 * 
+	 *\/!\\ Since Wamp allow null values on message if this methods return null a null value will be sent. To do not send any result message see {@link Returns#NO_RETURN}, and for empty message see {@link Returns#EMPTY}. 
+	 * 
+	 * 
+	 * @param sessionId
+	 * @param args
+	 * @return
+	 * @throws CallException
+	 */
+	Object execute(String sessionId, WampArguments args) throws CallException;
+	
+	public enum Returns{
+		NO_RETURN,
+		EMPTY
+	}
 }

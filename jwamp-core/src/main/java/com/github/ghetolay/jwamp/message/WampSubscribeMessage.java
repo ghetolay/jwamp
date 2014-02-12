@@ -29,6 +29,6 @@ public class WampSubscribeMessage extends WampUnsubscribeMessage {
 	
 	@Override
 	public String toString(){
-		return " WampSubscribehMessage { "+ topicId + " } ";
+		return " WampSubscribehMessage { "+ topicURI + " } ";
 	}
 }

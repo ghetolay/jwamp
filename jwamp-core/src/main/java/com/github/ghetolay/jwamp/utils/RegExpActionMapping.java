@@ -15,6 +15,7 @@
 */
 package com.github.ghetolay.jwamp.utils;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.regex.Pattern;
@@ -30,9 +31,10 @@ public class RegExpActionMapping<T> implements ActionMapping<T>{
 	/* (non-Javadoc)
 	 * @see com.github.ghetolay.jwamp.utils.ActionMapping#getAction(java.lang.String)
 	 */
-	public T getAction(String actionId) {
+	//TODO first match may not be the best choice
+	public T getAction(URI actionURI) {
 		for(Pattern regExp : actions.keySet())
-			if(regExp.matcher(actionId).matches())
+			if(regExp.matcher(actionURI.toString()).matches())
 				return actions.get(regExp);
 		
 		return null;
@@ -45,7 +47,11 @@ public class RegExpActionMapping<T> implements ActionMapping<T>{
 		return actions.values().iterator();
 	}
 
-	public void put(String actionId, T action){
-		actions.put(Pattern.compile(actionId), action);
+	public void addAction(URI pattern, T action){
+		actions.put(Pattern.compile(pattern.toString()), action);
+	}
+	
+	public void addPattern(String pattern, T action){
+		actions.put(Pattern.compile(pattern), action);
 	}
 }

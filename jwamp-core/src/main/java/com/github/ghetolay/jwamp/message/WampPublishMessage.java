@@ -15,11 +15,12 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
 import java.util.List;
 
 public class WampPublishMessage extends WampMessage{
 
-	protected String topicId;
+	protected URI topicURI;
 	protected Object event;
 	protected List<String> exclude;
 	protected List<String> eligible;
@@ -29,8 +30,8 @@ public class WampPublishMessage extends WampMessage{
 		messageType = PUBLISH;
 	}
 	
-	public String getTopicId() {
-		return topicId;
+	public URI getTopicURI() {
+		return topicURI;
 	}
 
 	public Object getEvent() {

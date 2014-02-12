@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 
@@ -26,8 +28,8 @@ public class OutputWampEventMessage extends WampEventMessage{
 
 	private Object arg;
 	
-	public void setTopicId(String topicId) {
-		this.topicId = topicId;
+	public void setTopicURI(URI topicURI) {
+		this.topicURI = topicURI;
 	}
 	
 	public void setEvent(Object arg){

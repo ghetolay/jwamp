@@ -17,8 +17,8 @@ package com.github.ghetolay.jwamp.event;
 
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,14 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.websocket.CloseReason;
+import javax.websocket.EncodeException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.WampConnection;
+import com.github.ghetolay.jwamp.endpoint.SessionManager;
 import com.github.ghetolay.jwamp.message.WampArguments;
-import com.github.ghetolay.jwamp.message.SerializationException;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
-import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampPublishMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampSubscribeMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampUnsubscribeMessage;
@@ -43,170 +44,174 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
-	private WampConnection conn;
-
+	private SessionManager sessionManager;
+	private String sessionId;
+	
 	private Set<SubSet> topics = new HashSet<SubSet>();
 
-	private Map<String, ResultListener<WampArguments>> eventListeners = new HashMap<String, ResultListener<WampArguments>>();
-	private ResultListener<EventResult> globalListener;
+	private Map<URI, ResultListener<WampArguments>> eventListeners = new HashMap<URI, ResultListener<WampArguments>>();
+	//private ResultListener<EventResult> globalListener;
 
-	public DefaultEventSubscriber(Collection<WampSubscription> topics, ResultListener<EventResult> globalListener){
-		
-		for( WampSubscription sub : topics)
-			this.topics.add(new SubSet(sub));
-		
-		this.globalListener = globalListener;
+	public DefaultEventSubscriber(){
 	}
 	
-	public void onConnected(WampConnection connection) {
-		conn = connection;
-
-		for(SubSet s : topics)
-			try {
-				subscribe(s);
-			} catch (Exception e) {
-				if(log.isWarnEnabled())
-					log.warn("Unable to auto-subscribe : " + e.getMessage());
-				if(log.isTraceEnabled())
-					log.trace("Warning verbose : ", e);
-			}
+	public void addSubscription(EventSubscription topic){
+		topics.add(new SubSet(topic));
 	}
-
-	public void onClose(String sessionId, int closeCode) {}
-
-	public boolean onMessage(String sessionId, WampMessage message){
-
-		if(message.getMessageType() == WampMessage.EVENT){
-			onEvent((WampEventMessage)message);
-			return true;
+	
+	@Override
+	public void init(SessionManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
+	
+	public void onOpen(String sessionId) {
+		synchronized(this){
+			this.sessionId = sessionId;
+			
+			for(SubSet s : topics)
+				try {
+					subscribe(s);
+				} catch (Exception e) {
+					if(log.isWarnEnabled())
+						log.warn("Unable to auto-subscribe : " + e.getMessage());
+					if(log.isTraceEnabled())
+						log.trace("Warning verbose : ", e);
+				}
 		}
-		
-		return false;
 	}
 
-	private void onEvent(WampEventMessage msg){	
+	public void onClose(String sessionId, CloseReason closeReason) {
+		synchronized(this){
+			sessionId = null;
+		}
+	}
+
+	public void onMessage(String sessionId, WampEventMessage msg){
 		//TODO: ThreadPool shared with RPC
-		if(eventListeners.containsKey(msg.getTopicId())){
+		if(eventListeners.containsKey(msg.getTopicURI())){
 			try{
-				 eventListeners.get(msg.getTopicId()).onResult(msg.getEvents());
+				 eventListeners.get(msg.getTopicURI()).onResult(msg.getEvents());
 			}catch(Exception e){
 				e.printStackTrace();
 			}
 		}
-		else if(globalListener != null)
-			globalListener.onResult(new SimpleEventResult(msg.getTopicId(), msg.getEvents()));
+
+		/*else if(globalListener != null)
+			globalListener.onResult(new SimpleEventResult(msg.getTopicURI(), msg.getEvents()));
+		*/
 
 	}
 
-	private void subscribe(SubSet s) throws IOException, SerializationException{
-		OutputWampSubscribeMessage msg = new OutputWampSubscribeMessage(s.sub.getTopicId());
+	private void subscribe(SubSet s) throws IOException, EncodeException{
+		OutputWampSubscribeMessage msg = new OutputWampSubscribeMessage(s.sub.getTopicURI());
 
-		conn.sendMessage(msg);
+		sessionManager.sendMessageTo(sessionId, msg);
 	}
 
-	public void subscribe(String topicId) throws IOException, SerializationException{
+	public void subscribe(URI topicURI) throws IOException, EncodeException{
 		try {
-			subscribe(new WampSubscription.Impl(topicId));
-		} catch (SerializationException e) {
+			subscribe(new EventSubscription.Impl(topicURI));
+		} catch (EncodeException e) {
 			log.error("Serialization error on unsubscribe message");
 			throw e;
 		}
 	}
 	
-	public void subscribe(String topicId, ResultListener<WampArguments> eventListener) throws IOException, SerializationException{
+	public void subscribe(URI topicURI, ResultListener<WampArguments> eventListener) throws IOException, EncodeException{
 		try{
-			subscribe(topicId);
+			subscribe(topicURI);
 		}finally{
 			if(eventListener != null)
-				eventListeners.put(topicId, eventListener);
+				eventListeners.put(topicURI, eventListener);
 		}
 	}
 
-	public void subscribe(WampSubscription subscription) throws IOException, SerializationException {
+	public void subscribe(EventSubscription subscription) throws IOException, EncodeException {
 		
 		SubSet s = new SubSet(subscription);
-		
-		if(!topics.contains(s)){
-			try {
-				if(conn != null && conn.isConnected())
-					subscribe(s);
-			} finally{
-				topics.add(s);
-				if(log.isDebugEnabled())
-					log.debug("Add Subscription " + subscription.getTopicId() );
-			}
-		}else if(log.isTraceEnabled())
-			log.trace("Already subscribed to the topic : " + subscription.getTopicId());
+		synchronized(this){
+			if(!topics.contains(s)){
+				try {
+					if(sessionId != null)
+						subscribe(s);
+				} finally{
+					topics.add(s);
+					if(log.isDebugEnabled())
+						log.debug("Add Subscription " + subscription.getTopicURI() );
+				}
+			}else if(log.isTraceEnabled())
+				log.trace("Already subscribed to the topic : " + subscription.getTopicURI());
+		}
 	}
 
-	public void subscribe(WampSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, SerializationException {
+	public void subscribe(EventSubscription subscription, ResultListener<WampArguments> eventListener) throws IOException, EncodeException {
 
 		try{
 			subscribe(subscription);
 		}finally{
 			if(eventListener != null)
-				eventListeners.put(subscription.getTopicId(), eventListener);
+				eventListeners.put(subscription.getTopicURI(), eventListener);
 		}
 	}
 
-	public void unsubscribe(String topicId) throws IOException {
-		if(topics.contains(topicId)){
+	public void unsubscribe(URI topicURI) throws IOException {
+		if(topics.contains(topicURI)){
 			try {
-				conn.sendMessage(new OutputWampUnsubscribeMessage(topicId));
-			} catch (SerializationException e) {
+				sessionManager.sendMessageTo(sessionId, new OutputWampUnsubscribeMessage(topicURI));
+			} catch (EncodeException e) {
 				log.error("Serialization error on unsubscribe message");
 			}
 
-			topics.remove(topicId);
+			topics.remove(topicURI);
 		}
-		if(eventListeners.containsKey(topicId))
-			eventListeners.remove(topicId);
+		if(eventListeners.containsKey(topicURI))
+			eventListeners.remove(topicURI);
 	}
 
 	public void unsubscribeAll() throws IOException{
 		for(Iterator<SubSet> it = topics.iterator(); it.hasNext();){
 			try {
-				conn.sendMessage(new OutputWampUnsubscribeMessage( it.next().sub.getTopicId() ));
-			} catch (SerializationException e) {
+				sessionManager.sendMessageTo(sessionId, new OutputWampUnsubscribeMessage( it.next().sub.getTopicURI() ));
+			} catch (EncodeException e) {
 				log.error("Serialization error on unsubscribe message");
 			}
 			it.remove();
 		}
 	}
 	
-	public void publish(String topicId, Object event) throws IOException, SerializationException {
-		publish(topicId, event, true);
+	public void publish(URI topicURI, Object event) throws IOException, EncodeException {
+		publish(topicURI, event, true);
 	}
 
-	public void publish(String topicId, Object event, boolean excludeMe) throws IOException, SerializationException {
-		publish(topicId, event, true, null, null );
+	public void publish(URI topicURI, Object event, boolean excludeMe) throws IOException, EncodeException {
+		publish(topicURI, event, true, null, null );
 	}
 
-	public void publish(String topicId, Object event, boolean excludeMe, List<String> eligible) throws IOException, SerializationException {
+	public void publish(URI topicURI, Object event, boolean excludeMe, List<String> eligible) throws IOException, EncodeException {
 		if(eligible != null){
 			List<String> excludes = new ArrayList<String>();
 			if(excludeMe)
-				excludes.add(conn.getSessionId());
+				excludes.add(sessionId);
 
-			publish(topicId, event, false, excludes, eligible);
+			publish(topicURI, event, false, excludes, eligible);
 		}else
-			publish(topicId, event, excludeMe, null , null);
+			publish(topicURI, event, excludeMe, null , null);
 	}
 
-	public void publish(String topicId, Object event, List<String> exclude, List<String> eligible) throws IOException, SerializationException {
-		if(exclude.size() == 1 && exclude.get(0).equals(conn.getSessionId()) && eligible == null)
-			publish(topicId, event, true, null, null);
+	public void publish(URI topicURI, Object event, List<String> exclude, List<String> eligible) throws IOException, EncodeException {
+		if(exclude.size() == 1 && exclude.get(0).equals(sessionId) && eligible == null)
+			publish(topicURI, event, true, null, null);
 		else
-			publish(topicId, event, false, exclude, eligible);
+			publish(topicURI, event, false, exclude, eligible);
 	}
 
-	private void publish(String topicId, Object event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException, SerializationException{
+	private void publish(URI topicURI, Object event, boolean excludeMe, List<String> exclude, List<String> eligible) throws IOException, EncodeException{
 
-		if(!topics.contains(topicId))
-			subscribe(topicId);
+		if(!topics.contains(topicURI))
+			subscribe(topicURI);
 
 		OutputWampPublishMessage msg = new OutputWampPublishMessage();
-		msg.setTopicId(topicId);
+		msg.setTopicURI(topicURI);
 		msg.setEvent(event);
 
 		if(excludeMe)
@@ -216,9 +221,10 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			msg.setEligible(eligible != null ? exclude : new ArrayList<String>());
 		}
 
-		conn.sendMessage(msg);
+		sessionManager.sendMessageTo(sessionId, msg);
 	}
 
+	/*
 	public ResultListener<EventResult> getGlobalListener(){
 		return globalListener;
 	}
@@ -226,7 +232,8 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	public void setGlobalListener(ResultListener<EventResult> listener){
 		globalListener = listener;
 	}
-
+	 */
+	
 	public class SimpleEventResult implements EventResult{
 		private String topicId;
 		private WampArguments event;
@@ -247,9 +254,9 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 	
 	private class SubSet {
 
-		WampSubscription sub;
+		EventSubscription sub;
 
-		public SubSet(WampSubscription sub) {
+		public SubSet(EventSubscription sub) {
 			this.sub = sub;
 		}
 
@@ -258,18 +265,18 @@ public class DefaultEventSubscriber implements WampEventSubscriber {
 			if( o == null || sub == null)
 				return false;
 
-			if(o instanceof WampSubscription)
-				return ((WampSubscription) o).getTopicId().equals(sub.getTopicId());
+			if(o instanceof EventSubscription)
+				return ((EventSubscription) o).getTopicURI().equals(sub.getTopicURI());
 
 			if(o instanceof SubSet)
-				return ((SubSet) o).sub.getTopicId().equals(sub.getTopicId());
+				return ((SubSet) o).sub.getTopicURI().equals(sub.getTopicURI());
 
 			return false;
 		}
 
 		@Override
 		public int hashCode(){
-			return sub.getTopicId().hashCode();
+			return sub.getTopicURI().hashCode();
 		}
 	}
 }

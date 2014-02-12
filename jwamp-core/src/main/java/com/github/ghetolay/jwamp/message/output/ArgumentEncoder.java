@@ -20,10 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.ghetolay.jwamp.message.WampArguments;
 
 /**
@@ -31,13 +29,14 @@ import com.github.ghetolay.jwamp.message.WampArguments;
  *
  */
 
-//TODO MOCHE MOCHE MOCHE !!!
-public class ArgumentSerializer{
+//TODO AWFUL CHANGE THAT FAST !!!
+//it's do the job but not really efficient nor pretty/simple coding
+public class ArgumentEncoder{
 
 	Object arg;
 	Collection<?> argList;
 	
-	public ArgumentSerializer(Object arg){
+	public ArgumentEncoder(Object arg){
 		if(arg != null){
 			if(arg instanceof Collection)
 				argList = (Collection<?>)arg;
@@ -62,42 +61,50 @@ public class ArgumentSerializer{
 		return arg == null?0:1;
 	}
 
-	public void serialize(StringBuffer result, ObjectMapper objectMapper) throws JsonGenerationException, JsonMappingException, IOException {
+	/**
+	 * mandatory define the process in case there is no arg : 
+	 * call message arguments can be non-present, null or present
+	 * but
+	 * callresult/publish/event/ message must have a argument : null or present
+	 * 
+	 * 
+	 * @param generator
+	 * @param mandatory define if we omit or put null in case of no argument
+	 * @throws JsonProcessingException
+	 * @throws IOException
+	 */
+	public void encode(JsonGenerator generator, boolean mandatory) throws JsonProcessingException, IOException{
 		if(argList != null)
 			for(Object obj : argList)
-				writeObj(result, objectMapper, obj);
+				generator.writeObject(obj);
 			
 		else if(arg != null){
 			if(arg.getClass().isArray()){
 				Class<?> type = arg.getClass().getComponentType();
 				if(type.equals(int.class))
 					for(int obj : (int[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else if(type.equals(short.class))
 					for(short obj : (short[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else if(type.equals(float.class))
 					for(float obj : (float[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else if(type.equals(long.class))
 					for(long obj : (long[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else if(type.equals(boolean.class))
 					for(boolean obj : (boolean[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else if(type.equals(byte.class))
 					for(byte obj : (byte[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 				else
 					for(Object obj : (Object[])arg)
-						writeObj(result, objectMapper, obj);
+						generator.writeObject(obj);
 			}else
-				writeObj(result, objectMapper, arg);
-		}
-	}
-
-	private void writeObj(StringBuffer result, ObjectMapper objectMapper, Object obj) throws JsonGenerationException, JsonMappingException, IOException{
-		result.append(',');
-		result.append(objectMapper.writeValueAsString(obj));
+				generator.writeObject(arg);
+		}else if(mandatory)
+			generator.writeNull();
 	}
 }

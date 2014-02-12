@@ -15,18 +15,20 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 
 public class WampCallErrorMessage extends WampCallResultMessage {
 
-	protected String errorUri;
+	protected URI errorUri;
 	protected String errorDesc;
-	protected String errorDetails;
+	protected WampArguments errorDetails;
 	
 	protected WampCallErrorMessage(){
 		messageType = CALLERROR;
 	}
 	
-	public String getErrorUri() {
+	public URI getErrorUri() {
 		return errorUri;
 	}
 
@@ -34,7 +36,7 @@ public class WampCallErrorMessage extends WampCallResultMessage {
 		return errorDesc;
 	}
 
-	public String getErrorDetails() {
+	public WampArguments getErrorDetails() {
 		return errorDetails;
 	}
 	

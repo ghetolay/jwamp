@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 /**
  * Also UnsubscribeMessage
  * @author ghetolay
@@ -22,7 +24,7 @@ package com.github.ghetolay.jwamp.message;
  */
 public class WampUnsubscribeMessage extends WampMessage{
 
-	protected String topicId;
+	protected URI topicURI;
 	
 	protected WampUnsubscribeMessage(int messageType){
 		this.messageType = messageType;
@@ -32,12 +34,12 @@ public class WampUnsubscribeMessage extends WampMessage{
 		this(UNSUBSCRIBE);
 	}
 	
-	public String getTopicId() {
-		return topicId;
+	public URI getTopicURI() {
+		return topicURI;
 	}
 	
 	@Override
 	public String toString(){
-		return " WampUnsubscribehMessage { "+ topicId + " } ";
+		return " WampUnsubscribehMessage { "+ topicURI + " } ";
 	}
 }

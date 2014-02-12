@@ -15,6 +15,8 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 
 /**
@@ -24,18 +26,15 @@ import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 
 public class OutputWampUnsubscribeMessage extends WampUnsubscribeMessage{
 	
-	protected OutputWampUnsubscribeMessage(){}
-	
-	protected OutputWampUnsubscribeMessage(int messageType, String topicId){
-		super(messageType);
-		this.topicId = topicId;
+	public OutputWampUnsubscribeMessage(){
+		super();
 	}
 	
-	public OutputWampUnsubscribeMessage(String topicId){
-		this.topicId = topicId;
+	public OutputWampUnsubscribeMessage(URI topicURI){
+		this.topicURI = topicURI;
 	}
 	
-	public void setTopicId(String topicId) {
-		this.topicId = topicId;
+	public void setTopicURI(URI topicURI) {
+		this.topicURI = topicURI;
 	}
 }

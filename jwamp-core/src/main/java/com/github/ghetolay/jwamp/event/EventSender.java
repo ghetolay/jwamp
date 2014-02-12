@@ -15,8 +15,18 @@
 */
 package com.github.ghetolay.jwamp.event;
 
-import com.github.ghetolay.jwamp.message.SerializationException;
+import java.net.URI;
+
 
 public interface EventSender {
-	public void sendEvent(String sessionId, String eventId, Object event) throws SerializationException;
+	
+	/**
+	 * 
+	 * @param sessionId
+	 * @param eventId
+	 * @param event
+	 * @return true if event was succesfully sent. /!\ return always true on asynchronous call
+	 * @see com.github.ghetolay.jwamp.endpoint.WampEndpoint#setAsynchronousEnabled(boolean)
+	 */
+	public boolean sendEvent(String sessionId, URI eventURI, Object event);
 }
