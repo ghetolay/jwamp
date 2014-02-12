@@ -29,7 +29,7 @@ public interface CallAction extends Action{
 	 * @return
 	 * @throws CallException
 	 */
-	Object execute(String sessionId, WampArguments args) throws CallException;
+	Object execute(WampArguments args) throws CallException;
 	
 	public enum Returns{
 		NO_RETURN,

@@ -20,7 +20,7 @@ import com.github.ghetolay.jwamp.rpc.CallAction;
 
 public class EchoAction implements CallAction{
 
-	public Object execute(String sessionId, WampArguments args) {
+	public Object execute(WampArguments args) {
 		if(args.hasNext())
 			return args.nextObject().asObject();
 		
