@@ -35,7 +35,7 @@ import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
 
-public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, ResultListener<WampCallResultMessage>>{
+public class DefaultRPCSender implements WampRPCSender{
 	
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	
@@ -43,16 +43,23 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
 	
-	//TODO COMMMIT : add timeout listener
+	private final TimeoutListener<String, ResultListener<WampCallResultMessage>> myTimeoutListener = new TimeoutListener<String, ResultListener<WampCallResultMessage>>(){
+		public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
+			// TODO: KD - this feels wrong to me... null is a magic value that has to be specially interpreted.  Should ResultListener also have an onTimeout() method?
+			value.onResult(null);
+		}
+	};
+
 	public DefaultRPCSender(){
-		resultListeners.addListener(this);
 	}
 	
 	public void onConnected(WampConnection connection) {
 		conn = connection;
 	}
 	
-	public void onClose(String sessionId, int closeCode) {}
+	public void onClose(String sessionId, int closeCode) {
+		conn = null;
+	}
 	
 	public WampArguments call(String procId, long timeout, Object... args) throws IOException, TimeoutException, SerializationException, CallException{
 		if(timeout == 0)
@@ -88,6 +95,9 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	}
 	
 	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, SerializationException{
+		if (conn == null)
+			throw new IllegalStateException("Not connected");
+		
 		String callId = generateCallId();
 		
 		OutputWampCallMessage msg = new OutputWampCallMessage();
@@ -105,7 +115,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 			
 		if(listener != null)
 			if(timeout >= 0)
-				resultListeners.put(callId, listener, timeout);
+				resultListeners.put(callId, listener, timeout, myTimeoutListener);
 			else//weird listener will never be called
 				if(log.isWarnEnabled())
 					log.warn("ResultListener not null but timeout < 0. ResultListener will never be called.");
@@ -124,19 +134,17 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	}
 	
 	private void onCallResult(WampCallResultMessage msg) {
-		if(resultListeners.containsKey(msg.getCallId())){
-			ResultListener<WampCallResultMessage> listener = resultListeners.get(msg.getCallId());
-			
-			if(listener != null)
-				listener.onResult(msg);
+		
+		ResultListener<WampCallResultMessage> listener = resultListeners.remove(msg.getCallId());
+		if (listener != null){
+			listener.onResult(msg);
+		} else {
+			if (log.isDebugEnabled())
+				log.debug("callId from CallResultMessage not recognized : " + msg.toString());
 		}
-		else if(log.isDebugEnabled())
-			log.debug("callId from CallResultMessage not recognized : " + msg.toString());
+
 	}	
 
-	public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
-		value.onResult(null);
-	}
 	
 	private String generateCallId(){
 		Random rand = new Random();

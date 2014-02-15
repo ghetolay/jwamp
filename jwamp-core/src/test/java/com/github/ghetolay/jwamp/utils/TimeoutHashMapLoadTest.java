@@ -3,6 +3,7 @@
  */
 package com.github.ghetolay.jwamp.utils;
 
+import java.util.LinkedList;
 import java.util.Random;
 
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
@@ -16,24 +17,26 @@ public class TimeoutHashMapLoadTest {
 	public static void main(String[] args) {
 		final TimeoutHashMap map = new TimeoutHashMap();
 		
-		map.addListener(new TimeoutListener(){
-
-			@Override
-			public void timedOut(Object key, Object value) {
-				System.out.println(key + " evicted");
-			}
-			
-		});
-		
 		for(int i = 0; i < 10; i++){
 			AbuseThread t = new AbuseThread(map);
 			t.start();
 		}
 	}
 		
+	
+	
 	private static class AbuseThread extends Thread {
-		private final TimeoutHashMap map;
+		private final LinkedList<String> myKeys = new LinkedList<String>();
+		private final TimeoutHashMap<String, String> map;
 		private final Random r;
+		private TimeoutListener<String, String> listener = new TimeoutListener<String, String>(){
+
+			@Override
+			public void timedOut(String key, String value) {
+				//System.out.println(key + " evicted");
+			}
+			
+		};
 		
 		public AbuseThread(TimeoutHashMap map) {
 			this.map = map;
@@ -43,9 +46,22 @@ public class TimeoutHashMapLoadTest {
 		public void run() {
 			try{
 				while(true){
-					String key = "key" + r.nextInt();
-					map.put(key, "value", 10);
-//					System.out.println(this + " - Put key");
+					
+					if (r.nextBoolean()){ // add
+						int timeout = 1 + r.nextInt(1000);
+						String key = "key" + r.nextInt();
+						myKeys.offer(key);
+						map.put(key, "value", timeout, listener);
+					} else { // remove
+						String key = myKeys.poll();
+						if (key != null)
+							map.remove(key);
+					}
+					
+					int delay = r.nextInt(15);
+					if (delay > 7)
+						Thread.sleep(delay);
+					//System.out.println(this + " - Put key");
 				}
 			} catch (Exception e){
 				e.printStackTrace();

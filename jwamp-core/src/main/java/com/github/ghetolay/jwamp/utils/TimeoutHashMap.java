@@ -15,150 +15,160 @@
  */
 package com.github.ghetolay.jwamp.utils;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 
-public class TimeoutHashMap<K,V> extends HashMap<K,V>{
+public class TimeoutHashMap<K,V>{
 
-	private static final long serialVersionUID = 3164054746684312958L;
-
-	private TimeoutThread updater;
-
-	Set<TimeoutListener<K,V>> listeners = new HashSet<TimeoutListener<K,V>>();
-
+	private final ConcurrentHashMap<K, TimeoutElement<K,V>> map = new ConcurrentHashMap<K, TimeoutElement<K,V>>();
+	private final DelayQueue<TimeoutElement<K,V>> delayQueue = new DelayQueue<TimeoutElement<K,V>>();
+	
+	private final NoOpTimeoutListener<K,V> noOpListener = new NoOpTimeoutListener<K,V>();
+	
 	public TimeoutHashMap() {
-		updater = new TimeoutThread();
-		updater.start();
 	}
 
-	public void addListener(TimeoutListener<K,V> listener){
-		listeners.add(listener);
+	public void put(K key, V value, long timeoutMillis){
+		put(key, value, timeoutMillis, noOpListener);
 	}
-
-	public void removeListener(TimeoutListener<K,V> listener){
-		listeners.remove(listener);
-	}
-
-	public void put(K key, V value, long timeout){
-		if(timeout > 0)
-			updater.add(key,timeout);
-
-		super.put(key, value);
-	}
-
-	@SuppressWarnings("unchecked")
-	protected V remove(Object key, boolean deleteToRemove){
-		V result = super.remove(key);
-
-		if(deleteToRemove)
-			updater.removeFromSet(key);
-		else
-			for(TimeoutListener<K,V> l : listeners)
-				l.timedOut((K)key, result);
-
-		return result;
-	}
-
-	@Override
-	public V remove(Object key){
-		return remove(key,true);
-	}
-
-	@Override
-	public void finalize(){
-		updater.interrupt();
-	}
-
-	private class TimeoutThread extends Thread{
-
-		//TODO change to FieldMap when finish
-		HashMap<K,ToRemove> toRemove = new HashMap<K,ToRemove>();
-		long minimalWait = -1;
-		long sleepUntil = 0;
+	
+	public void put(K key, V value, long timeoutMillis, TimeoutListener<K, V> timeoutListener){
+		TimeoutElement<K, V> element = new TimeoutElement<K,V>(key, value, timeoutListener, timeoutMillis);
+		map.put(key, element);
 		
-		public synchronized void add(K key, long timeout){
+		if(timeoutMillis > 0)
+			delayQueue.offer(element);
+		
+		pollTimeouts();
+	}
 
-			if(toRemove.isEmpty())
-				notify();
+	public V get(K key){
+		pollTimeouts();
+		
+		TimeoutElement<K, V> element = map.get(key);
+		if (element == null)
+			return null;
+		
+		return element.getValue();
+	}
+	
+	public V remove(K key){
+		TimeoutElement<K, V> element = map.remove(key);
+		if (element == null)
+			return null;
+		
+		element.markRemoved();
+		
+		pollTimeouts();
+		
+		return element.getValue();
+	}
 
-			if(System.currentTimeMillis() + timeout < sleepUntil)
-				minimalWait = timeout;
-			notify();
-
-			synchronized(toRemove){	
-				toRemove.put(key,new ToRemove(key,timeout));
-			}
-		}
-
-		public void removeFromSet(Object key){
-			synchronized(toRemove){
-				toRemove.remove(key);
-			}
-		}
-
-		public synchronized void run() {
-			try{
-				while(!isInterrupted()){
-					if(toRemove.isEmpty()){
-						minimalWait = -1;
-						wait();
-					}
-
-					//if minimalWait is >0 it means it has been set by add(key,timeout)
-					if(minimalWait < 0){
-						long currentTime = System.currentTimeMillis();
-						minimalWait = Long.MAX_VALUE;
-						sleepUntil = 0;
-
-						synchronized(toRemove){
-							for(Iterator<Map.Entry<K, ToRemove>> it = toRemove.entrySet().iterator(); it.hasNext();){
-								ToRemove tr = it.next().getValue();
-								long timeleft = tr.timeLeft(currentTime);
-
-								if(timeleft <= 0){
-									it.remove();
-									remove(tr.key, false);
-								}else
-									if(timeleft < minimalWait)
-										minimalWait = timeleft;
-							}
-						}
-					}
-
-					if(minimalWait != Long.MAX_VALUE){
-						//we reset minimalWait before the wait
-						long gowait = minimalWait;
-						minimalWait = -1;
-
-						sleepUntil = System.currentTimeMillis() + gowait;
-						wait(gowait);
-					}
+	public void pollTimeouts(){
+		TimeoutElement<K, V> element;
+		while((element = delayQueue.poll()) != null){
+			if (!element.isRemoved()){ // Concurrency note: there is a race condition on 'removed' - there is a small chance that it will return false even if it has been removed.  No big deal, the map will return null
+				TimeoutElement<K, V> removed = map.remove(element.getKey());
+				if (removed != null){
+					removed.markRemoved();
+					removed.notifyTimeoutListener();
 				}
-			}catch(InterruptedException e){}
+			}
 		}
+		
+		// memory optimization - if the queue is too big, let's try to flush anything from it that has already been removed from the map.
+		// if this threshold is too small, it will impact performance
+		// if this threshold is too big, it will impact memory consumption when under high load
+		// we'll say that the queue can't be more than twice the size of the map
+		int queueSize = delayQueue.size();
+		int mapSize = map.size();
+		if (queueSize > 100 && queueSize > (mapSize << 1)){
+			Iterator<TimeoutElement<K, V>> it = delayQueue.iterator();
+			while (it.hasNext()){
+				if (it.next().isRemoved())
+					it.remove();
+			}
+			String msg = "After Clean - Map/Queue size is " + map.size() + "/" + delayQueue.size();
+			System.out.println(msg);
+		}
+		
+		System.out.println("Map/Queue size is " + map.size() + "/" + delayQueue.size());
 	}
-
-	private class ToRemove{
-
-		long timeout;
-		long startTime;
-		K key;
-
-		private ToRemove(K key, long timeout){
-			startTime = System.currentTimeMillis();
-			this.timeout = timeout;
-			this.key = key;
-		}
-
-		private long timeLeft(long currentTime){
-			return timeout - (currentTime - startTime);
-		}
-	}
-
+	
 	public static interface TimeoutListener<K,V>{
 		public void timedOut(K key, V value);
 	}
+	
+	private static class NoOpTimeoutListener<K, V> implements TimeoutListener<K,V>{
+
+		@Override
+		public void timedOut(K key, V value) {
+			// do nothing
+		}
+		
+	}
+	
+	private static class TimeoutElement<K,V> implements Delayed {
+		private final long expiryTimeMillis;
+		private final K key;
+		private final V value;
+		private final TimeoutListener<K, V> timeoutListener;
+		private boolean removed = false;
+		
+		public TimeoutElement(K key, V value, TimeoutListener<K, V> timeoutListener, long delayMillis) {
+			this.key = key;
+			this.value = value;
+			this.timeoutListener = timeoutListener;
+			this.expiryTimeMillis = delayMillis > 0 ? System.currentTimeMillis() + delayMillis : 0;
+			
+		}
+		
+		public boolean isRemoved() {
+			return removed;
+		}
+		
+		public void markRemoved() {
+			this.removed = true;
+		}
+		
+		public K getKey() {
+			return key;
+		}
+		
+		public V getValue() {
+			return value;
+		}
+		
+		public void notifyTimeoutListener(){
+			timeoutListener.timedOut(key, value);
+		}
+
+		@Override
+		public int compareTo(Delayed o) {
+			if (o == this) return 0;
+			
+			if (o instanceof TimeoutElement){
+				TimeoutElement<?, ?> other = (TimeoutElement<?, ?>)o;
+				long dif = this.expiryTimeMillis - other.expiryTimeMillis;
+				return dif == 0 ? 0 : (dif < 0 ? -1 : 1); 
+			}
+			
+			throw new IllegalStateException();
+		}
+
+		@Override
+		public long getDelay(TimeUnit unit) {
+			if (!hasDelay())
+				throw new IllegalStateException("Doesn't have delay, should not be part of delay queue");
+			
+			return unit.convert(expiryTimeMillis - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+		}
+		
+		public boolean hasDelay(){
+			return expiryTimeMillis != 0;
+		}
+	}	
 }
