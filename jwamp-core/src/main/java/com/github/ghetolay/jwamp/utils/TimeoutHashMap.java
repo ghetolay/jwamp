@@ -67,6 +67,18 @@ public class TimeoutHashMap<K,V>{
 		return element.getValue();
 	}
 
+	public int size(){
+		return map.size();
+	}
+	
+	/**
+	 * Used for testing only
+	 * @return the size of the delay queue
+	 */
+	int delayQueueSize(){
+		return delayQueue.size();
+	}
+	
 	public void pollTimeouts(){
 		TimeoutElement<K, V> element;
 		while((element = delayQueue.poll()) != null){
@@ -91,11 +103,8 @@ public class TimeoutHashMap<K,V>{
 				if (it.next().isRemoved())
 					it.remove();
 			}
-			String msg = "After Clean - Map/Queue size is " + map.size() + "/" + delayQueue.size();
-			System.out.println(msg);
 		}
 		
-		System.out.println("Map/Queue size is " + map.size() + "/" + delayQueue.size());
 	}
 	
 	public static interface TimeoutListener<K,V>{

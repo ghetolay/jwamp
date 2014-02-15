@@ -21,6 +21,15 @@ public class TimeoutHashMapLoadTest {
 			AbuseThread t = new AbuseThread(map);
 			t.start();
 		}
+		
+		try{
+			while(true){
+				Thread.sleep(1000L);
+				System.out.println("Map/Queue size is " + map.size() + "/" + map.delayQueueSize());
+			}
+		} catch (InterruptedException e){
+			// expected
+		}
 	}
 		
 	
@@ -48,7 +57,7 @@ public class TimeoutHashMapLoadTest {
 				while(true){
 					
 					if (r.nextBoolean()){ // add
-						int timeout = 1 + r.nextInt(1000);
+						int timeout = 1 + r.nextInt(30000);
 						String key = "key" + r.nextInt();
 						myKeys.offer(key);
 						map.put(key, "value", timeout, listener);
