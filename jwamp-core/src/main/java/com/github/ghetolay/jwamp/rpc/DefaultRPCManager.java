@@ -41,13 +41,17 @@ public class DefaultRPCManager implements WampMessageHandler, WampMessageHandler
 
 	private SessionManager sessionManager;
 
-	private ActionMapping<CallAction> actions;
+	private ActionMapping<Action> actions;
 	
-	public void setActionMapping(ActionMapping<CallAction> actionMapping){
+	public void setActionMapping(ActionMapping<Action> actionMapping){
 		this.actions = actionMapping;
 	}
 	
 	public void addAction(URI procURI, CallAction action){
+		actions.addAction(procURI, action);
+	}
+	
+	public void addCompleteAction(URI procURI, CompleteCallAction action){
 		actions.addAction(procURI, action);
 	}
 	
@@ -68,7 +72,7 @@ public class DefaultRPCManager implements WampMessageHandler, WampMessageHandler
 			try{
 				if(action instanceof CallAction)
 					sendResult(sessionId, message.getCallId(),
-							((CallAction)action).execute(sessionId, message.getArguments()));
+							((CallAction)action).execute(message.getArguments()));
 				else if(action instanceof CompleteCallAction)
 					((CompleteCallAction)action).execute(sessionId, message);
 				else

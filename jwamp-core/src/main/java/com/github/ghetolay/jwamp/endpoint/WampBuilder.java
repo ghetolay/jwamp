@@ -7,7 +7,9 @@ import com.github.ghetolay.jwamp.event.DefaultEventManager;
 import com.github.ghetolay.jwamp.event.DefaultEventSubscriber;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.EventSubscription;
+import com.github.ghetolay.jwamp.rpc.Action;
 import com.github.ghetolay.jwamp.rpc.CallAction;
+import com.github.ghetolay.jwamp.rpc.CompleteCallAction;
 import com.github.ghetolay.jwamp.rpc.DefaultRPCManager;
 import com.github.ghetolay.jwamp.rpc.DefaultRPCSender;
 import com.github.ghetolay.jwamp.utils.ActionMapping;
@@ -70,7 +72,7 @@ public class WampBuilder {
 			this.mainBuilder = mainBuilder;
 			rpcManager = new DefaultRPCManager();
 			
-			rpcManager.setActionMapping(new MapActionMapping<CallAction>());
+			rpcManager.setActionMapping(new MapActionMapping<Action>());
 		}
 		
 		/**
@@ -79,13 +81,18 @@ public class WampBuilder {
 		 * @param actionMapping
 		 * @return
 		 */
-		public RPCManager setActionMapping(ActionMapping<CallAction> actionMapping){
+		public RPCManager setActionMapping(ActionMapping<Action> actionMapping){
 			rpcManager.setActionMapping(actionMapping);
 			return this;
 		}
 		
 		public RPCManager addAction(URI procURI, CallAction action){
 			rpcManager.addAction(procURI, action);
+			return this;
+		}
+		
+		public RPCManager addCompleteAction(URI procURI, CompleteCallAction action){
+			rpcManager.addCompleteAction(procURI, action);
 			return this;
 		}
 		
