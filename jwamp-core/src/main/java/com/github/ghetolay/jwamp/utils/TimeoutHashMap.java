@@ -127,7 +127,8 @@ public class TimeoutHashMap<K,V>{
 	/**
 	 * Causes the cache to remove any entries that have timed out, and notify a timeout eviction listener for any entries that are removed
 	 * This call is made internally, and can also be called by an external thread (i.e. a dedicated cleaner thread) if desired.
-	 * TODO: create a blocking version of this so that a cleaner thread can just poll in a loop.
+	 * TODO: create a blocking version of this so that a cleaner thread can just poll in a loop (or maybe just have the method block itself, so it becomes a take() instead of a poll()).
+	 * TODO: the check of the queuesize vs mapsize shouuld probably be broken out into a different private method that we call during put() and remove()
 	 */
 	public void pollTimeouts(){
 		TimeoutElement<K, V> element;
