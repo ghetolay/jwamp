@@ -37,7 +37,7 @@ import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
 
-public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, ResultListener<WampCallResultMessage>>{
+public class DefaultRPCSender implements WampRPCSender{
 	
 	protected static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
 	
@@ -46,9 +46,14 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 	
 	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
 	
-	//TODO COMMMIT : add timeout listener
+	private final TimeoutListener<String, ResultListener<WampCallResultMessage>> myTimeoutListener = new TimeoutListener<String, ResultListener<WampCallResultMessage>>(){
+		public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
+			// TODO: KD - this feels wrong to me... null is a magic value that has to be specially interpreted.  Should ResultListener also have an onTimeout() method?
+			value.onResult(null);
+		}
+	};
+
 	public DefaultRPCSender(){
-		resultListeners.addListener(this);
 	}
 	
 	@Override
@@ -61,7 +66,13 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		this.sessionId = sessionId;
 	}
 	
+<<<<<<< HEAD
 	public void onClose(String sessionId, CloseReason closeReason) {}
+=======
+	public void onClose(String sessionId, int closeCode) {
+		conn = null;
+	}
+>>>>>>> refs/heads/timeouthashmap-redesign
 	
 	public WampArguments call(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException{
 		if(timeout == 0)
@@ -96,7 +107,14 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		return null;
 	}
 	
+<<<<<<< HEAD
 	public String call(URI procURI, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, EncodeException{
+=======
+	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, SerializationException{
+		if (conn == null)
+			throw new IllegalStateException("Not connected");
+		
+>>>>>>> refs/heads/timeouthashmap-redesign
 		String callId = generateCallId();
 		
 		OutputWampCallMessage msg = new OutputWampCallMessage();
@@ -114,7 +132,7 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 			
 		if(listener != null)
 			if(timeout >= 0)
-				resultListeners.put(callId, listener, timeout);
+				resultListeners.put(callId, listener, timeout, myTimeoutListener);
 			else//weird listener will never be called
 				if(log.isWarnEnabled())
 					log.warn("ResultListener not null but timeout < 0. ResultListener will never be called.");
@@ -126,20 +144,27 @@ public class DefaultRPCSender implements WampRPCSender, TimeoutListener<String, 
 		onMessage(sessionId, (WampCallResultMessage)msg);
 	}
 	
+<<<<<<< HEAD
 	public void onMessage(String sessionId, WampCallResultMessage msg) {
 		if(resultListeners.containsKey(msg.getCallId())){
 			ResultListener<WampCallResultMessage> listener = resultListeners.get(msg.getCallId());
 			
 			if(listener != null)
 				listener.onResult(msg);
+=======
+	private void onCallResult(WampCallResultMessage msg) {
+		
+		ResultListener<WampCallResultMessage> listener = resultListeners.remove(msg.getCallId());
+		if (listener != null){
+			listener.onResult(msg);
+		} else {
+			if (log.isDebugEnabled())
+				log.debug("callId from CallResultMessage not recognized : " + msg.toString());
+>>>>>>> refs/heads/timeouthashmap-redesign
 		}
-		else if(log.isDebugEnabled())
-			log.debug("callId from CallResultMessage not recognized : " + msg.toString());
+
 	}	
 
-	public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
-		value.onResult(null);
-	}
 	
 	private String generateCallId(){
 		Random rand = new Random();
