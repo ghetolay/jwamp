@@ -109,60 +109,7 @@ public class TimeoutHashMap<K,V>{
 		return element.getValue();
 	}
 
-<<<<<<< HEAD
-			if(System.currentTimeMillis() + timeout < sleepUntil)
-				minimalWait = timeout;
-			notify();
 
-			synchronized(toRemove){	
-				toRemove.put(key,new ToRemove(key,timeout));
-			}
-		}
-
-		public void removeFromSet(Object key){
-			synchronized(toRemove){
-				toRemove.remove(key);
-			}
-		}
-
-		public synchronized void run() {
-			try{
-				while(!isInterrupted()){
-					if(toRemove.isEmpty()){
-						minimalWait = -1;
-						wait();
-					}
-
-					//if minimalWait is >0 it means it has been set by add(key,timeout)
-					if(minimalWait < 0){
-						long currentTime = System.currentTimeMillis();
-						minimalWait = Long.MAX_VALUE;
-						sleepUntil = 0;
-
-						synchronized(toRemove){
-							for(Iterator<Map.Entry<K, ToRemove>> it = toRemove.entrySet().iterator(); it.hasNext();){
-								ToRemove tr = it.next().getValue();
-								long timeleft = tr.timeLeft(currentTime);
-
-								if(timeleft <= 0){
-									it.remove();
-									remove(tr.key, false);
-								}else
-									if(timeleft < minimalWait)
-										minimalWait = timeleft;
-							}
-						}
-					}
-
-					if(minimalWait != Long.MAX_VALUE){
-						//we reset minimalWait before the wait
-						long gowait = minimalWait;
-						minimalWait = -1;
-
-						sleepUntil = System.currentTimeMillis() + gowait;
-						wait(gowait);
-					}
-=======
 	/**
 	 * @return the number of elements in the cache
 	 */
@@ -192,7 +139,6 @@ public class TimeoutHashMap<K,V>{
 				if (removed != null){
 					removed.markRemoved();
 					removed.notifyTimeoutListener();
->>>>>>> refs/heads/timeouthashmap-redesign
 				}
 			}
 		}

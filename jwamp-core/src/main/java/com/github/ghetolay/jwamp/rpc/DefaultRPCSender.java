@@ -66,13 +66,7 @@ public class DefaultRPCSender implements WampRPCSender{
 		this.sessionId = sessionId;
 	}
 	
-<<<<<<< HEAD
 	public void onClose(String sessionId, CloseReason closeReason) {}
-=======
-	public void onClose(String sessionId, int closeCode) {
-		conn = null;
-	}
->>>>>>> refs/heads/timeouthashmap-redesign
 	
 	public WampArguments call(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException{
 		if(timeout == 0)
@@ -107,14 +101,7 @@ public class DefaultRPCSender implements WampRPCSender{
 		return null;
 	}
 	
-<<<<<<< HEAD
 	public String call(URI procURI, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, EncodeException{
-=======
-	public String call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, SerializationException{
-		if (conn == null)
-			throw new IllegalStateException("Not connected");
-		
->>>>>>> refs/heads/timeouthashmap-redesign
 		String callId = generateCallId();
 		
 		OutputWampCallMessage msg = new OutputWampCallMessage();
@@ -144,25 +131,16 @@ public class DefaultRPCSender implements WampRPCSender{
 		onMessage(sessionId, (WampCallResultMessage)msg);
 	}
 	
-<<<<<<< HEAD
 	public void onMessage(String sessionId, WampCallResultMessage msg) {
-		if(resultListeners.containsKey(msg.getCallId())){
-			ResultListener<WampCallResultMessage> listener = resultListeners.get(msg.getCallId());
-			
-			if(listener != null)
-				listener.onResult(msg);
-=======
-	private void onCallResult(WampCallResultMessage msg) {
-		
+
 		ResultListener<WampCallResultMessage> listener = resultListeners.remove(msg.getCallId());
 		if (listener != null){
 			listener.onResult(msg);
 		} else {
 			if (log.isDebugEnabled())
 				log.debug("callId from CallResultMessage not recognized : " + msg.toString());
->>>>>>> refs/heads/timeouthashmap-redesign
+	
 		}
-
 	}	
 
 	
