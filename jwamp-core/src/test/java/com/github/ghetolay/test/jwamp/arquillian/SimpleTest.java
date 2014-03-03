@@ -17,9 +17,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.github.ghetolay.jwamp.WampBuilder;
-import com.github.ghetolay.jwamp.message.WampCallMessage;
-import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.utils.JsonBackedObject;
@@ -65,13 +62,5 @@ public class SimpleTest {
 		assertNotNull(result);
 		assertEquals("EchoTest", result.getAs(String.class));
 	}
-	
-	private static class EchoAction implements CallAction{
 
-		@Override
-		public WampCallResultMessage handleCall(WampSession session, WampCallMessage msg) throws CallException {
-			return WampCallResultMessage.create(msg.getCallId(), msg.getArgs().get(0));
-		}
-		
-	}
 }

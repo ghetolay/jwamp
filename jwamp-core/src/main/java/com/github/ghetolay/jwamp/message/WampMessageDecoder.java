@@ -46,9 +46,11 @@ public abstract class WampMessageDecoder implements Decoder{
 	
 	private static final Logger log = LoggerFactory.getLogger(WampMessageDecoder.class);
 	
-	// we either need to explicitly create a new jsonFactory in the Decoder/Encoder, or we'll have to set it in the user properies and retrieve it in
-	// the init() method.  Not happy with either of those options, but it's the only thing I can think of.
-	private final JsonFactory jsonFactory = new MappingJsonFactory();
+	/**
+	 * Singleton JsonFactory used by all instances of MessageEncoder.  If sub-classes wish to use a different JsonFactory, they can do so
+	 * by overriding {@link WampMessageEncoder#getJsonFactory()}
+	 */
+	private static final JsonFactory jsonFactory = new MappingJsonFactory();
 	
 	private WampMessageDecoder(){
 		log.debug("Message decoder created");
@@ -56,6 +58,7 @@ public abstract class WampMessageDecoder implements Decoder{
 	
 	@Override
 	public void init(EndpointConfig config) {
+		log.debug("init");
 	}
 
 	protected JsonFactory getJsonFactory() {

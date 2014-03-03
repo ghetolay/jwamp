@@ -1,7 +1,5 @@
 package com.github.ghetolay.test.jwamp.server;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -19,20 +17,13 @@ public class ApplicationConfig implements ServerApplicationConfig{
 	public Set<ServerEndpointConfig> getEndpointConfigs(
 			Set<Class<? extends Endpoint>> endpointClasses) {
 		
-		try{
-			
-			ServerEndpointConfig endpointConfig = WampBuilder.create()
-					.withCallAction(new URI("http://example.com/echo"), new EchoAction())
-					.forServer("wamp")
-					.createEndpointConfig();
-					
-			return new HashSet<ServerEndpointConfig>(Arrays.asList(endpointConfig));
-		
+		ServerEndpointConfig endpointConfig = WampBuilder.create()
+				.withCallAction(EchoAction.uri, new EchoAction())
+				.forServer("wamp")
+				.createEndpointConfig();
+				
+		return new HashSet<ServerEndpointConfig>(Arrays.asList(endpointConfig));
 
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			return Collections.emptySet();
-		}
 	}
 
 	@Override

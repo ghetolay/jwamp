@@ -36,7 +36,11 @@ import com.github.ghetolay.jwamp.utils.JsonBackedObject;
  */
 public abstract class WampMessageEncoder implements Encoder{
 
-	private final JsonFactory jsonFactory = new MappingJsonFactory();
+	/**
+	 * Singleton JsonFactory used by all instances of MessageEncoder.  If sub-classes wish to use a different JsonFactory, they can do so
+	 * by overriding {@link WampMessageEncoder#getJsonFactory()}
+	 */
+	private static final JsonFactory jsonFactory = new MappingJsonFactory();
 
 	@Override
 	public void init(EndpointConfig config) {

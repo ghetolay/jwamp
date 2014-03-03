@@ -15,15 +15,20 @@
 */
 package com.github.ghetolay.test.jwamp.server;
 
+import java.net.URI;
+
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 public class EchoAction implements CallAction{
 
+	public static URI uri = URIBuilder.newURI("http://example.com/echo");
+	
 	@Override
 	public WampCallResultMessage handleCall(WampSession session, WampCallMessage msg) throws CallException {
 		if ( msg.getArgs().size() != 0)
