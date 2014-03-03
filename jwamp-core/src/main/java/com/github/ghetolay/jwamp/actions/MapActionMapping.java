@@ -13,34 +13,35 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.actions;
+
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-/**
- * Also UnsubscribeMessage
- * @author ghetolay
- *
- */
-public class WampUnsubscribeMessage extends WampMessage{
+public class MapActionMapping<T> extends HashMap<URI,T> implements ActionMapping<T> {
 
-	private final URI topicURI;
+	private static final long serialVersionUID = 5706026333888185183L;
 	
-	public static WampUnsubscribeMessage create(URI topicURI){
-		return new WampUnsubscribeMessage(topicURI);
+	public MapActionMapping(){
+		super();
 	}
 	
-	private WampUnsubscribeMessage(URI topicURI){
-		super(MessageType.UNSUBSCRIBE);
-		this.topicURI = topicURI;
+	public MapActionMapping( Map<URI,T> actions){
+		super(actions);
 	}
 	
-	public URI getTopicURI() {
-		return topicURI;
+	public void addAction(URI actionURI, T action){
+		put(actionURI, action);
 	}
 	
-	@Override
-	public String toString(){
-		return " WampUnsubscribehMessage { "+ topicURI + " } ";
+	public T getAction(URI actionURI){
+		return get(actionURI);
+	}
+
+	public Iterator<T> getActionsIterator(){
+		return values().iterator();
 	}
 }

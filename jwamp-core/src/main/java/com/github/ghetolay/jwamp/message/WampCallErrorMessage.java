@@ -17,15 +17,41 @@ package com.github.ghetolay.jwamp.message;
 
 import java.net.URI;
 
+import com.github.ghetolay.jwamp.utils.BuiltInURIs;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
 
-public class WampCallErrorMessage extends WampCallResultMessage {
 
-	protected URI errorUri;
-	protected String errorDesc;
-	protected WampArguments errorDetails;
+public class WampCallErrorMessage extends WampMessage {
+
+	private final String callId;
+	private final URI errorUri;
+	private final String errorDesc;
+	private final JsonBackedObject errorDetails;
+
 	
-	protected WampCallErrorMessage(){
-		messageType = CALLERROR;
+	public static WampCallErrorMessage create(String callId, URI errorUri, String errorDesc){
+		return new WampCallErrorMessage(callId, errorUri, errorDesc, null);
+	}
+	
+	public static WampCallErrorMessage create(String callId, URI errorUri, String errorDesc, JsonBackedObject errorDetails){
+		return new WampCallErrorMessage(callId, errorUri, errorDesc, errorDetails);
+	}
+	
+	public static WampCallErrorMessage createUnknownCall(WampCallMessage msg){
+		return new WampCallErrorMessage(msg.getCallId(), BuiltInURIs.Errors.unknownCall, "No registered handler for procedure URI", JsonBackedObjectFactory.createForObject(msg.getProcURI()));
+	}
+	
+	private WampCallErrorMessage(String callId, URI errorUri, String errorDesc, JsonBackedObject errorDetails){
+		super(MessageType.CALLERROR);
+		this.callId = callId;
+		this.errorUri = errorUri;
+		this.errorDesc = errorDesc;
+		this.errorDetails = errorDetails;
+	}
+	
+	public String getCallId() {
+		return callId;
 	}
 	
 	public URI getErrorUri() {
@@ -36,12 +62,19 @@ public class WampCallErrorMessage extends WampCallResultMessage {
 		return errorDesc;
 	}
 
-	public WampArguments getErrorDetails() {
+	public boolean isErrorDetailsPresent(){
+		return errorDetails != null;
+	}
+	
+	public JsonBackedObject getErrorDetails() {
 		return errorDetails;
 	}
 	
 	@Override
 	public String toString(){
-		return " WampCallErrorMessage { "+ errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+		if (errorDetails != null)
+			return " WampCallErrorMessage { "+ callId + ", " + errorUri+ ", " + errorDesc + ", " + errorDetails + " } ";
+		
+		return " WampCallErrorMessage { "+ callId + ", " + errorUri+ ", " + errorDesc + " } ";
 	}
 }

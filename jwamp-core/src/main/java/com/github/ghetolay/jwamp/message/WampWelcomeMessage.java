@@ -15,50 +15,46 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import com.github.ghetolay.jwamp.WampFactory;
+import com.github.ghetolay.jwamp.WampBuilder;
 
 public class WampWelcomeMessage extends WampMessage{
 
-	protected String sessionId;
-	protected int protocolVersion;
-	protected String implementation;
+	private final String sessionId;
+	private final int protocolVersion;
+	private final String implementation;
 	
-	public WampWelcomeMessage(){
-		messageType = WELCOME;
+	public static WampWelcomeMessage create(String sessionId, int protocolVersion, String implementation){
+		return new WampWelcomeMessage(sessionId, protocolVersion, implementation);
+	}
+	
+	public static WampWelcomeMessage create(String sessionId){
+		return new WampWelcomeMessage(
+				sessionId,
+				WampBuilder.getProtocolVersion(),
+				WampBuilder.getImplementation()
+				);
+	}
+	
+	protected WampWelcomeMessage(String sessionId, int protocolVersion, String implementation){
+		super(MessageType.WELCOME);
+		this.sessionId = sessionId;
+		this.protocolVersion = protocolVersion;
+		this.implementation = implementation;
 	}
 
 	public String getSessionId() {
 		return sessionId;
 	}
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-
 	public int getProtocolVersion() {
 		return protocolVersion;
-	}
-
-	public void setProtocolVersion(int protocolVersion) {
-		this.protocolVersion = protocolVersion;
 	}
 
 	public String getImplementation() {
 		return implementation;
 	}
 
-	public void setImplementation(String implementation) {
-		this.implementation = implementation;
-	}
-	
-	public static WampWelcomeMessage newJWamp(String sessionId){
-		WampWelcomeMessage msg = new WampWelcomeMessage();
-		msg.setImplementation(WampFactory.getImplementation());
-		msg.setProtocolVersion(WampFactory.getProtocolVersion());
-		msg.setSessionId(sessionId);
-		
-		return msg;
-	}
+
 	
 	@Override
 	public String toString(){

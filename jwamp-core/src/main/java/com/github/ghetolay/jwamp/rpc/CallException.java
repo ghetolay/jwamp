@@ -18,6 +18,8 @@ package com.github.ghetolay.jwamp.rpc;
 import java.net.URI;
 
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
 import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 /**
@@ -44,7 +46,10 @@ public class CallException extends Throwable {
 	
 	public CallException(WampCallErrorMessage msg){
 		this(msg.getErrorUri(), msg.getErrorDesc());
-		details = msg.getErrorDetails();
+		if (msg.isErrorDetailsPresent())
+			details = msg.getErrorDetails();
+		else
+			details = null;
 	}
 
 	public URI getErrorURI(){
@@ -64,5 +69,16 @@ public class CallException extends Throwable {
 	
 	public Object getErrorDetails(){
 		return details;
+	}
+	
+	protected WampCallErrorMessage createCallErrorMessage(String callId){
+
+		if (details == null){
+			return WampCallErrorMessage.create(callId, getErrorURI(), getErrorDescription());
+		} else {
+			JsonBackedObject errorDetailsJson = JsonBackedObjectFactory.createForObject(details);
+			return WampCallErrorMessage.create(callId, getErrorURI(), getErrorDescription(), errorDetailsJson);
+		}
+		
 	}
 }

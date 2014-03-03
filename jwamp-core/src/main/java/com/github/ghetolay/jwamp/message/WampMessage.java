@@ -22,19 +22,13 @@ public abstract class WampMessage {
 	
 	protected transient final Logger log = LoggerFactory.getLogger(getClass());
 	
-	public transient final static int WELCOME     = 0;
-	public transient final static int PREFIX      = 1;
-	public transient final static int CALL        = 2;
-	public transient final static int CALLRESULT  = 3;
-	public transient final static int CALLERROR   = 4;
-	public transient final static int SUBSCRIBE   = 5;
-	public transient final static int UNSUBSCRIBE = 6;
-	public transient final static int PUBLISH     = 7;
-	public transient final static int EVENT       = 8;
+	private final MessageType messageType;
 	
-	protected int messageType;
+	public WampMessage(MessageType messageType) {
+		this.messageType = messageType;
+	}
 	
-	public int getMessageType(){
+	public MessageType getMessageType(){
 		return messageType;
 	}
 }

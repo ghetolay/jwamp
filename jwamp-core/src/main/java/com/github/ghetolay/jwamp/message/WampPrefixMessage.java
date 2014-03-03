@@ -15,30 +15,26 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 
 public class WampPrefixMessage extends WampMessage{
 
-	protected String prefix;
-	protected String uri;
+	private final String prefix;
+	private final URI uri;
 	
-	public WampPrefixMessage(){
-		messageType = PREFIX;
+	public WampPrefixMessage(String prefix, URI uri){
+		super(MessageType.PREFIX);
+		this.prefix = prefix;
+		this.uri = uri;
 	}
 
 	public String getPrefix() {
 		return prefix;
 	}
 
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
-
-	public String getUri() {
+	public URI getUri() {
 		return uri;
-	}
-
-	public void setUri(String uri) {
-		this.uri = uri;
 	}
 
 	@Override

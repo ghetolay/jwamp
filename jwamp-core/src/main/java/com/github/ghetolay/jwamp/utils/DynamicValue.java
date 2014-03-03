@@ -22,6 +22,7 @@ import java.util.Map;
  * @author ghetolay
  *
  */
+// TODO: KD - do we need this?
 public interface DynamicValue {
 
 	boolean isBoolean();

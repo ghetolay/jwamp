@@ -18,146 +18,168 @@ package com.github.ghetolay.jwamp.rpc;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
 
-import javax.websocket.CloseReason;
 import javax.websocket.EncodeException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.endpoint.SessionManager;
-import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.MessageType;
+import com.github.ghetolay.jwamp.message.RemoteMessageSender;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
+import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
-import com.github.ghetolay.jwamp.message.output.OutputWampCallMessage;
-import com.github.ghetolay.jwamp.utils.ResultListener;
+import com.github.ghetolay.jwamp.message.WampMessage;
+import com.github.ghetolay.jwamp.message.WampMessageHandler;
+import com.github.ghetolay.jwamp.session.WampSession;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
-import com.github.ghetolay.jwamp.utils.WaitResponse;
 
-public class DefaultRPCSender implements WampRPCSender{
+public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	
-	protected static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
+	private static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
+
+	//TODO: this is now set up to where we could share the same instance across all DefaultRPCSender instances - if we do that, we can reintroduce the cleaner thread concept (this would result in a single cleaner thread for the entire application)
+	private TimeoutHashMap<CallIdTimeoutKey, CallResultListener> resultListeners = new TimeoutHashMap<CallIdTimeoutKey, CallResultListener>();
 	
-	private SessionManager sessionManager;
-	private String sessionId;
-	
-	private TimeoutHashMap<String, ResultListener<WampCallResultMessage>> resultListeners = new TimeoutHashMap<String, ResultListener<WampCallResultMessage>>();
-	
-	private final TimeoutListener<String, ResultListener<WampCallResultMessage>> myTimeoutListener = new TimeoutListener<String, ResultListener<WampCallResultMessage>>(){
-		public void timedOut(String key, ResultListener<WampCallResultMessage> value) {
-			// TODO: KD - this feels wrong to me... null is a magic value that has to be specially interpreted.  Should ResultListener also have an onTimeout() method?
-			value.onResult(null);
+	private final TimeoutListener<CallIdTimeoutKey, CallResultListener> myTimeoutListener = new TimeoutListener<CallIdTimeoutKey, CallResultListener>(){
+		public void timedOut(CallIdTimeoutKey key, CallResultListener value) {
+			value.onTimeout();
 		}
 	};
 
-	public DefaultRPCSender(){
-	}
-	
-	@Override
-	public void init(SessionManager sessionManager) {
-		this.sessionManager = sessionManager;
-	}
+	private final RemoteMessageSender remoteMessageSender;
+	private final String sessionId;
+	private final Random rand = new Random();
 
-	@Override
-	public void onOpen(String sessionId) {
+	public DefaultRPCSender(RemoteMessageSender remoteMessageSender, String sessionId){
+		this.remoteMessageSender = remoteMessageSender;
 		this.sessionId = sessionId;
 	}
 	
-	public void onClose(String sessionId, CloseReason closeReason) {}
-	
-	public WampArguments call(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException{
-		if(timeout == 0)
-			throw new IllegalArgumentException("Timeout can't be infinite, use #call(String procId, ResultListener<WampCallResultMessage> listener, long timeout, Object... args)");
+	public JsonBackedObject callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException{
 
-		if(timeout > 0){
-			WaitResponse<WampCallResultMessage> wr = new WaitResponse<WampCallResultMessage>();
-			
-			call(procURI,wr,timeout,args);
-			
-			WampCallResultMessage result;
-			
-			try {
-				result = wr.call();
-			} catch (Exception e) {
-				if(log.isErrorEnabled())
-					log.error("Error waiting call result : ",e);
-				return null;
-			}
-			
-			if(result != null){
-				if(result instanceof WampCallErrorMessage)
-					throw new CallException((WampCallErrorMessage)result);
-				else
-					return result.getResults();
-			}
-				
-			throw new TimeoutException();
-		}
+		AsyncCallResultBlocker callResultBlocker = new AsyncCallResultBlocker();
 		
-		call(procURI,null,-1,args);
-		return null;
+		callAsynchronously(procURI, timeout, callResultBlocker, args);
+		
+		return callResultBlocker.getResult(timeout);
+
 	}
 	
-	public String call(URI procURI, ResultListener<WampCallResultMessage> listener, long timeout, Object... args) throws IOException, EncodeException{
+	private CallIdTimeoutKey getTimeoutKey(String callId){
+		return new CallIdTimeoutKey(sessionId, callId);
+	}
+	
+	public String callAsynchronously(URI procURI, long timeout, CallResultListener listener, Object... args) throws IOException, EncodeException{
+		if(timeout < 0)
+			throw new IllegalArgumentException("Timeout can't be negative");
+
 		String callId = generateCallId();
 		
-		OutputWampCallMessage msg = new OutputWampCallMessage();
-		msg.setProcURI(procURI);
-		msg.setCallId(callId);
+		List<JsonBackedObject> jsonArgs = JsonBackedObjectFactory.createForObjects(args);
 		
-		if(args.length > 0){
-			if(args.length == 1)
-				msg.setArgument(args[0]);
-			else
-				msg.setArgument(args);
-		}
-			
-		sessionManager.sendMessageTo(sessionId, msg);
+		WampCallMessage msg = WampCallMessage.create(callId, procURI, jsonArgs);
 			
 		if(listener != null)
-			if(timeout >= 0)
-				resultListeners.put(callId, listener, timeout, myTimeoutListener);
-			else//weird listener will never be called
-				if(log.isWarnEnabled())
-					log.warn("ResultListener not null but timeout < 0. ResultListener will never be called.");
+			resultListeners.put(getTimeoutKey(callId), listener, timeout, myTimeoutListener);
+
+		remoteMessageSender.sendToRemote(msg);
+			
 			
 		return callId;
 	}
 	
-	public void onMessage(String sessionId, WampCallErrorMessage msg) {
-		onMessage(sessionId, (WampCallResultMessage)msg);
+	@Override
+	public Collection<MessageType> getMessageTypes() {
+		return EnumSet.of(MessageType.CALLRESULT, MessageType.CALLERROR);
 	}
 	
-	public void onMessage(String sessionId, WampCallResultMessage msg) {
-
-		ResultListener<WampCallResultMessage> listener = resultListeners.remove(msg.getCallId());
+	@Override
+	public void onMessage(WampSession session, WampMessage inMsg) {
+		switch (inMsg.getMessageType()){
+			case CALLRESULT:
+				onMessage(session, (WampCallResultMessage)inMsg);
+				break;
+			case CALLERROR:
+				onMessage(session, (WampCallErrorMessage)inMsg);
+				break;
+			default:
+				log.warn(this + " received unexpected message " + inMsg);
+				return;
+		}
+		
+	}
+	
+	private void onMessage(WampSession session, WampCallResultMessage msg){
+		CallResultListener listener = resultListeners.remove(getTimeoutKey(msg.getCallId()));
 		if (listener != null){
-			listener.onResult(msg);
+			listener.onSuccess(msg);
 		} else {
 			if (log.isDebugEnabled())
 				log.debug("callId from CallResultMessage not recognized : " + msg.toString());
-	
 		}
-	}	
-
+	}
+	
+	private void onMessage(WampSession session, WampCallErrorMessage msg){
+		CallResultListener listener = resultListeners.remove(getTimeoutKey(msg.getCallId()));
+		if (listener != null){
+			listener.onError(msg);
+		} else {
+			if (log.isDebugEnabled())
+				log.debug("callId from CallResultMessage not recognized : " + msg.toString());
+		}
+	}
+	
+	private static char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 	
 	private String generateCallId(){
-		Random rand = new Random();
-		String id ="";
+		StringBuilder sb = new StringBuilder();
 		
 		for(int i = 0; i < 12; i++){
-			int r = rand.nextInt(62);
-			if(r > 35)
-				id += (char)(r+61);
-			else if(r > 9)
-				id += (char)(r+55);
-			else
-				id += r; 
+			sb.append(chars[rand.nextInt(chars.length)]); 
 		}
 		
-		return id;
+		return sb.toString();
+	}
+	
+	private static class AsyncCallResultBlocker implements CallResultListener {
+
+		private WampCallResultMessage resultMessage = null;
+		private WampCallErrorMessage errorMessage = null;
+		
+		public synchronized JsonBackedObject getResult(long timeout) throws TimeoutException, CallException, InterruptedException {
+			wait(timeout);
+			if (resultMessage != null) return resultMessage.getResult();
+			if (errorMessage != null) throw new CallException(errorMessage);
+			throw new TimeoutException();
+		}
+
+		@Override
+		public synchronized void onSuccess(WampCallResultMessage msg) {
+			resultMessage = msg;
+			notifyAll();
+		}
+
+		@Override
+		public synchronized void onError(WampCallErrorMessage msg) {
+			errorMessage = msg;
+			notifyAll();
+
+		}
+
+		@Override
+		public synchronized void onTimeout() {
+			notifyAll();
+		}
+
+		
 	}
 }

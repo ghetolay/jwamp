@@ -16,17 +16,28 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
 
 
 public class WampCallMessage extends WampMessage{
 
-	protected String callId;
-	protected URI procURI;
+	private final String callId;
+	private final URI procURI;
+	private final List<JsonBackedObject> args;
 	
-	protected WampArguments args;
+	public static WampCallMessage create(String callId, URI procURI, List<JsonBackedObject> args){
+		return new WampCallMessage(callId, procURI, args);
+	}
 	
-	protected WampCallMessage(){
-		messageType = CALL;
+	private WampCallMessage(String callId, URI procURI, List<JsonBackedObject> args){
+		super(MessageType.CALL);
+		this.callId = callId;
+		this.procURI = procURI;
+		this.args = Collections.unmodifiableList(args);
 	}
 	
 	public String getCallId() {
@@ -37,7 +48,7 @@ public class WampCallMessage extends WampMessage{
 		return procURI;
 	}
 	
-	public WampArguments getArguments(){
+	public List<JsonBackedObject> getArgs() {
 		return args;
 	}
 	

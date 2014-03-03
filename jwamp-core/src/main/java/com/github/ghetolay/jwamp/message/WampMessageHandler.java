@@ -13,13 +13,16 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.event;
+package com.github.ghetolay.jwamp.message;
 
-import com.github.ghetolay.jwamp.message.WampEventMessage;
+import java.util.Collection;
+
 import com.github.ghetolay.jwamp.session.WampSession;
 
-public interface EventAction {
+public interface WampMessageHandler{
 	
-	public void handleEvent(WampSession session, WampEventMessage msg);
+	public Collection<MessageType> getMessageTypes();
 	
+	public void onMessage(WampSession session, WampMessage message);
+
 }

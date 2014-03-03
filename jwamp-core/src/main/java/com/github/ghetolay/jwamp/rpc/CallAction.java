@@ -15,24 +15,11 @@
 */
 package com.github.ghetolay.jwamp.rpc;
 
-import com.github.ghetolay.jwamp.message.WampArguments;
+import com.github.ghetolay.jwamp.message.WampCallMessage;
+import com.github.ghetolay.jwamp.message.WampCallResultMessage;
+import com.github.ghetolay.jwamp.session.WampSession;
 
-public interface CallAction extends Action{
+public interface CallAction{
 
-	/**
-	 * 
-	 *\/!\\ Since Wamp allow null values on message if this methods return null a null value will be sent. To do not send any result message see {@link Returns#NO_RETURN}, and for empty message see {@link Returns#EMPTY}. 
-	 * 
-	 * 
-	 * @param sessionId
-	 * @param args
-	 * @return
-	 * @throws CallException
-	 */
-	Object execute(WampArguments args) throws CallException;
-	
-	public enum Returns{
-		NO_RETURN,
-		EMPTY
-	}
+	public WampCallResultMessage handleCall(WampSession session, WampCallMessage msg) throws CallException;
 }

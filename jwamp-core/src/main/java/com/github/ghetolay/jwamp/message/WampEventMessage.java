@@ -17,22 +17,33 @@ package com.github.ghetolay.jwamp.message;
 
 import java.net.URI;
 
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+
 
 public class WampEventMessage extends WampMessage{
-
-	protected URI topicURI;
+	private final URI topicURI;
+	private final JsonBackedObject event;
 	
-	protected WampArguments event;
+	public static WampEventMessage createFromPublishMessage(WampPublishMessage publishMsg){
+		WampEventMessage evtMsg = new WampEventMessage(publishMsg.getTopicURI(), publishMsg.getEvent());
+		return evtMsg;
+	}
 	
-	protected WampEventMessage(){
-		messageType = EVENT;
+	public static WampEventMessage create(URI topicURI, JsonBackedObject event){
+		return new WampEventMessage(topicURI, event);
+	}
+	
+	private WampEventMessage(URI topicURI, JsonBackedObject event){
+		super(MessageType.EVENT);
+		this.topicURI = topicURI;
+		this.event = event;
 	}
 
 	public URI getTopicURI() {
 		return topicURI;
 	}
 
-	public WampArguments getEvents(){
+	public JsonBackedObject getEvent() {
 		return event;
 	}
 	

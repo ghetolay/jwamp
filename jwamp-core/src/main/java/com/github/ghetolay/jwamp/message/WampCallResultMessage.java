@@ -15,27 +15,36 @@
 */
 package com.github.ghetolay.jwamp.message;
 
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+
+
 
 
 public class WampCallResultMessage extends WampMessage{
 
-	protected String callId;
-	protected WampArguments result;
+	private final String callId;
+	private final JsonBackedObject result;
 	
-	protected WampCallResultMessage(){
-		messageType = CALLRESULT;
+	public static WampCallResultMessage create(String callId, JsonBackedObject result){
+		return new WampCallResultMessage(callId, result);
+	}
+	
+	private WampCallResultMessage(String callId, JsonBackedObject result){
+		super(MessageType.CALLRESULT);
+		this.callId = callId;
+		this.result = result;
 	}
 	
 	public String getCallId() {
 		return callId;
 	}
-	
-	public WampArguments getResults(){
+
+	public JsonBackedObject getResult() {
 		return result;
 	}
 	
 	@Override
 	public String toString(){
-		return " WampCallResultMessage { "+ callId+ " , " + result.size() + " results} ";
+		return " WampCallResultMessage { "+ callId+ " , " + result + " } ";
 	}
 }

@@ -19,6 +19,7 @@ package com.github.ghetolay.jwamp.utils;
  * @author ghetolay
  *
  */
+//TODO: KD - do we need this?
 public class Return {
 	
 	public static class Double<A,B>{

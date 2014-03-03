@@ -15,16 +15,28 @@
  */
 package com.github.ghetolay.jwamp.message;
 
+import java.net.URI;
+
 
 /**
  * @author ghetolay
  *
  */
 
-public class WampSubscribeMessage extends WampUnsubscribeMessage {
+public class WampSubscribeMessage extends WampMessage {
+	private final URI topicURI;
+	
+	public static WampSubscribeMessage create(URI topicURI){
+		return new WampSubscribeMessage(topicURI);
+	}
+	
+	private WampSubscribeMessage(URI topicURI){
+		super(MessageType.SUBSCRIBE);
+		this.topicURI = topicURI;
+	}
 
-	protected WampSubscribeMessage(){
-		super(SUBSCRIBE);
+	public URI getTopicURI() {
+		return topicURI;
 	}
 	
 	@Override

@@ -13,34 +13,20 @@
 *See the License for the specific language governing permissions and
 *limitations under the License.
 */
-package com.github.ghetolay.jwamp.message;
+package com.github.ghetolay.jwamp.rpc;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeoutException;
 
-/**
- * Also UnsubscribeMessage
- * @author ghetolay
- *
- */
-public class WampUnsubscribeMessage extends WampMessage{
+import javax.websocket.EncodeException;
 
-	private final URI topicURI;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+
+
+public interface RPCSender {
 	
-	public static WampUnsubscribeMessage create(URI topicURI){
-		return new WampUnsubscribeMessage(topicURI);
-	}
+	public JsonBackedObject callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException;
 	
-	private WampUnsubscribeMessage(URI topicURI){
-		super(MessageType.UNSUBSCRIBE);
-		this.topicURI = topicURI;
-	}
-	
-	public URI getTopicURI() {
-		return topicURI;
-	}
-	
-	@Override
-	public String toString(){
-		return " WampUnsubscribehMessage { "+ topicURI + " } ";
-	}
+	public String callAsynchronously(URI procURI, long timeout, CallResultListener listener, Object... args) throws EncodeException, IOException;
 }

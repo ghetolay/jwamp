@@ -16,276 +16,332 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.websocket.DecodeException;
 import javax.websocket.Decoder;
 import javax.websocket.EndpointConfig;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.github.ghetolay.jwamp.WampFactory;
+import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
 
 
 /**
  * @author ghetolay
  *
  */
-public class WampMessageDecoder implements Decoder.Text<WampMessage>{
-
-	private JsonFactory jsonFactory;
-
+public abstract class WampMessageDecoder implements Decoder{
+	
+	private static final Logger log = LoggerFactory.getLogger(WampMessageDecoder.class);
+	
+	// we either need to explicitly create a new jsonFactory in the Decoder/Encoder, or we'll have to set it in the user properies and retrieve it in
+	// the init() method.  Not happy with either of those options, but it's the only thing I can think of.
+	private final JsonFactory jsonFactory = new MappingJsonFactory();
+	
+	private WampMessageDecoder(){
+		log.debug("Message decoder created");
+	}
+	
 	@Override
 	public void init(EndpointConfig config) {
-		this.jsonFactory = new MappingJsonFactory();//(JsonFactory) config.getUserProperties().get("jwamp.jsonfactory");
 	}
 
+	protected JsonFactory getJsonFactory() {
+		return jsonFactory;
+	}
+	
 	@Override
-	public void destroy() {		
+	public void destroy() {
 	}
 
-	@Override
-	public WampMessage decode(String reader) throws DecodeException{
-
-
-		try {
-			//JsonParser parser = jsonFactory.createParser(reader);
-			JsonParser parser = WampFactory.getInstance().getWampEncoders().getJsonFactory().createParser(reader);
-
-			if(parser.nextToken() != JsonToken.START_ARRAY)
-				throw new DecodeException(parser.getValueAsString(), "WampMessage must be a not null JSON array");
-
-			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
-				throw new DecodeException(parser.getValueAsString(), "The first array element must be a int");
-
-			int messageType = parser.getIntValue();
-
-			switch(messageType){
-			case WampMessage.CALL :
-				return callMsg(parser);
-
-			case WampMessage.CALLERROR :
-				return callErrorMsg(parser);
-
-			case WampMessage.CALLRESULT :
-				return callResultMsg(parser);
-
-			case WampMessage.EVENT :
-				return eventMsg(parser);
-
-			case WampMessage.PUBLISH :
-				return publishMsg(parser);
-
-			case WampMessage.SUBSCRIBE :
-				return subscribeMsg(parser);
-
-			case WampMessage.UNSUBSCRIBE :	
-				return unsubscribeMsg(parser);
-
-			case WampMessage.WELCOME :
-				return welcomeMsg(parser);
-
-			case WampMessage.PREFIX :
-				return prefixMsg(parser);
-
-			default :
-				throw new DecodeException(parser.getValueAsString(), "Unknown message type : " + messageType);
+	public static class Text extends WampMessageDecoder implements Decoder.Text<WampMessage>{
+		@Override
+		public boolean willDecode(String s) {
+			return true;
+		}
+	
+		@Override
+		public WampMessage decode(String reader) throws DecodeException{
+	
+			try {
+				JsonParser parser = getJsonFactory().createParser(reader);
+				return decode(parser);
+			} catch (IOException e) {
+				throw new DecodeException(reader, "Unparsable message", e);
 			}
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
+			
 		}
 	}
+	
+	public static class TextStream extends WampMessageDecoder implements Decoder.TextStream<WampMessage>{
+		
+		@Override
+		public WampMessage decode(Reader reader) throws DecodeException, IOException{
 
+			JsonParser parser = getJsonFactory().createParser(reader);
+
+			return WampMessageDecoder.decode(parser);
+
+		}
+	}
+	
+	// TODO: refactor the decoders into objects and use an EnumMap to retrieve the appropriate one
+	protected static WampMessage decode(JsonParser parser) throws DecodeException, IOException{
+		try{
+			if(parser.nextToken() != JsonToken.START_ARRAY)
+				throw new DecodeException(parser.getValueAsString(), "WampMessage must be a not null JSON array");
+	
+			if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
+				throw new DecodeException(parser.getValueAsString(), "The first array element must be a int");
+	
+			MessageType messageType;
+			try{
+				messageType = MessageType.forId(parser.getIntValue());
+			} catch (IllegalArgumentException e){
+				throw new DecodeException(parser.getValueAsString(), "Unknown message type : " + parser.getIntValue());
+			}
+			
+			switch(messageType){
+				case CALL :
+					return callMsg(parser);
+	
+				case CALLERROR :
+					return callErrorMsg(parser);
+	
+				case CALLRESULT :
+					return callResultMsg(parser);
+	
+				case EVENT :
+					return eventMsg(parser);
+	
+				case PUBLISH :
+					return publishMsg(parser);
+	
+				case SUBSCRIBE :
+					return subscribeMsg(parser);
+	
+				case UNSUBSCRIBE :	
+					return unsubscribeMsg(parser);
+	
+				case WELCOME :
+					return welcomeMsg(parser);
+	
+				case PREFIX :
+					return prefixMsg(parser);
+					
+				default:
+					throw new DecodeException(parser.getValueAsString(), "Unknown message type : " + parser.getIntValue());
+			}
+		} catch (JsonParseException e){
+			throw new DecodeException(parser.getValueAsString(), "Unknown message type : " + parser.getIntValue());
+		}
+	}
+	
+
+
+	private static URI parseURI(JsonParser parser) throws JsonParseException, IOException, DecodeException{
+		String uriText = parser.getText();
+		
+		URI uri;
+		try {
+			uri = new URI(uriText);
+		} catch (URISyntaxException e) {
+			throw new DecodeException(uriText, "Invalid URI");
+		}
+
+		return uri;
+	}
+	
+	private static void assertLastArgument(JsonParser parser) throws DecodeException, JsonParseException, IOException{
+		
+		if (parser.nextToken() != JsonToken.END_ARRAY)
+			throw new DecodeException(parser.getValueAsString(), "To many arguments");
+		
+	}
+	
 	public static WampCallErrorMessage callErrorMsg(JsonParser parser) throws JsonParseException, IOException, DecodeException{
-		WampCallErrorMessage result = new WampCallErrorMessage();
-
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "CallId is required and must be a string");
-		result.callId = parser.getText();
+		String callId = parser.getText();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "ErrorUri is required and must be a string");
-		try {
-			result.errorUri = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
-		}
+		URI errorURI = parseURI(parser);
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "ErrorDescription is required and must be a string");
-		result.errorDesc = parser.getText();
+		String errorDesc = parser.getText();
 
-		parser.nextToken();
-		result.errorDetails = new JSONArguments(parser);
-
-		return result;
+		if (parser.nextToken() == JsonToken.END_ARRAY)
+			return WampCallErrorMessage.create(callId, errorURI, errorDesc);
+		
+		JsonBackedObject errorDetails = JsonBackedObjectFactory.readNextObject(parser);
+		
+		assertLastArgument(parser);
+		
+		return WampCallErrorMessage.create(callId, errorURI, errorDesc, errorDetails);
 	}
 
 	public static WampCallMessage callMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampCallMessage result = new WampCallMessage();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "CallId is required and must be a string");
-		result.callId = parser.getText();
+		String callId = parser.getText();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "ProcUri is required and must be a string");
-		try {
-			result.procURI = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
+		URI procURI = parseURI(parser);
+
+		List<JsonBackedObject> args = new ArrayList<JsonBackedObject>();
+		while (parser.nextToken() != JsonToken.END_ARRAY){
+			JsonBackedObject arg = JsonBackedObjectFactory.readNextObject(parser);
+			args.add(arg);
 		}
-
-		parser.nextToken();
-		result.args = new JSONArguments(parser);
-
-		return result;
+		
+		// by definition, we are at the last argument now, so no need to call assertLastArgument(parser);
+		
+		return WampCallMessage.create(callId, procURI, args);
 	}
 
 
 	private static WampCallResultMessage callResultMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampCallResultMessage result = new WampCallResultMessage();
-
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "CallId is required and must be a string");
-		result.callId = parser.getText();
+		String callId = parser.getText();
 
-		parser.nextToken();
-		result.result = new JSONArguments(parser);
+		if (parser.nextToken() == JsonToken.END_ARRAY)
+			throw new DecodeException(parser.getValueAsString(), "Result is required");
+		
+		JsonBackedObject result = JsonBackedObjectFactory.readNextObject(parser);
 
-		return result;
+		assertLastArgument(parser);
+		
+		return WampCallResultMessage.create(callId, result);
+		
 	}
 
 	public static WampEventMessage eventMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampEventMessage result = new WampEventMessage();
-
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "TopicUri is required and must be a string");
-		try{
-			result.topicURI = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
-		}
+		URI topicURI = parseURI(parser);
 
-		parser.nextToken();
-		result.event = new JSONArguments(parser);
+		if (parser.nextToken() == JsonToken.END_ARRAY)
+			throw new DecodeException(parser.getValueAsString(), "Event is required");
 
-		return result;
+		JsonBackedObject event = JsonBackedObjectFactory.readNextObject(parser);
+		
+		assertLastArgument(parser);
+		
+		return WampEventMessage.create(topicURI, event);
 	}
 
 	public static WampPublishMessage publishMsg(JsonParser parser) throws JsonParseException, IOException, DecodeException {
-		WampPublishMessage result = new WampPublishMessage();			
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "TopicUri is required and must be a string");
-		try{
-			result.topicURI = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
-		}
+		URI topicURI = parseURI(parser);
 
-		parser.nextToken();
-		result.event = parser.readValueAs(Object.class);
+		if (parser.nextToken() == JsonToken.END_ARRAY)
+			throw new DecodeException(parser.getValueAsString(), "Event is required");
+		
+		JsonBackedObject event = JsonBackedObjectFactory.readNextObject(parser);
 
 		//excludeme or exclude list
 		if(parser.nextToken() == JsonToken.VALUE_TRUE)
-			result.excludeMe = true;
+			return WampPublishMessage.createExcludeMe(topicURI, event);
 		else if(parser.getCurrentToken() == JsonToken.START_ARRAY){
-			result.exclude = new ArrayList<String>();
+			List<String> exclude = new ArrayList<String>();
 			while(parser.nextToken() != JsonToken.END_ARRAY){
 				if(parser.getCurrentToken() != JsonToken.VALUE_STRING)
 					throw new DecodeException(parser.getValueAsString(), "Fourth element must be boolean or array of string");
-				result.exclude.add(parser.getText());
+				exclude.add(parser.getText());
 			}
 
 			//eligible list
 			if(parser.nextToken() == JsonToken.START_ARRAY){
-				result.eligible = new ArrayList<String>();
+				List<String> eligible = new ArrayList<String>();
 				while(parser.nextToken() != JsonToken.END_ARRAY){
 					if(parser.getCurrentToken() != JsonToken.VALUE_STRING)
 						throw new DecodeException(parser.getValueAsString(), "Fifth element must be an array of string");
-					result.eligible.add(parser.getText());
+					eligible.add(parser.getText());
 				}
+				return WampPublishMessage.createWithExcludeAndEligible(topicURI, event, exclude, eligible);
+			} else {
+				return WampPublishMessage.createWithExclude(topicURI, event, exclude);
 			}
+		} else {
+			return WampPublishMessage.createSimple(topicURI, event);
 		}
 
-		return result;
 	}
 
 	public static WampUnsubscribeMessage unsubscribeMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampUnsubscribeMessage result = new WampUnsubscribeMessage();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "TopicUri is required and must be a string");
-		try{
-			result.topicURI = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
-		}
+		URI topicURI = parseURI(parser);
 
-		return result;
+		assertLastArgument(parser);
+		
+		return WampUnsubscribeMessage.create(topicURI);
 
 	}
 
 	public static WampSubscribeMessage subscribeMsg(JsonParser parser) throws JsonParseException, IOException, DecodeException{
-		WampSubscribeMessage result = new WampSubscribeMessage();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "TopicUri is required and must be a string");
-		try{
-			result.topicURI = new URI(parser.getText());
-		} catch (URISyntaxException e) {
-			throw new DecodeException(parser.getText(), "Invalid URI");
-		}
+		URI topicURI = parseURI(parser);
+		
+		assertLastArgument(parser);
 
-		return result;
+		return WampSubscribeMessage.create(topicURI);
 	}
 
 	public static WampWelcomeMessage welcomeMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampWelcomeMessage result = new WampWelcomeMessage();
-
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(),"SessionId is required and must be a string");
-		result.setSessionId(parser.getText());
+		String sessionId = parser.getText();
 
 		if(parser.nextToken() != JsonToken.VALUE_NUMBER_INT)
 			throw new DecodeException(parser.getValueAsString(), "ProtocolVersion is required and must be a int");
-		result.setProtocolVersion(parser.getIntValue());
+		int protocolVersion = parser.getIntValue();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "Implementation is required and must be a string");
-		result.setImplementation(parser.getText());
+		String implementation = parser.getText();
 
-		return result;
+		assertLastArgument(parser);
+
+		return new WampWelcomeMessage(sessionId, protocolVersion, implementation);
 
 	}
 
 	public static WampPrefixMessage prefixMsg(JsonParser parser) throws JsonParseException, DecodeException, IOException{
-		WampPrefixMessage result = new WampPrefixMessage();
-
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new DecodeException(parser.getValueAsString(), "prefix is required and must be a string");
-		result.setPrefix(parser.getText());
+		String prefix = parser.getText();
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
-			throw new DecodeException(parser.getValueAsString(), "URI is required and must be a int");
-		result.setUri(parser.getText());
+			throw new DecodeException(parser.getValueAsString(), "URI is required and must be a string");
+		URI uri = parseURI(parser);
 
-		return result;
+		assertLastArgument(parser);
+
+		return new WampPrefixMessage(prefix, uri);
 	}
 
-	@Override
-	public boolean willDecode(String s) {
-		// TODO Auto-generated method stub
-		return true;
-	}
 }
