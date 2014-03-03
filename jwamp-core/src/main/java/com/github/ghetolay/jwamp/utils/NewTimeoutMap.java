@@ -15,7 +15,10 @@
  */
 package com.github.ghetolay.jwamp.utils;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
@@ -30,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * @param <K> the type of the key for the cache
  * @param <V> the type of value that will be stored in the cache
  */
-public class TimeoutHashMap<K,V>{
+public class NewTimeoutMap<K,V> implements TimeoutMap<K, V>{
 
 	/**
 	 * Stores the values and other information needed to maintain the cache entries
@@ -47,7 +50,7 @@ public class TimeoutHashMap<K,V>{
 	 */
 	private final NoOpTimeoutListener<K,V> noOpListener = new NoOpTimeoutListener<K,V>();
 	
-	public TimeoutHashMap() {
+	public NewTimeoutMap() {
 	}
 
 	/**
@@ -67,7 +70,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param timeoutMillis the time that the value will be in the cache before eviction.  If 0, this entry will not be evicted from the cache because of a timeout.
 	 * @param timeoutListener the listener that will be notified if a timeout eviction occurs
 	 */
-	public void put(K key, V value, long timeoutMillis, TimeoutListener<K, V> timeoutListener){
+	public void put(K key, V value, long timeoutMillis, TimedOutListener<K, V> timeoutListener){
 		TimeoutElement<K, V> element = new TimeoutElement<K,V>(key, value, timeoutListener, timeoutMillis);
 		map.put(key, element);
 		
@@ -82,7 +85,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param key the key identifying the cache entry
 	 * @return the value from the cache, or null if the value is not in the cache
 	 */
-	public V get(K key){
+	public V get(Object key){
 		pollTimeouts();
 		
 		TimeoutElement<K, V> element = map.get(key);
@@ -97,7 +100,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param key the key for the value that needs to be removed from the cache
 	 * @return the value that was removed, or null if the value was no longer in the cache
 	 */
-	public V remove(K key){
+	public V remove(Object key){
 		TimeoutElement<K, V> element = map.remove(key);
 		if (element == null)
 			return null;
@@ -159,21 +162,11 @@ public class TimeoutHashMap<K,V>{
 	}
 	
 	/**
-	 * Listener interface for timeout cache evictions
-	 * 
-	 * @param <K> the type of the key associated with the value in the cache
-	 * @param <V> the type of the value stored in the cache
-	 */
-	public static interface TimeoutListener<K,V>{
-		public void timedOut(K key, V value);
-	}
-	
-	/**
 	 * A {@link TimeoutListener} that does nothing
 	 * @param <K> the type of the key associated with the value in the cache
 	 * @param <V> the type of the value stored in the cache
 	 */
-	private static class NoOpTimeoutListener<K, V> implements TimeoutListener<K,V>{
+	private static class NoOpTimeoutListener<K, V> implements TimedOutListener<K,V>{
 
 		@Override
 		public void timedOut(K key, V value) {
@@ -205,13 +198,13 @@ public class TimeoutHashMap<K,V>{
 		/**
 		 * The listener that should be notified if a timeout eviction occurs
 		 */
-		private final TimeoutListener<K, V> timeoutListener;
+		private final TimedOutListener<K, V> timeoutListener;
 		/**
 		 * State variable that tracks whether the entry has been removed from the cache (i.e. via the {@link TimeoutHashMap#remove(Object)} method)
 		 */
 		private boolean removed = false;
 		
-		public TimeoutElement(K key, V value, TimeoutListener<K, V> timeoutListener, long delayMillis) {
+		public TimeoutElement(K key, V value, TimedOutListener<K, V> timeoutListener, long delayMillis) {
 			this.key = key;
 			this.value = value;
 			this.timeoutListener = timeoutListener;
@@ -269,5 +262,56 @@ public class TimeoutHashMap<K,V>{
 		private boolean hasDelay(){
 			return expiryTimeMillis != 0;
 		}
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+
+	@Override
+	public boolean containsKey(Object key) {
+		return map.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return map.containsValue(value);
+	}
+
+	@Override
+	public V put(K key, V value) {
+		put(key, value, 0);
+		
+		//TODO
+		return value;
+	}
+
+	@Override
+	public void putAll(Map<? extends K, ? extends V> m) {
+		for(Entry<? extends K, ? extends V> e : m.entrySet())
+			put(e.getKey(), e.getValue());
+	}
+
+	@Override
+	public void clear() {
+		map.clear();
+	}
+
+	@Override
+	public Set<K> keySet() {
+		return map.keySet();
+	}
+
+	@Override
+	public Collection<V> values() {
+		//TODO
+		return null;
+	}
+
+	@Override
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
+		// TODO
+		return null;
 	}	
 }

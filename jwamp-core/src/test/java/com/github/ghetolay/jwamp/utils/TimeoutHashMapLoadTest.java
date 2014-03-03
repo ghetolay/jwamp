@@ -6,7 +6,7 @@ package com.github.ghetolay.jwamp.utils;
 import java.util.LinkedList;
 import java.util.Random;
 
-import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
+import com.github.ghetolay.jwamp.utils.TimeoutMap.TimedOutListener;
 
 /**
  * @author Kevin
@@ -15,7 +15,9 @@ import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 public class TimeoutHashMapLoadTest {
 
 	public static void main(String[] args) {
-		final TimeoutHashMap map = new TimeoutHashMap();
+		final TimeoutMap<String,String> map = 
+				new OldTimeoutMap<String,String>();
+			//	new NewTimeoutMap<String,String>();
 		
 		for(int i = 0; i < 10; i++){
 			AbuseThread t = new AbuseThread(map);
@@ -25,7 +27,7 @@ public class TimeoutHashMapLoadTest {
 		try{
 			while(true){
 				Thread.sleep(1000L);
-				System.out.println("Map/Queue size is " + map.size() + "/" + map.delayQueueSize());
+				System.out.println("Map/Queue size is " + map.size());
 			}
 		} catch (InterruptedException e){
 			// expected
@@ -36,9 +38,9 @@ public class TimeoutHashMapLoadTest {
 	
 	private static class AbuseThread extends Thread {
 		private final LinkedList<String> myKeys = new LinkedList<String>();
-		private final TimeoutHashMap<String, String> map;
+		private final TimeoutMap<String, String> map;
 		private final Random r;
-		private TimeoutListener<String, String> listener = new TimeoutListener<String, String>(){
+		private TimedOutListener<String, String> listener = new TimedOutListener<String, String>(){
 
 			@Override
 			public void timedOut(String key, String value) {
@@ -47,12 +49,16 @@ public class TimeoutHashMapLoadTest {
 			
 		};
 		
-		public AbuseThread(TimeoutHashMap map) {
+		public AbuseThread(TimeoutMap<String, String> map) {
 			this.map = map;
 			r = new Random();
 		}
 
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public void run() {
+			if(map instanceof OldTimeoutMap)
+				((OldTimeoutMap)map).addListener(listener);
+				
 			try{
 				while(true){
 					
@@ -60,7 +66,12 @@ public class TimeoutHashMapLoadTest {
 						int timeout = 1 + r.nextInt(30000);
 						String key = "key" + r.nextInt();
 						myKeys.offer(key);
-						map.put(key, "value", timeout, listener);
+						
+						if(map instanceof NewTimeoutMap)
+							((NewTimeoutMap)map).put(key, "value", timeout, listener);
+						else
+							map.put(key, "value", timeout);
+						
 					} else { // remove
 						String key = myKeys.poll();
 						if (key != null)
