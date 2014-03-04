@@ -67,10 +67,6 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 		final DefaultRPCSender rpcSender = new DefaultRPCSender(remoteMessageSender, wampSessionId);
 		dispatcherBuilder.register(rpcSender);
 		
-		// create the main dispatcher
-		
-		WampMessageHandler messageHandler = dispatcherBuilder.build();
-		
 		// behavior of the WampSession is slightly different depending on whether we are a client connection or a server connection
 		
 		final WampSession wampSession;
@@ -84,6 +80,10 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 			wampSession = WampSession.createForClient(session, wampSessionId, remoteMessageSender, eventActionRegistry, rpcSender, callActionRegistry);
 		}
 		
+		
+		// create the main dispatcher
+		final WampMessageHandler messageHandler = dispatcherBuilder.build();
+
 		
 			
 		DefaultWampSessionConfig wampSessionConfig = new DefaultWampSessionConfig(wampSessionId, session, eventSubscriptionRegistry, messageHandler, remoteMessageSender, wampSession);
