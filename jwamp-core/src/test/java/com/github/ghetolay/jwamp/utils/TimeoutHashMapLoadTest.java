@@ -3,10 +3,12 @@
  */
 package com.github.ghetolay.jwamp.utils;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
+import com.github.ghetolay.jwamp.utils.TimeoutMap.TimedOutListener;
 
 /**
  * @author Kevin
@@ -15,17 +17,39 @@ import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 public class TimeoutHashMapLoadTest {
 
 	public static void main(String[] args) {
-		final TimeoutHashMap map = new TimeoutHashMap();
+//		final TimeoutMap map = new TimeoutHashMapWithPolling();
 		
-		for(int i = 0; i < 10; i++){
-			AbuseThread t = new AbuseThread(map);
-			t.start();
+		final InsertionEvictionTracker tracker = new InsertionEvictionTracker();
+		
+		final OldTimeoutMap<String, String> oldMap = new OldTimeoutMap<String, String>();
+		
+		final NewTimeoutMap<String, String> newMap = new NewTimeoutMap<String, String>();
+		
+		final TimeoutMapWithCleaner<String, String> newWithCleanerMap = new TimeoutMapWithCleaner<>();
+		
+		
+		
+		TestableTimeoutMap<String, String> mapToTest = oldMap;
+		
+		if (mapToTest == oldMap){
+			oldMap.addListener(tracker);
 		}
 		
+		
+		List<AbuseThread> threads = new ArrayList<AbuseThread>();
+		for(int i = 0; i < 500; i++){
+			AbuseThread t = new AbuseThread(mapToTest, tracker);
+			threads.add(t);
+			t.start();
+		}
+
 		try{
 			while(true){
 				Thread.sleep(1000L);
-				System.out.println("Map/Queue size is " + map.size() + "/" + map.delayQueueSize());
+				
+				Rates currentRates = tracker.resetAndGetRates();
+				
+				System.out.println("Insertion rate: " + currentRates.insertionRate + " insertions/sec, Eviction rate: " + currentRates.evictionRate + ", " + mapToTest.getMapDescription());
 			}
 		} catch (InterruptedException e){
 			// expected
@@ -33,22 +57,53 @@ public class TimeoutHashMapLoadTest {
 	}
 		
 	
+	public static class Rates{
+		long elapsed = 0;
+		long insertionRate = 0;
+		long evictionRate = 0;
+	}
+	
+	private static class InsertionEvictionTracker implements TimedOutListener<String, String>{
+		
+		final AtomicLong totalInsertions = new AtomicLong(0);
+		final AtomicLong totalEvictions = new AtomicLong(0);
+		private long startMillis = System.currentTimeMillis();
+
+		public void addInsertion(){
+			totalInsertions.incrementAndGet();
+		}
+		
+		public void addEviction(){
+			totalEvictions.incrementAndGet();
+		}
+		
+		public Rates resetAndGetRates(){
+			Rates rslt = new Rates();
+			rslt.elapsed = System.currentTimeMillis() - startMillis;
+			rslt.insertionRate = totalInsertions.get() * 1000L / rslt.elapsed;
+			rslt.evictionRate = totalEvictions.get() * 1000L / rslt.elapsed;
+			
+			startMillis = System.currentTimeMillis();
+			totalInsertions.set(0);
+			totalEvictions.set(0);
+			
+			return rslt;
+		}
+		
+		@Override
+		public void timedOut(String key, String value) {
+			addEviction();
+		}
+	}
 	
 	private static class AbuseThread extends Thread {
-		private final LinkedList<String> myKeys = new LinkedList<String>();
-		private final TimeoutHashMap<String, String> map;
+		private final TestableTimeoutMap<String, String> map;
+		private final InsertionEvictionTracker tracker;
 		private final Random r;
-		private TimeoutListener<String, String> listener = new TimeoutListener<String, String>(){
-
-			@Override
-			public void timedOut(String key, String value) {
-				//System.out.println(key + " evicted");
-			}
-			
-		};
 		
-		public AbuseThread(TimeoutHashMap map) {
+		public AbuseThread(TestableTimeoutMap<String, String> map, InsertionEvictionTracker tracker) {
 			this.map = map;
+			this.tracker = tracker;
 			r = new Random();
 		}
 
@@ -56,21 +111,15 @@ public class TimeoutHashMapLoadTest {
 			try{
 				while(true){
 					
-					if (r.nextBoolean()){ // add
-						int timeout = 1 + r.nextInt(30000);
+					//if (r.nextBoolean()){ // add
+						long timeout = 1 + r.nextInt(100);
 						String key = "key" + r.nextInt();
-						myKeys.offer(key);
-						map.put(key, "value", timeout, listener);
-					} else { // remove
-						String key = myKeys.poll();
-						if (key != null)
-							map.remove(key);
-					}
+						map.put(key, "value", timeout, tracker);
+						tracker.addInsertion();
+					//}
 					
-					int delay = r.nextInt(15);
-					if (delay > 7)
-						Thread.sleep(delay);
-					//System.out.println(this + " - Put key");
+					// allow other threads to process
+					Thread.sleep(2);
 				}
 			} catch (Exception e){
 				e.printStackTrace();

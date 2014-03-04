@@ -21,6 +21,8 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+import com.github.ghetolay.jwamp.utils.TimeoutMap.TimedOutListener;
+
 /**
  * A cache that allows specifying a timeout for entries.  Entries are evicted at some point after their timeout expires.
  * There is no guarantee that eviction will happen exactly at the timeout, or even somewhat near the timeout. 
@@ -30,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * @param <K> the type of the key for the cache
  * @param <V> the type of value that will be stored in the cache
  */
-public class TimeoutHashMap<K,V>{
+public class NewTimeoutMap<K,V> implements TestableTimeoutMap<K, V>{
 
 	/**
 	 * Stores the values and other information needed to maintain the cache entries
@@ -47,7 +49,7 @@ public class TimeoutHashMap<K,V>{
 	 */
 	private final NoOpTimeoutListener<K,V> noOpListener = new NoOpTimeoutListener<K,V>();
 	
-	public TimeoutHashMap() {
+	public NewTimeoutMap() {
 	}
 
 	/**
@@ -60,6 +62,12 @@ public class TimeoutHashMap<K,V>{
 		put(key, value, timeoutMillis, noOpListener);
 	}
 	
+	@Override
+	public String getMapDescription() {
+		return getClass().getName() + " size: " + map.size() + ", timeout size: " + delayQueue.size();
+	}
+
+	
 	/**
 	 * Adds a value to the cache, and allows registration of a listener that will be called if a timeout eviction of this value occurs
 	 * @param key the key to use to retrieve the item from the cache in the future
@@ -67,7 +75,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param timeoutMillis the time that the value will be in the cache before eviction.  If 0, this entry will not be evicted from the cache because of a timeout.
 	 * @param timeoutListener the listener that will be notified if a timeout eviction occurs
 	 */
-	public void put(K key, V value, long timeoutMillis, TimeoutListener<K, V> timeoutListener){
+	public void put(K key, V value, long timeoutMillis, TimedOutListener<K, V> timeoutListener){
 		TimeoutElement<K, V> element = new TimeoutElement<K,V>(key, value, timeoutListener, timeoutMillis);
 		map.put(key, element);
 		
@@ -82,7 +90,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param key the key identifying the cache entry
 	 * @return the value from the cache, or null if the value is not in the cache
 	 */
-	public V get(K key){
+	public V get(Object key){
 		pollTimeouts();
 		
 		TimeoutElement<K, V> element = map.get(key);
@@ -97,7 +105,7 @@ public class TimeoutHashMap<K,V>{
 	 * @param key the key for the value that needs to be removed from the cache
 	 * @return the value that was removed, or null if the value was no longer in the cache
 	 */
-	public V remove(K key){
+	public V remove(Object key){
 		TimeoutElement<K, V> element = map.remove(key);
 		if (element == null)
 			return null;
@@ -114,14 +122,6 @@ public class TimeoutHashMap<K,V>{
 	 */
 	public int size(){
 		return map.size();
-	}
-	
-	/**
-	 * Used for testing and diagnostics only
-	 * @return the size of the delay queue
-	 */
-	int delayQueueSize(){
-		return delayQueue.size();
 	}
 	
 	/**
@@ -159,21 +159,11 @@ public class TimeoutHashMap<K,V>{
 	}
 	
 	/**
-	 * Listener interface for timeout cache evictions
-	 * 
-	 * @param <K> the type of the key associated with the value in the cache
-	 * @param <V> the type of the value stored in the cache
-	 */
-	public static interface TimeoutListener<K,V>{
-		public void timedOut(K key, V value);
-	}
-	
-	/**
 	 * A {@link TimeoutListener} that does nothing
 	 * @param <K> the type of the key associated with the value in the cache
 	 * @param <V> the type of the value stored in the cache
 	 */
-	private static class NoOpTimeoutListener<K, V> implements TimeoutListener<K,V>{
+	private static class NoOpTimeoutListener<K, V> implements TimedOutListener<K,V>{
 
 		@Override
 		public void timedOut(K key, V value) {
@@ -205,13 +195,13 @@ public class TimeoutHashMap<K,V>{
 		/**
 		 * The listener that should be notified if a timeout eviction occurs
 		 */
-		private final TimeoutListener<K, V> timeoutListener;
+		private final TimedOutListener<K, V> timeoutListener;
 		/**
 		 * State variable that tracks whether the entry has been removed from the cache (i.e. via the {@link TimeoutHashMap#remove(Object)} method)
 		 */
 		private boolean removed = false;
 		
-		public TimeoutElement(K key, V value, TimeoutListener<K, V> timeoutListener, long delayMillis) {
+		public TimeoutElement(K key, V value, TimedOutListener<K, V> timeoutListener, long delayMillis) {
 			this.key = key;
 			this.value = value;
 			this.timeoutListener = timeoutListener;
@@ -269,5 +259,7 @@ public class TimeoutHashMap<K,V>{
 		private boolean hasDelay(){
 			return expiryTimeMillis != 0;
 		}
-	}	
+	}
+
+
 }
