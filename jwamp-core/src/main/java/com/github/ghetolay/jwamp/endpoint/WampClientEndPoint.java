@@ -24,6 +24,13 @@ import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.session.WampSessionConfig;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
+/**
+ * 
+ * 
+ * <p>Implementation note: There is a bug in Jetty that prevents Encoders/Decoders from the endpoint config from being injected into an interface based client endpoint.  See ticket with the Jetty folks: https://bugs.eclipse.org/bugs/show_bug.cgi?id=429390
+ * After this bug is resolved, we can remove the annotations.</p>
+ *
+ */
 @ClientEndpoint(encoders={WampMessageEncoder.Text.class}, decoders={WampMessageDecoder.Text.class}, subprotocols={"wamp"})
 public class WampClientEndPoint extends AbstractWampEndpoint {
 	
