@@ -6,15 +6,14 @@ import javax.websocket.CloseReason;
 import javax.websocket.Session;
 
 import com.github.ghetolay.jwamp.actions.ActionRegistry;
+import com.github.ghetolay.jwamp.event.DefaultEventPublisher;
+import com.github.ghetolay.jwamp.event.DefaultEventSubscriptionManager;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.event.EventPublisher;
 import com.github.ghetolay.jwamp.event.EventSubscriptionManager;
 import com.github.ghetolay.jwamp.event.PubSubMessageHandler;
-import com.github.ghetolay.jwamp.event.DefaultEventPublisher;
-import com.github.ghetolay.jwamp.event.DefaultEventSubscriptionManager;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
-import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampMessageHandler;
+import com.github.ghetolay.jwamp.message.LoopbackMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.RPCSender;
 
@@ -27,7 +26,7 @@ public class WampSession {
 	private final RPCSender rpcSender;
 	private final ActionRegistry<CallAction> callActionRegistry;
 	
-	public static WampSession createForClient(Session session, String wampSessionId, RemoteMessageSender remoteMessageSender, ActionRegistry<EventAction> eventActionRegistry, RPCSender rpcSender, ActionRegistry<CallAction> callActionRegistry){
+	public static WampSession createForClient(Session session, String wampSessionId, MessageSender remoteMessageSender, ActionRegistry<EventAction> eventActionRegistry, RPCSender rpcSender, ActionRegistry<CallAction> callActionRegistry){
 		return new WampSession(session, wampSessionId, remoteMessageSender, eventActionRegistry, rpcSender, callActionRegistry);
 	}
 	
@@ -36,7 +35,7 @@ public class WampSession {
 	}
 	
 	// client session constructor
-	private WampSession(Session session, String wampSessionId, RemoteMessageSender remoteMessageSender, ActionRegistry<EventAction> eventActionRegistry, RPCSender rpcSender, ActionRegistry<CallAction> callActionRegistry){
+	private WampSession(Session session, String wampSessionId, MessageSender remoteMessageSender, ActionRegistry<EventAction> eventActionRegistry, RPCSender rpcSender, ActionRegistry<CallAction> callActionRegistry){
 		this.session = session;
 		this.wampSessionId = wampSessionId;
 		this.eventPublisher = new DefaultEventPublisher(remoteMessageSender);
@@ -47,29 +46,14 @@ public class WampSession {
 	
 	// server session constructor
 	private WampSession(Session session, String wampSessionId, PubSubMessageHandler pubSubMessageHandler, ActionRegistry<EventAction> eventActionRegistry, RPCSender rpcSender, ActionRegistry<CallAction> callActionRegistry){
-		LoopbackRemoteMessageSender loopbackRemoteSender = new LoopbackRemoteMessageSender(this, pubSubMessageHandler);
+		MessageSender loopbackSender = new LoopbackMessageSender(this, pubSubMessageHandler);
 		
 		this.session = session;
 		this.wampSessionId = wampSessionId;
-		this.eventPublisher = new DefaultEventPublisher(loopbackRemoteSender);
-		this.eventSubscriptionManager = new DefaultEventSubscriptionManager(loopbackRemoteSender, eventActionRegistry);
+		this.eventPublisher = new DefaultEventPublisher(loopbackSender);
+		this.eventSubscriptionManager = new DefaultEventSubscriptionManager(loopbackSender, eventActionRegistry);
 		this.rpcSender = rpcSender;
 		this.callActionRegistry = callActionRegistry;
-	}
-	
-	private static class LoopbackRemoteMessageSender implements RemoteMessageSender{
-		private final WampSession session;
-		private final WampMessageHandler targetHandler;
-		
-		public LoopbackRemoteMessageSender(WampSession session, WampMessageHandler targetHandler) {
-			this.session = session;
-			this.targetHandler = targetHandler;
-		}
-		
-		@Override
-		public void sendToRemote(WampMessage msg) {
-			targetHandler.onMessage(session, msg);
-		}
 	}
 	
 	public Session getWebSocketSession(){

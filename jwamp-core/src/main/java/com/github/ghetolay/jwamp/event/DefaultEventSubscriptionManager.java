@@ -4,7 +4,7 @@
 package com.github.ghetolay.jwamp.event;
 
 import com.github.ghetolay.jwamp.actions.ActionRegistry;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.message.WampMessage;
 
 /**
@@ -13,9 +13,9 @@ import com.github.ghetolay.jwamp.message.WampMessage;
  */
 public class DefaultEventSubscriptionManager extends AbstractEventSubscriptionManager {
 
-	private final RemoteMessageSender messageSender;
+	private final MessageSender messageSender;
 
-	public DefaultEventSubscriptionManager(RemoteMessageSender messageSender, ActionRegistry<EventAction> actionRegistry) {
+	public DefaultEventSubscriptionManager(MessageSender messageSender, ActionRegistry<EventAction> actionRegistry) {
 		super(actionRegistry);
 		this.messageSender = messageSender;
 	}

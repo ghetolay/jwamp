@@ -6,7 +6,7 @@ package com.github.ghetolay.jwamp.session;
 import javax.websocket.Session;
 
 import com.github.ghetolay.jwamp.event.EventSubscriptionRegistry;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.message.WampMessageHandler;
 
 /**
@@ -25,6 +25,6 @@ public interface WampSessionConfig {
 
 	public WampMessageHandler getMessageHandler();
 
-	public RemoteMessageSender getRemoteMessageSender();
+	public MessageSender getRemoteMessageSender();
 
 }

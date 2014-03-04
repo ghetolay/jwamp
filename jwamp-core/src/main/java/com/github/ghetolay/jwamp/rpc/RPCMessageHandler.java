@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.actions.ActionProvider;
 import com.github.ghetolay.jwamp.message.MessageType;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
@@ -39,10 +39,10 @@ public class RPCMessageHandler implements WampMessageHandler {
 
 	protected final static Logger log = LoggerFactory.getLogger(RPCMessageHandler.class);
 
-	private final RemoteMessageSender remoteMessageSender;
+	private final MessageSender remoteMessageSender;
 	private final ActionProvider<CallAction> actions;
 	
-	public RPCMessageHandler(RemoteMessageSender remoteMessageSender, ActionProvider<CallAction> actions) {
+	public RPCMessageHandler(MessageSender remoteMessageSender, ActionProvider<CallAction> actions) {
 		this.remoteMessageSender = remoteMessageSender;
 		this.actions = actions;
 	}

@@ -4,24 +4,17 @@
 package com.github.ghetolay.jwamp.event;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
-import com.github.ghetolay.jwamp.message.WampEventMessage;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * @author Kevin
  *
  */
 public class EventSubscriptionRegistry {
-	private final Set<URI> subscriptions = Collections.newSetFromMap(new ConcurrentHashMap<URI, Boolean>());
+	private final Set<URI> subscriptions = new ConcurrentSkipListSet<URI>();
 	
-	private final RemoteMessageSender remoteMessageSender;
-	
-	public EventSubscriptionRegistry(RemoteMessageSender remoteMessageSender) {
-		this.remoteMessageSender = remoteMessageSender;
+	public EventSubscriptionRegistry() {
 	}
 	
 	public void register(URI topicUri){
@@ -32,11 +25,10 @@ public class EventSubscriptionRegistry {
 		subscriptions.remove(topicUri);
 	}
 	
-	public void publish(String sourceSessionId, WampEventMessage eventMessage){
-		if (!subscriptions.contains(eventMessage.getTopicURI()))
-			return;
-		
-		remoteMessageSender.sendToRemote(eventMessage);
+	public boolean isSubscribed(URI topicUri){
+		return subscriptions.contains(topicUri);
 	}
+	
+
 
 }

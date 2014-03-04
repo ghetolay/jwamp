@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.ghetolay.jwamp.message.MessageType;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
@@ -47,7 +47,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	private static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
 
 	//TODO: this is now set up to where we could share the same instance across all DefaultRPCSender instances - if we do that, we can reintroduce the cleaner thread concept (this would result in a single cleaner thread for the entire application)
-	private TimeoutHashMap<CallIdTimeoutKey, CallResultListener> resultListeners = new TimeoutHashMap<CallIdTimeoutKey, CallResultListener>();
+	private TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager = new TimeoutHashMap<CallIdTimeoutKey, CallResultListener>();
 	
 	private final TimeoutListener<CallIdTimeoutKey, CallResultListener> myTimeoutListener = new TimeoutListener<CallIdTimeoutKey, CallResultListener>(){
 		public void timedOut(CallIdTimeoutKey key, CallResultListener value) {
@@ -55,14 +55,16 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 		}
 	};
 
-	private final RemoteMessageSender remoteMessageSender;
+	private final MessageSender remoteMessageSender;
 	private final String sessionId;
 	private final Random rand = new Random();
 
-	public DefaultRPCSender(RemoteMessageSender remoteMessageSender, String sessionId){
+	public DefaultRPCSender(TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager, MessageSender remoteMessageSender, String sessionId){
+		this.rpcTimeoutManager = rpcTimeoutManager;
 		this.remoteMessageSender = remoteMessageSender;
 		this.sessionId = sessionId;
 	}
+
 	
 	public JsonBackedObject callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException{
 
@@ -89,7 +91,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 		WampCallMessage msg = WampCallMessage.create(callId, procURI, jsonArgs);
 			
 		if(listener != null)
-			resultListeners.put(getTimeoutKey(callId), listener, timeout, myTimeoutListener);
+			rpcTimeoutManager.put(getTimeoutKey(callId), listener, timeout, myTimeoutListener);
 
 		remoteMessageSender.sendToRemote(msg);
 			
@@ -119,7 +121,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	}
 	
 	private void onMessage(WampSession session, WampCallResultMessage msg){
-		CallResultListener listener = resultListeners.remove(getTimeoutKey(msg.getCallId()));
+		CallResultListener listener = rpcTimeoutManager.remove(getTimeoutKey(msg.getCallId()));
 		if (listener != null){
 			listener.onSuccess(msg);
 		} else {
@@ -129,7 +131,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	}
 	
 	private void onMessage(WampSession session, WampCallErrorMessage msg){
-		CallResultListener listener = resultListeners.remove(getTimeoutKey(msg.getCallId()));
+		CallResultListener listener = rpcTimeoutManager.remove(getTimeoutKey(msg.getCallId()));
 		if (listener != null){
 			listener.onError(msg);
 		} else {

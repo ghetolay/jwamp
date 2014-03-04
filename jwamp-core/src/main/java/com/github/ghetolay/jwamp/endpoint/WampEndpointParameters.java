@@ -9,9 +9,12 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.github.ghetolay.jwamp.actions.ActionRegistration;
 import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.rpc.CallAction;
+import com.github.ghetolay.jwamp.rpc.CallIdTimeoutKey;
+import com.github.ghetolay.jwamp.rpc.CallResultListener;
 import com.github.ghetolay.jwamp.session.SessionRegistry;
 import com.github.ghetolay.jwamp.session.WampLifeCycleListener;
 import com.github.ghetolay.jwamp.session.WampSessionConfigFactory;
+import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 
 /**
  * A set of objects that are useful to WampEndPoints.
@@ -25,14 +28,16 @@ public class WampEndpointParameters {
 	private final List<ActionRegistration<EventAction>> initialEventActionRegistrations;
 	private final List<WampLifeCycleListener> lifecycleListeners;
 	private final WampSessionConfigFactory wampSessionConfigFactory;
+	private final TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager;
 	
-	public WampEndpointParameters(SessionRegistry sessionRegistry, JsonFactory jsonFactory, List<ActionRegistration<CallAction>> initialCallActionRegistrations, List<ActionRegistration<EventAction>> initialEventActionRegistrations, List<WampLifeCycleListener> lifecycleListeners, WampSessionConfigFactory wampSessionConfigFactory) {
+	public WampEndpointParameters(SessionRegistry sessionRegistry, JsonFactory jsonFactory, List<ActionRegistration<CallAction>> initialCallActionRegistrations, List<ActionRegistration<EventAction>> initialEventActionRegistrations, List<WampLifeCycleListener> lifecycleListeners, WampSessionConfigFactory wampSessionConfigFactory, TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager) {
 		this.sessionRegistry = sessionRegistry;
 		this.jsonFactory = jsonFactory;
 		this.initialCallActionRegistrations = initialCallActionRegistrations;
 		this.initialEventActionRegistrations = initialEventActionRegistrations;
 		this.lifecycleListeners = lifecycleListeners;
 		this.wampSessionConfigFactory = wampSessionConfigFactory;
+		this.rpcTimeoutManager = rpcTimeoutManager;
 	}
 
 
@@ -59,6 +64,10 @@ public class WampEndpointParameters {
 	
 	public WampSessionConfigFactory getWampSessionConfigFactory() {
 		return wampSessionConfigFactory;
+	}
+	
+	public TimeoutHashMap<CallIdTimeoutKey, CallResultListener> getRpcTimeoutManager() {
+		return rpcTimeoutManager;
 	}
 	
 }

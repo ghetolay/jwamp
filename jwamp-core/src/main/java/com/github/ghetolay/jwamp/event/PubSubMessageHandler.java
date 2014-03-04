@@ -96,7 +96,10 @@ public class PubSubMessageHandler implements WampMessageHandler {
 			if (msg.isExcludeSpecified() && msg.getExclude().contains(targetSessionId))
 				return;
 
-			sessionConfig.getEventSubscriptionRegistry().publish(sourceSessionId, eventMessage);
+			if (sessionConfig.getEventSubscriptionRegistry().isSubscribed(eventMessage.getTopicURI())){
+				sessionConfig.getRemoteMessageSender().sendToRemote(eventMessage);
+			}			
+			
 		}
 	}
 

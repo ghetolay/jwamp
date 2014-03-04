@@ -12,7 +12,7 @@ import com.github.ghetolay.jwamp.event.EventMessageHandler;
 import com.github.ghetolay.jwamp.event.EventSubscriptionRegistry;
 import com.github.ghetolay.jwamp.event.PubSubMessageHandler;
 import com.github.ghetolay.jwamp.message.MessageHandlerRegistry;
-import com.github.ghetolay.jwamp.message.RemoteMessageSender;
+import com.github.ghetolay.jwamp.message.MessageSender;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.WampMessageHandler;
 import com.github.ghetolay.jwamp.rpc.CallAction;
@@ -40,17 +40,10 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 
 		MessageHandlerRegistry.Builder dispatcherBuilder = new MessageHandlerRegistry.Builder();
 
-		final RemoteMessageSender remoteMessageSender = new RemoteMessageSender() {
-			@Override
-			public void sendToRemote(WampMessage msg) {
-				session.getAsyncRemote().sendObject(msg);
-			}
-		};
-		
-		final SessionRegistry sessionRegistry = endpointParameters.getSessionRegistry();
+		final MessageSender remoteMessageSender = new WebsocketMessageSender(session);
 		
 		// Pub/Sub stuff for clients AND servers
-		final EventSubscriptionRegistry eventSubscriptionRegistry = new EventSubscriptionRegistry(remoteMessageSender); 
+		final EventSubscriptionRegistry eventSubscriptionRegistry = new EventSubscriptionRegistry(); 
 
 		final ActionRegistry<EventAction> eventActionRegistry = new ActionRegistry<EventAction>();
 		
@@ -64,7 +57,7 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 		final RPCMessageHandler rpcMessageHandler = new RPCMessageHandler(remoteMessageSender, callActionRegistry);
 		dispatcherBuilder.register(rpcMessageHandler);
 		
-		final DefaultRPCSender rpcSender = new DefaultRPCSender(remoteMessageSender, wampSessionId);
+		final DefaultRPCSender rpcSender = new DefaultRPCSender(endpointParameters.getRpcTimeoutManager(), remoteMessageSender, wampSessionId);
 		dispatcherBuilder.register(rpcSender);
 		
 		// behavior of the WampSession is slightly different depending on whether we are a client connection or a server connection
@@ -72,7 +65,7 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 		final WampSession wampSession;
 		if (serverMode){
 			// Pub/Sub stuff for servers only
-			final PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(eventSubscriptionRegistry, sessionRegistry);
+			final PubSubMessageHandler pubSubMessageHandler = new PubSubMessageHandler(eventSubscriptionRegistry, endpointParameters.getSessionRegistry());
 			dispatcherBuilder.register(pubSubMessageHandler);
 
 			wampSession = WampSession.createForServer(session, wampSessionId, pubSubMessageHandler, eventActionRegistry, rpcSender, callActionRegistry);
@@ -91,20 +84,43 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 		return wampSessionConfig;		
 	}
 	
+	/**
+	 * @author Kevin
+	 *
+	 */
+	private final class WebsocketMessageSender implements MessageSender {
+		/**
+		 * 
+		 */
+		private final Session session;
+
+		/**
+		 * @param session
+		 */
+		private WebsocketMessageSender(Session session) {
+			this.session = session;
+		}
+
+		@Override
+		public void sendToRemote(WampMessage msg) {
+			session.getAsyncRemote().sendObject(msg);
+		}
+	}
+
 	private static class DefaultWampSessionConfig implements WampSessionConfig {
 
 		private final String sessionId;
 		private final Session webSocketSession;
 		private final EventSubscriptionRegistry eventSubscriptionRegistry;
 		private final WampMessageHandler messageHandler;
-		private final RemoteMessageSender remoteMessageSender;
+		private final MessageSender remoteMessageSender;
 		private final WampSession wampSession;
 
 		
 		
 		private DefaultWampSessionConfig(String sessionId, Session webSocketSession,
 				EventSubscriptionRegistry eventSubscriptionRegistry, WampMessageHandler messageHandler,
-				RemoteMessageSender remoteMessageSender, WampSession wampSession) {
+				MessageSender remoteMessageSender, WampSession wampSession) {
 
 			this.sessionId = sessionId;
 			this.webSocketSession = webSocketSession;
@@ -140,7 +156,7 @@ public class DefaultWampSessionConfigFactory implements WampSessionConfigFactory
 		}
 		
 		@Override
-		public RemoteMessageSender getRemoteMessageSender() {
+		public MessageSender getRemoteMessageSender() {
 			return remoteMessageSender;
 		}
 		
