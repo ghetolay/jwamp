@@ -29,7 +29,7 @@ public class TimeoutHashMapLoadTest {
 		
 		
 		
-		TestableTimeoutMap<String, String> mapToTest = oldMap;
+		TestableTimeoutMap<String, String> mapToTest = newWithCleanerMap;
 		
 		if (mapToTest == oldMap){
 			oldMap.addListener(tracker);
