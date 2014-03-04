@@ -11,11 +11,11 @@ import com.github.ghetolay.jwamp.message.WampMessage;
  * @author Kevin
  *
  */
-public class RemoteEventSubscriptionManager extends AbstractEventSubscriptionManager {
+public class DefaultEventSubscriptionManager extends AbstractEventSubscriptionManager {
 
 	private final RemoteMessageSender messageSender;
 
-	public RemoteEventSubscriptionManager(RemoteMessageSender messageSender, ActionRegistry<EventAction> actionRegistry) {
+	public DefaultEventSubscriptionManager(RemoteMessageSender messageSender, ActionRegistry<EventAction> actionRegistry) {
 		super(actionRegistry);
 		this.messageSender = messageSender;
 	}

@@ -10,11 +10,11 @@ import com.github.ghetolay.jwamp.message.WampPublishMessage;
  * @author Kevin
  *
  */
-public class RemoteEventPublisher extends AbstractEventPublisher {
+public class DefaultEventPublisher extends AbstractEventPublisher {
 
 	private final RemoteMessageSender remoteMessageSender;
 	
-	public RemoteEventPublisher(RemoteMessageSender remoteMessageSender) {
+	public DefaultEventPublisher(RemoteMessageSender remoteMessageSender) {
 		this.remoteMessageSender = remoteMessageSender;
 	}
 
