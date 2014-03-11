@@ -11,37 +11,36 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.core.TreeNode;
-import com.fasterxml.jackson.core.type.ResolvedType;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * @author Kevin
  *
  */
-public class JsonBackedObjectFactory {
+public class ObjectHolderFactory {
 
-	private JsonBackedObjectFactory() {
+	private ObjectHolderFactory() {
 	}
 
 	
-	static public JsonBackedObject readNextObject(JsonParser parser) throws JsonProcessingException, IOException{
+	static public ObjectHolder readNextObject(JsonParser parser) throws JsonProcessingException, IOException{
 		TreeNode node = parser.readValueAsTree();
 		return new JacksonParserBasedObject(parser.getCodec(), node);
 	}
 	
-	static public JsonBackedObject createForObject(Object o){
+	static public ObjectHolder createForObject(Object o){
 		return new ObjectBasedObject(o);
 	}
 	
-	static public List<JsonBackedObject> createForObjects(Object... objects){
-		List<JsonBackedObject> jsonArgs = new ArrayList<JsonBackedObject>(objects.length);
+	static public List<ObjectHolder> createForObjects(Object... objects){
+		List<ObjectHolder> jsonArgs = new ArrayList<ObjectHolder>(objects.length);
 		for (Object arg : objects) {
-			jsonArgs.add(JsonBackedObjectFactory.createForObject(arg));
+			jsonArgs.add(ObjectHolderFactory.createForObject(arg));
 		}
 		return jsonArgs;
 	}
 	
-	public static JsonBackedObject VOID = new JsonBackedObject() {
+	public static ObjectHolder VOID = new ObjectHolder() {
 		
 		@Override
 		public <T> T getAs(TypeReference<T> typeReference) {
@@ -58,7 +57,7 @@ public class JsonBackedObjectFactory {
 		};
 	};
 	
-	private static class ObjectBasedObject implements JsonBackedObject{
+	private static class ObjectBasedObject implements ObjectHolder{
 
 		private final Object val;
 		
@@ -83,7 +82,7 @@ public class JsonBackedObjectFactory {
 
 	}	
 	
-	private static class JacksonParserBasedObject implements JsonBackedObject{
+	private static class JacksonParserBasedObject implements ObjectHolder{
 
 		private final ObjectCodec codec;
 		private final TreeNode val;

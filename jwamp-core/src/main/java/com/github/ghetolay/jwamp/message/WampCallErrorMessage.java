@@ -18,8 +18,8 @@ package com.github.ghetolay.jwamp.message;
 import java.net.URI;
 
 import com.github.ghetolay.jwamp.utils.BuiltInURIs;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 public class WampCallErrorMessage extends WampMessage {
@@ -27,22 +27,22 @@ public class WampCallErrorMessage extends WampMessage {
 	private final String callId;
 	private final URI errorUri;
 	private final String errorDesc;
-	private final JsonBackedObject errorDetails;
+	private final ObjectHolder errorDetails;
 
 	
 	public static WampCallErrorMessage create(String callId, URI errorUri, String errorDesc){
 		return new WampCallErrorMessage(callId, errorUri, errorDesc, null);
 	}
 	
-	public static WampCallErrorMessage create(String callId, URI errorUri, String errorDesc, JsonBackedObject errorDetails){
+	public static WampCallErrorMessage create(String callId, URI errorUri, String errorDesc, ObjectHolder errorDetails){
 		return new WampCallErrorMessage(callId, errorUri, errorDesc, errorDetails);
 	}
 	
 	public static WampCallErrorMessage createUnknownCall(WampCallMessage msg){
-		return new WampCallErrorMessage(msg.getCallId(), BuiltInURIs.Errors.unknownCall, "No registered handler for procedure URI", JsonBackedObjectFactory.createForObject(msg.getProcURI()));
+		return new WampCallErrorMessage(msg.getCallId(), BuiltInURIs.Errors.unknownCall, "No registered handler for procedure URI", ObjectHolderFactory.createForObject(msg.getProcURI()));
 	}
 	
-	private WampCallErrorMessage(String callId, URI errorUri, String errorDesc, JsonBackedObject errorDetails){
+	private WampCallErrorMessage(String callId, URI errorUri, String errorDesc, ObjectHolder errorDetails){
 		super(MessageType.CALLERROR);
 		this.callId = callId;
 		this.errorUri = errorUri;
@@ -66,7 +66,7 @@ public class WampCallErrorMessage extends WampMessage {
 		return errorDetails != null;
 	}
 	
-	public JsonBackedObject getErrorDetails() {
+	public ObjectHolder getErrorDetails() {
 		return errorDetails;
 	}
 	

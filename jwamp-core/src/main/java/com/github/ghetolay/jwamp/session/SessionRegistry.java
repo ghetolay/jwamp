@@ -17,14 +17,14 @@ import javax.websocket.Session;
  */
 public class SessionRegistry {
 
-	private final ConcurrentHashMap<String, WampSessionConfig> sessionConfigs = new ConcurrentHashMap<String, WampSessionConfig>();
-	private final static String USER_PROPERTY = WampSessionConfig.class.getName();
+	private final ConcurrentHashMap<String, WampSessionContext> sessionConfigs = new ConcurrentHashMap<String, WampSessionContext>();
+	private final static String USER_PROPERTY = WampSessionContext.class.getName();
 	
 	public SessionRegistry() {
 	}
 
-	public void register(WampSessionConfig sessionConfig){
-		WampSessionConfig existing = sessionConfigs.putIfAbsent(sessionConfig.getSessionId(), sessionConfig);
+	public void register(WampSessionContext sessionConfig){
+		WampSessionContext existing = sessionConfigs.putIfAbsent(sessionConfig.getSessionId(), sessionConfig);
 		if (existing != null)
 			throw new IllegalStateException(sessionConfig.getSessionId() + " is already registered");
 
@@ -32,11 +32,11 @@ public class SessionRegistry {
 		sessionConfig.getWebSocketSession().getUserProperties().put(USER_PROPERTY, sessionConfig);
 	}
 	
-	public void deregister(WampSessionConfig sessionConfig){
+	public void deregister(WampSessionContext sessionConfig){
 		if (!sessionConfigs.remove(sessionConfig.getSessionId(), sessionConfig))
 			throw new IllegalStateException(sessionConfig.getSessionId() + " is not registered");
 		
-		WampSessionConfig removed = (WampSessionConfig)sessionConfig.getWebSocketSession().getUserProperties().remove(USER_PROPERTY);
+		WampSessionContext removed = (WampSessionContext)sessionConfig.getWebSocketSession().getUserProperties().remove(USER_PROPERTY);
 		
 		if (removed != sessionConfig){
 			sessionConfig.getWebSocketSession().getUserProperties().put(USER_PROPERTY, removed);
@@ -44,21 +44,21 @@ public class SessionRegistry {
 		}
 	}
 	
-	public Collection<WampSessionConfig> getSessionConfigs(){
+	public Collection<WampSessionContext> getSessionConfigs(){
 		return Collections.unmodifiableCollection(sessionConfigs.values());
 	}
 	
-	public Collection<WampSessionConfig> getSessionConfigs(Collection<String> sessionIds){
-		List<WampSessionConfig> rslt = new ArrayList<WampSessionConfig>(sessionIds.size());
+	public Collection<WampSessionContext> getSessionConfigs(Collection<String> sessionIds){
+		List<WampSessionContext> rslt = new ArrayList<WampSessionContext>(sessionIds.size());
 		for (String sessionId : sessionIds) {
 			rslt.add(sessionConfigs.get(sessionId));
 		}
 		return rslt;
 	}
 	
-	public WampSessionConfig getWampSessionConfigForWebSocketSession(Session session){
+	public WampSessionContext getWampSessionConfigForWebSocketSession(Session session){
 		// the only problem with using user properties like this is that a handler with access to the user properties could muck with the value and cause problems
 		// if we are concerned about that, we can just look the values of the sessions map and check for equality...
-		return (WampSessionConfig)session.getUserProperties().get(USER_PROPERTY);
+		return (WampSessionContext)session.getUserProperties().get(USER_PROPERTY);
 	}
 }

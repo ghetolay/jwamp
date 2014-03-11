@@ -21,7 +21,7 @@ import com.github.ghetolay.jwamp.message.WampMessageEncoder;
 import com.github.ghetolay.jwamp.message.WampMessageHandler;
 import com.github.ghetolay.jwamp.message.WampWelcomeMessage;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.session.WampSessionConfig;
+import com.github.ghetolay.jwamp.session.WampSessionContext;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 
 /**
@@ -65,7 +65,7 @@ public class WampClientEndPoint extends AbstractWampEndpoint {
 			this.connectionListener = connectionListener;
 		}
 		
-		private boolean setWampSessionConfig(WampSessionConfig sessionConfig){
+		private boolean setWampSessionConfig(WampSessionContext sessionConfig){
 			synchronized(messageHandlerValueLock){
 				try{
 					QueueingMessageHandler original = (QueueingMessageHandler)this.messageHandler;
@@ -102,7 +102,7 @@ public class WampClientEndPoint extends AbstractWampEndpoint {
 						log.trace("Server's Wamp Implementation : " + welcomeMessage.getImplementation());
 	
 	
-					final WampSessionConfig wampSessionConfig = createAndRegisterWampSessionConfig(session, welcomeMessage.getSessionId());
+					final WampSessionContext wampSessionConfig = createAndRegisterWampSessionConfig(session, welcomeMessage.getSessionId());
 	
 					if (!setWampSessionConfig(wampSessionConfig)){
 						throw new RuntimeException("Huge problem during welcome message processing - we should not be able to get to here - " + message);

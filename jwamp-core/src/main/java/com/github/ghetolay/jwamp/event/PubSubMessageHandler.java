@@ -30,7 +30,7 @@ import com.github.ghetolay.jwamp.message.WampSubscribeMessage;
 import com.github.ghetolay.jwamp.message.WampUnsubscribeMessage;
 import com.github.ghetolay.jwamp.session.SessionRegistry;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.session.WampSessionConfig;
+import com.github.ghetolay.jwamp.session.WampSessionContext;
 
 /**
  * @author ghetolay
@@ -83,11 +83,11 @@ public class PubSubMessageHandler implements WampMessageHandler {
 
 	private void onMessage(WampSession session, WampPublishMessage msg){
 		// TODO: we can do better than this if we want - instead of looping through all sessionConfigs (if eligile isn't specified), somehow make a global event subscription manager that tracks which sessions are registered for which event URLs and query that for the list of sessions to notify
-		Collection<WampSessionConfig> configsToNotify = msg.isEligibleSpecified() ? sessionRegistry.getSessionConfigs(msg.getEligible()) : sessionRegistry.getSessionConfigs();
+		Collection<WampSessionContext> configsToNotify = msg.isEligibleSpecified() ? sessionRegistry.getSessionConfigs(msg.getEligible()) : sessionRegistry.getSessionConfigs();
 
 		WampEventMessage eventMessage = WampEventMessage.createFromPublishMessage(msg);
 		
-		for(WampSessionConfig sessionConfig : configsToNotify){
+		for(WampSessionContext sessionConfig : configsToNotify){
 			String targetSessionId = sessionConfig.getSessionId();
 			String sourceSessionId = session.getWampSessionId();
 			

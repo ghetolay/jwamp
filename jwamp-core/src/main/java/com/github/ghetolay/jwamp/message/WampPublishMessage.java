@@ -23,35 +23,35 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 public class WampPublishMessage extends WampMessage{
 
 	private final URI topicURI;
-	private final JsonBackedObject event;
+	private final ObjectHolder event;
 	private final Set<String> exclude;
 	private final List<String> eligible;
 	private final boolean excludeMe;
 	
-	public static WampPublishMessage createSimple(URI topicURI, JsonBackedObject event){
+	public static WampPublishMessage createSimple(URI topicURI, ObjectHolder event){
 		return new WampPublishMessage(topicURI, event, false, null, null);
 	}
 
-	public static WampPublishMessage createExcludeMe(URI topicURI, JsonBackedObject event){
+	public static WampPublishMessage createExcludeMe(URI topicURI, ObjectHolder event){
 		return new WampPublishMessage(topicURI, event, true, null, null);
 	}
 
-	public static WampPublishMessage createExcludeMe(URI topicURI, JsonBackedObject event, boolean excludeMe){
+	public static WampPublishMessage createExcludeMe(URI topicURI, ObjectHolder event, boolean excludeMe){
 		return new WampPublishMessage(topicURI, event, excludeMe, null, null);
 	}
 
-	public static WampPublishMessage createWithExclude(URI topicURI, JsonBackedObject event, Collection<String> exclude){
+	public static WampPublishMessage createWithExclude(URI topicURI, ObjectHolder event, Collection<String> exclude){
 		if (exclude == null)
 			throw new IllegalArgumentException("Exclude cannot be null");
 		return new WampPublishMessage(topicURI, event, false, exclude, null);
 	}
 
-	public static WampPublishMessage createWithExcludeAndEligible(URI topicURI, JsonBackedObject event, Collection<String> exclude, Collection<String> eligible){
+	public static WampPublishMessage createWithExcludeAndEligible(URI topicURI, ObjectHolder event, Collection<String> exclude, Collection<String> eligible){
 		if (exclude == null)
 			throw new IllegalArgumentException("Exclude cannot be null");
 		if (eligible == null)
@@ -59,7 +59,7 @@ public class WampPublishMessage extends WampMessage{
 		return new WampPublishMessage(topicURI, event, false, exclude, eligible);
 	}
 	
-	private WampPublishMessage(URI topicUri, JsonBackedObject event, boolean excludeMe, Collection<String> exclude, Collection<String> eligible){
+	private WampPublishMessage(URI topicUri, ObjectHolder event, boolean excludeMe, Collection<String> exclude, Collection<String> eligible){
 		super(MessageType.PUBLISH);
 		this.topicURI = topicUri;
 		this.event = event;
@@ -72,7 +72,7 @@ public class WampPublishMessage extends WampMessage{
 		return topicURI;
 	}
 
-	public JsonBackedObject getEvent() {
+	public ObjectHolder getEvent() {
 		return event;
 	}
 	

@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 
@@ -52,7 +52,7 @@ public class EventSerializationTest extends AbstractSerializationTest{
 	/////////////////// 1 //////////////////////
 	@Test
 	public void event1_encode() throws EncodeException, IOException, URISyntaxException{
-		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/simple"), JsonBackedObjectFactory.createForObject("Hello, I am a simple event."));
+		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/simple"), ObjectHolderFactory.createForObject("Hello, I am a simple event."));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -79,7 +79,7 @@ public class EventSerializationTest extends AbstractSerializationTest{
 	/////////////////// 2 //////////////////////
 	@Test
 	public void event2_encode() throws EncodeException, IOException, URISyntaxException{
-		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/simple"), JsonBackedObjectFactory.createForObject((Object)null));
+		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/simple"), ObjectHolderFactory.createForObject((Object)null));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -118,7 +118,7 @@ public class EventSerializationTest extends AbstractSerializationTest{
 		
 		obj.setCreated(calendar.getTime());
 
-		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/event#myevent2"), JsonBackedObjectFactory.createForObject(obj));
+		WampEventMessage msg = WampEventMessage.create(new URI("http://example.com/event#myevent2"), ObjectHolderFactory.createForObject(obj));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);

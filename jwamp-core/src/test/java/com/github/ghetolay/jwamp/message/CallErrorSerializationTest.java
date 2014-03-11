@@ -35,7 +35,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 
@@ -83,7 +83,7 @@ public class CallErrorSerializationTest extends AbstractSerializationTest{
 	/////////////////// 2 //////////////////////
 	@Test
 	public void callerror2_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallErrorMessage msg = WampCallErrorMessage.create("7bVW5pv8r60ZeL6u", new URI("http://example.com/error#number_too_big"), "1001 too big for me, max is 1000", JsonBackedObjectFactory.createForObject(1000));
+		WampCallErrorMessage msg = WampCallErrorMessage.create("7bVW5pv8r60ZeL6u", new URI("http://example.com/error#number_too_big"), "1001 too big for me, max is 1000", ObjectHolderFactory.createForObject(1000));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -118,7 +118,7 @@ public class CallErrorSerializationTest extends AbstractSerializationTest{
 	/////////////////// 3 //////////////////////
 	@Test
 	public void callerror3_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallErrorMessage msg = WampCallErrorMessage.create("AStPd8RS60pfYP8c", new URI("http://example.com/error#invalid_numbers"), "one or more numbers are multiples of 3", JsonBackedObjectFactory.createForObject(new int[] {0,3}));
+		WampCallErrorMessage msg = WampCallErrorMessage.create("AStPd8RS60pfYP8c", new URI("http://example.com/error#invalid_numbers"), "one or more numbers are multiples of 3", ObjectHolderFactory.createForObject(new int[] {0,3}));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);

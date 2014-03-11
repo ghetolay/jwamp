@@ -28,7 +28,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 /**
  * @author ghetolay
@@ -147,7 +147,7 @@ public abstract class WampMessageEncoder implements Encoder{
 
 		generator.writeString(msg.getCallId());
 		generator.writeString(msg.getProcURI().toString());
-		for (JsonBackedObject arg : msg.getArgs()) {
+		for (ObjectHolder arg : msg.getArgs()) {
 			generator.writeObject(arg.getAs(Object.class));
 		}
 	}

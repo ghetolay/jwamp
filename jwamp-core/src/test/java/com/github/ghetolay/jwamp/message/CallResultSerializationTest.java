@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 
@@ -51,7 +51,7 @@ public class CallResultSerializationTest extends AbstractSerializationTest{
 	/////////////////// 1 //////////////////////
 	@Test
 	public void callresult1_encode() throws EncodeException, IOException{
-		WampCallResultMessage msg = WampCallResultMessage.create("CcDnuI2bl2oLGBzO", JsonBackedObjectFactory.VOID);
+		WampCallResultMessage msg = WampCallResultMessage.create("CcDnuI2bl2oLGBzO", ObjectHolderFactory.VOID);
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -78,7 +78,7 @@ public class CallResultSerializationTest extends AbstractSerializationTest{
 	/////////////////// 2 //////////////////////
 	@Test
 	public void callresult2_encode() throws EncodeException, IOException{
-		WampCallResultMessage msg = WampCallResultMessage.create("otZom9UsJhrnzvLa", JsonBackedObjectFactory.createForObject("Awesome result .."));
+		WampCallResultMessage msg = WampCallResultMessage.create("otZom9UsJhrnzvLa", ObjectHolderFactory.createForObject("Awesome result .."));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -116,7 +116,7 @@ public class CallResultSerializationTest extends AbstractSerializationTest{
 		
 		obj.setModified(calendar.getTime());
 
-		WampCallResultMessage msg = WampCallResultMessage.create("CcDnuI2bl2oLGBzO", JsonBackedObjectFactory.createForObject(obj));
+		WampCallResultMessage msg = WampCallResultMessage.create("CcDnuI2bl2oLGBzO", ObjectHolderFactory.createForObject(obj));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);

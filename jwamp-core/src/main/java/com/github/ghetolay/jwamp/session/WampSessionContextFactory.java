@@ -11,8 +11,8 @@ import com.github.ghetolay.jwamp.endpoint.WampEndpointParameters;
  * @author Kevin
  *
  */
-public interface WampSessionConfigFactory {
+public interface WampSessionContextFactory {
 
-	public WampSessionConfig createConfig(Session session, WampEndpointParameters endpointParameters, String wampSessionId);
+	public WampSessionContext createContext(Session session, WampEndpointParameters endpointParameters, String wampSessionId);
 
 }

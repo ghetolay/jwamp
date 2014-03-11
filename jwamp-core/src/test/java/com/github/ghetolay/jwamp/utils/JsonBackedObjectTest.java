@@ -21,8 +21,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 /**
  * @author Kevin
@@ -68,25 +68,25 @@ public class JsonBackedObjectTest {
 
 	@Test
 	public void testGetAsClassOfT() {
-		JsonBackedObject obj = JsonBackedObjectFactory.createForObject(inString);
+		ObjectHolder obj = ObjectHolderFactory.createForObject(inString);
 		assertEquals(inString, obj.getAs(String.class));
 	}
 
 	@Test(expected=ClassCastException.class)
 	public void testGetAsClassOfTWrongClass() {
-		JsonBackedObject obj = JsonBackedObjectFactory.createForObject(inString);
+		ObjectHolder obj = ObjectHolderFactory.createForObject(inString);
 		assertEquals(inString, obj.getAs(Map.class));
 	}
 	
 	@Test
 	public void testGetAsTypeReferenceOfT() {
-		JsonBackedObject obj = JsonBackedObjectFactory.createForObject(inMap);
+		ObjectHolder obj = ObjectHolderFactory.createForObject(inMap);
 		assertEquals(inMap, obj.getAs(new TypeReference<Map<String, String>>(){}));
 	}
 
 	@Test(expected=ClassCastException.class)
 	public void testGetAsTypeReferenceOfTWrongTypeReference() {
-		JsonBackedObject obj = JsonBackedObjectFactory.createForObject(inMap);
+		ObjectHolder obj = ObjectHolderFactory.createForObject(inMap);
 		Set<String> out = obj.getAs(new TypeReference<Set<String>>(){});
 		// we shouldn't get to here - should get a class cast exception in previous line
 		assertEquals(inMap, out);
@@ -98,7 +98,7 @@ public class JsonBackedObjectTest {
 	public void testJsonGetAsClossOfT() throws Exception{
 		String in = "test";
 		
-		JsonBackedObject obj = JsonBackedObjectFactory.readNextObject(createJsonFor(in));
+		ObjectHolder obj = ObjectHolderFactory.readNextObject(createJsonFor(in));
 
 		assertEquals(in, obj.getAs(String.class));
 	}
@@ -107,21 +107,21 @@ public class JsonBackedObjectTest {
 	public void testJsonGetAsClossOfTWrongClass() throws Exception{
 		String in = "test";
 		
-		JsonBackedObject obj = JsonBackedObjectFactory.readNextObject(createJsonFor(in));
+		ObjectHolder obj = ObjectHolderFactory.readNextObject(createJsonFor(in));
 
 		assertEquals(in, obj.getAs(Map.class));
 	}
 	
 	@Test
 	public void testJsonGetAsTypeReferenceOfT() throws Exception{
-		JsonBackedObject obj = JsonBackedObjectFactory.readNextObject(createJsonFor(inMap));
+		ObjectHolder obj = ObjectHolderFactory.readNextObject(createJsonFor(inMap));
 
 		assertEquals(inMap, obj.getAs(Map.class));
 	}
 	
 	@Test(expected=ClassCastException.class)
 	public void testJsonGetAsTypeReferenceOfTWrongClass() throws Exception{
-		JsonBackedObject obj = JsonBackedObjectFactory.readNextObject(createJsonFor(inMap));
+		ObjectHolder obj = ObjectHolderFactory.readNextObject(createJsonFor(inMap));
 
 		Set<String> out = obj.getAs(new TypeReference<Set<String>>(){});
 		// we shouldn't get to here - should get a class cast exception in previous line

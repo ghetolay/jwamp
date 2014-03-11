@@ -15,7 +15,7 @@
 */
 package com.github.ghetolay.jwamp.message;
 
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 
 
@@ -23,13 +23,13 @@ import com.github.ghetolay.jwamp.utils.JsonBackedObject;
 public class WampCallResultMessage extends WampMessage{
 
 	private final String callId;
-	private final JsonBackedObject result;
+	private final ObjectHolder result;
 	
-	public static WampCallResultMessage create(String callId, JsonBackedObject result){
+	public static WampCallResultMessage create(String callId, ObjectHolder result){
 		return new WampCallResultMessage(callId, result);
 	}
 	
-	private WampCallResultMessage(String callId, JsonBackedObject result){
+	private WampCallResultMessage(String callId, ObjectHolder result){
 		super(MessageType.CALLRESULT);
 		this.callId = callId;
 		this.result = result;
@@ -39,7 +39,7 @@ public class WampCallResultMessage extends WampMessage{
 		return callId;
 	}
 
-	public JsonBackedObject getResult() {
+	public ObjectHolder getResult() {
 		return result;
 	}
 	

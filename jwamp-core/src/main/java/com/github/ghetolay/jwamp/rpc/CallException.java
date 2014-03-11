@@ -18,8 +18,8 @@ package com.github.ghetolay.jwamp.rpc;
 import java.net.URI;
 
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 /**
@@ -76,7 +76,7 @@ public class CallException extends Throwable {
 		if (details == null){
 			return WampCallErrorMessage.create(callId, getErrorURI(), getErrorDescription());
 		} else {
-			JsonBackedObject errorDetailsJson = JsonBackedObjectFactory.createForObject(details);
+			ObjectHolder errorDetailsJson = ObjectHolderFactory.createForObject(details);
 			return WampCallErrorMessage.create(callId, getErrorURI(), getErrorDescription(), errorDetailsJson);
 		}
 		

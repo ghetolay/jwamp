@@ -20,20 +20,20 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 
 public class WampCallMessage extends WampMessage{
 
 	private final String callId;
 	private final URI procURI;
-	private final List<JsonBackedObject> args;
+	private final List<ObjectHolder> args;
 	
-	public static WampCallMessage create(String callId, URI procURI, List<JsonBackedObject> args){
+	public static WampCallMessage create(String callId, URI procURI, List<ObjectHolder> args){
 		return new WampCallMessage(callId, procURI, args);
 	}
 	
-	private WampCallMessage(String callId, URI procURI, List<JsonBackedObject> args){
+	private WampCallMessage(String callId, URI procURI, List<ObjectHolder> args){
 		super(MessageType.CALL);
 		this.callId = callId;
 		this.procURI = procURI;
@@ -48,7 +48,7 @@ public class WampCallMessage extends WampMessage{
 		return procURI;
 	}
 	
-	public List<JsonBackedObject> getArgs() {
+	public List<ObjectHolder> getArgs() {
 		return args;
 	}
 	

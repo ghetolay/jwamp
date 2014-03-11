@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 
@@ -53,7 +53,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 	/////////////////// 1 //////////////////////
 	@Test
 	public void call1_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallMessage msg = WampCallMessage.create("7DK6TdN4wLiUJgNM", new URI("http://example.com/api#howdy"), JsonBackedObjectFactory.createForObjects());
+		WampCallMessage msg = WampCallMessage.create("7DK6TdN4wLiUJgNM", new URI("http://example.com/api#howdy"), ObjectHolderFactory.createForObjects());
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -80,7 +80,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 	/////////////////// 2 //////////////////////
 	@Test
 	public void call2_array_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallMessage msg = WampCallMessage.create("Yp9EFZt9DFkuKndg", new URI("api:add2"), JsonBackedObjectFactory.createForObjects(23,99));
+		WampCallMessage msg = WampCallMessage.create("Yp9EFZt9DFkuKndg", new URI("api:add2"), ObjectHolderFactory.createForObjects(23,99));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -92,7 +92,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 	// TODO: KD - this test is reduntant to the one above.  Remove after we are sure it wasn't here for a specific corner case (it used to have an ArrayList of arguments instead of an integer array - but we no longer work with arrays or lists...
 	@Test
 	public void call2_list_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallMessage msg = WampCallMessage.create("Yp9EFZt9DFkuKndg", new URI("api:add2"), JsonBackedObjectFactory.createForObjects(23,99));
+		WampCallMessage msg = WampCallMessage.create("Yp9EFZt9DFkuKndg", new URI("api:add2"), ObjectHolderFactory.createForObjects(23,99));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -124,7 +124,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 		meal.setCategory("dinner");
 		meal.setCalories(2309);
 
-		WampCallMessage msg = WampCallMessage.create("J5DkZJgByutvaDWc", new URI("http://example.com/api#storeMeal"), JsonBackedObjectFactory.createForObjects(meal));
+		WampCallMessage msg = WampCallMessage.create("J5DkZJgByutvaDWc", new URI("http://example.com/api#storeMeal"), ObjectHolderFactory.createForObjects(meal));
 
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -183,7 +183,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 	/////////////////// 4 //////////////////////
 	@Test
 	public void call4_encode() throws EncodeException, IOException, URISyntaxException{
-		WampCallMessage msg = WampCallMessage.create("Dns3wuQo0ipOX1Xc", new URI("http://example.com/api#woooat"), JsonBackedObjectFactory.createForObjects((Object)null));
+		WampCallMessage msg = WampCallMessage.create("Dns3wuQo0ipOX1Xc", new URI("http://example.com/api#woooat"), ObjectHolderFactory.createForObjects((Object)null));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -223,7 +223,7 @@ public class CallSerializationTest extends AbstractSerializationTest{
 		
 		obj.setModified(calendar.getTime());
 		
-		WampCallMessage msg = WampCallMessage.create("ujL7WKGXCn8bkvFV", new URI("keyvalue:set"), JsonBackedObjectFactory.createForObjects("foobar", obj));
+		WampCallMessage msg = WampCallMessage.create("ujL7WKGXCn8bkvFV", new URI("keyvalue:set"), ObjectHolderFactory.createForObjects("foobar", obj));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);

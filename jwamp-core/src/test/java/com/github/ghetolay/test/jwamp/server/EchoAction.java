@@ -22,7 +22,7 @@ import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 public class EchoAction implements CallAction{
@@ -34,7 +34,7 @@ public class EchoAction implements CallAction{
 		if ( msg.getArgs().size() != 0)
 			return WampCallResultMessage.create(msg.getCallId(), msg.getArgs().get(0));
 
-		return WampCallResultMessage.create(msg.getCallId(), JsonBackedObjectFactory.VOID);
+		return WampCallResultMessage.create(msg.getCallId(), ObjectHolderFactory.VOID);
 	}
 	
 }

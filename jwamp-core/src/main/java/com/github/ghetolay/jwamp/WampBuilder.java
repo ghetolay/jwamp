@@ -26,11 +26,11 @@ import com.github.ghetolay.jwamp.message.WampMessageEncoder;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.rpc.CallIdTimeoutKey;
 import com.github.ghetolay.jwamp.rpc.CallResultListener;
-import com.github.ghetolay.jwamp.session.DefaultWampSessionConfigFactory;
+import com.github.ghetolay.jwamp.session.DefaultWampSessionContextFactory;
 import com.github.ghetolay.jwamp.session.SessionRegistry;
 import com.github.ghetolay.jwamp.session.WampLifeCycleListener;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.session.WampSessionConfigFactory;
+import com.github.ghetolay.jwamp.session.WampSessionContextFactory;
 import com.github.ghetolay.jwamp.utils.ResultListener;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
@@ -123,12 +123,12 @@ public class WampBuilder {
 	
 	public static class Client {
 		private final WampBuilder wampBuilder;
-		private WampSessionConfigFactory wampSessionConfigFactory;
+		private WampSessionContextFactory wampSessionContextFactory;
 		private long connectionTimeout = 1000;
 
 		private Client(WampBuilder wampBuilder) {
 			this.wampBuilder = wampBuilder;
-			this.wampSessionConfigFactory = DefaultWampSessionConfigFactory.createDefaultClientFactory();
+			this.wampSessionContextFactory = DefaultWampSessionContextFactory.createDefaultForClient();
 		}
 
 		public Client withConnectionTimeout(long connectionTimeout){
@@ -136,8 +136,8 @@ public class WampBuilder {
 			return this;
 		}
 		
-		public Client withWampSessionConfigFactory(WampSessionConfigFactory wampSessionConfigFactory) {
-			this.wampSessionConfigFactory = wampSessionConfigFactory;
+		public Client withWampSessionContextFactory(WampSessionContextFactory wampSessionContextFactory) {
+			this.wampSessionContextFactory = wampSessionContextFactory;
 			return this;
 		}
 		
@@ -147,7 +147,7 @@ public class WampBuilder {
 					wampBuilder.initialCallActionRegistrations, 
 					wampBuilder.initialEventActionRegistrations, 
 					wampBuilder.lifecycleListeners, 
-					wampSessionConfigFactory,
+					wampSessionContextFactory,
 					wampBuilder.rpcTimeoutManager);
 		}
 		
@@ -186,17 +186,17 @@ public class WampBuilder {
 	public static class Server {
 		private final WampBuilder wampBuilder;
 		private final String path;
-		private WampSessionConfigFactory wampSessionConfigFactory;
+		private WampSessionContextFactory wampSessionContextFactory;
 
 		public Server(WampBuilder wampBuilder, String path) {
 			this.wampBuilder = wampBuilder;
 			this.path = path;
-			this.wampSessionConfigFactory = DefaultWampSessionConfigFactory.createDefaultServerFactory();
+			this.wampSessionContextFactory = DefaultWampSessionContextFactory.createDefaultForServer();
 
 		}
 		
-		public Server withWampSessionConfigFactory(WampSessionConfigFactory wampSessionConfigFactory) {
-			this.wampSessionConfigFactory = wampSessionConfigFactory;
+		public Server withWampSessionConfigFactory(WampSessionContextFactory wampSessionContextFactory) {
+			this.wampSessionContextFactory = wampSessionContextFactory;
 			return this;
 		}
 		
@@ -207,7 +207,7 @@ public class WampBuilder {
 					wampBuilder.initialCallActionRegistrations, 
 					wampBuilder.initialEventActionRegistrations, 
 					wampBuilder.lifecycleListeners, 
-					wampSessionConfigFactory,
+					wampSessionContextFactory,
 					wampBuilder.rpcTimeoutManager);
 		}
 		

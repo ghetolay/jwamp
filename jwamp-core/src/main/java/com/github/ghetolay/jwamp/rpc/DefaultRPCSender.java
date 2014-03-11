@@ -37,8 +37,8 @@ import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.WampMessageHandler;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 
@@ -66,7 +66,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	}
 
 	
-	public JsonBackedObject callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException{
+	public ObjectHolder callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException{
 
 		AsyncCallResultBlocker callResultBlocker = new AsyncCallResultBlocker();
 		
@@ -86,7 +86,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 
 		String callId = generateCallId();
 		
-		List<JsonBackedObject> jsonArgs = JsonBackedObjectFactory.createForObjects(args);
+		List<ObjectHolder> jsonArgs = ObjectHolderFactory.createForObjects(args);
 		
 		WampCallMessage msg = WampCallMessage.create(callId, procURI, jsonArgs);
 			
@@ -157,7 +157,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 		private WampCallResultMessage resultMessage = null;
 		private WampCallErrorMessage errorMessage = null;
 		
-		public synchronized JsonBackedObject getResult(long timeout) throws TimeoutException, CallException, InterruptedException {
+		public synchronized ObjectHolder getResult(long timeout) throws TimeoutException, CallException, InterruptedException {
 			wait(timeout);
 			if (resultMessage != null) return resultMessage.getResult();
 			if (errorMessage != null) throw new CallException(errorMessage);

@@ -19,7 +19,7 @@ import org.junit.runner.RunWith;
 import com.github.ghetolay.jwamp.WampBuilder;
 import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 @RunWith(Arquillian.class)
 public class SimpleTest {
@@ -57,7 +57,7 @@ public class SimpleTest {
 	@RunAsClient
 	public void callTest() throws Exception, CallException{
 		String arg = "EchoTest";
-		JsonBackedObject result = session.getRpcSender().callSynchronously(new URI("http://example.com/echo"), 1000, arg);
+		ObjectHolder result = session.getRpcSender().callSynchronously(new URI("http://example.com/echo"), 1000, arg);
 
 		assertNotNull(result);
 		assertEquals("EchoTest", result.getAs(String.class));

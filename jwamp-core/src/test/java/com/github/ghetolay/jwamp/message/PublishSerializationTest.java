@@ -46,7 +46,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.WampPublishMessage;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 
@@ -62,7 +62,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	/////////////////// 1 //////////////////////
 	@Test
 	public void publish1_encode() throws EncodeException, IOException, URISyntaxException{
-		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/simple"), JsonBackedObjectFactory.createForObject("Hello, world!"));
+		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/simple"), ObjectHolderFactory.createForObject("Hello, world!"));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -89,7 +89,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	/////////////////// 2 //////////////////////
 	@Test
 	public void publish2_encode() throws EncodeException, IOException, URISyntaxException{
-		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/simple"), JsonBackedObjectFactory.createForObject((Object)null));
+		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/simple"), ObjectHolderFactory.createForObject((Object)null));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -128,7 +128,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 
 		obj.setCreated(calendar.getTime()); 
 		
-		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/event#myevent2"), JsonBackedObjectFactory.createForObject(obj));
+		WampPublishMessage msg = WampPublishMessage.createSimple(new URI("http://example.com/event#myevent2"), ObjectHolderFactory.createForObject(obj));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -187,7 +187,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	/////////////////// 4 //////////////////////
 	@Test
 	public void publish4_encode() throws EncodeException, IOException, URISyntaxException{
-		WampPublishMessage msg = WampPublishMessage.createWithExclude(new URI("event:myevent1"), JsonBackedObjectFactory.createForObject("hello"), Arrays.asList("NwtXQ8rdfPsy-ewS","dYqgDl0FthI6_hjb") );
+		WampPublishMessage msg = WampPublishMessage.createWithExclude(new URI("event:myevent1"), ObjectHolderFactory.createForObject("hello"), Arrays.asList("NwtXQ8rdfPsy-ewS","dYqgDl0FthI6_hjb") );
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);
@@ -222,7 +222,7 @@ public class PublishSerializationTest extends AbstractSerializationTest{
 	/////////////////// 5 //////////////////////
 	@Test
 	public void publish5_encode() throws EncodeException, IOException, URISyntaxException{
-		WampPublishMessage msg = WampPublishMessage.createWithExcludeAndEligible(new URI("event:myevent1"), JsonBackedObjectFactory.createForObject("hello"), Arrays.asList(new String[0]), Arrays.asList("NwtXQ8rdfPsy-ewS"));
+		WampPublishMessage msg = WampPublishMessage.createWithExcludeAndEligible(new URI("event:myevent1"), ObjectHolderFactory.createForObject("hello"), Arrays.asList(new String[0]), Arrays.asList("NwtXQ8rdfPsy-ewS"));
 		
 		StringWriter sw = new StringWriter();
 		encoder.encode(msg, sw);

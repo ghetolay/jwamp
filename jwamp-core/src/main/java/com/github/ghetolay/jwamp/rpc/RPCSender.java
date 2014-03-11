@@ -21,12 +21,12 @@ import java.util.concurrent.TimeoutException;
 
 import javax.websocket.EncodeException;
 
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 
 public interface RPCSender {
 	
-	public JsonBackedObject callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException;
+	public ObjectHolder callSynchronously(URI procURI, long timeout, Object... args) throws IOException, TimeoutException, EncodeException, CallException, InterruptedException;
 	
 	public String callAsynchronously(URI procURI, long timeout, CallResultListener listener, Object... args) throws EncodeException, IOException;
 }

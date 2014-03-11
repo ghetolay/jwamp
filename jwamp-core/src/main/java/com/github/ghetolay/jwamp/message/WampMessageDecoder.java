@@ -34,8 +34,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.github.ghetolay.jwamp.utils.JsonBackedObject;
-import com.github.ghetolay.jwamp.utils.JsonBackedObjectFactory;
+import com.github.ghetolay.jwamp.utils.ObjectHolder;
+import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 
 /**
@@ -190,7 +190,7 @@ public abstract class WampMessageDecoder implements Decoder{
 		if (parser.nextToken() == JsonToken.END_ARRAY)
 			return WampCallErrorMessage.create(callId, errorURI, errorDesc);
 		
-		JsonBackedObject errorDetails = JsonBackedObjectFactory.readNextObject(parser);
+		ObjectHolder errorDetails = ObjectHolderFactory.readNextObject(parser);
 		
 		assertLastArgument(parser);
 		
@@ -207,9 +207,9 @@ public abstract class WampMessageDecoder implements Decoder{
 			throw new DecodeException(parser.getValueAsString(), "ProcUri is required and must be a string");
 		URI procURI = parseURI(parser);
 
-		List<JsonBackedObject> args = new ArrayList<JsonBackedObject>();
+		List<ObjectHolder> args = new ArrayList<ObjectHolder>();
 		while (parser.nextToken() != JsonToken.END_ARRAY){
-			JsonBackedObject arg = JsonBackedObjectFactory.readNextObject(parser);
+			ObjectHolder arg = ObjectHolderFactory.readNextObject(parser);
 			args.add(arg);
 		}
 		
@@ -228,7 +228,7 @@ public abstract class WampMessageDecoder implements Decoder{
 		if (parser.nextToken() == JsonToken.END_ARRAY)
 			throw new DecodeException(parser.getValueAsString(), "Result is required");
 		
-		JsonBackedObject result = JsonBackedObjectFactory.readNextObject(parser);
+		ObjectHolder result = ObjectHolderFactory.readNextObject(parser);
 
 		assertLastArgument(parser);
 		
@@ -244,7 +244,7 @@ public abstract class WampMessageDecoder implements Decoder{
 		if (parser.nextToken() == JsonToken.END_ARRAY)
 			throw new DecodeException(parser.getValueAsString(), "Event is required");
 
-		JsonBackedObject event = JsonBackedObjectFactory.readNextObject(parser);
+		ObjectHolder event = ObjectHolderFactory.readNextObject(parser);
 		
 		assertLastArgument(parser);
 		
@@ -260,7 +260,7 @@ public abstract class WampMessageDecoder implements Decoder{
 		if (parser.nextToken() == JsonToken.END_ARRAY)
 			throw new DecodeException(parser.getValueAsString(), "Event is required");
 		
-		JsonBackedObject event = JsonBackedObjectFactory.readNextObject(parser);
+		ObjectHolder event = ObjectHolderFactory.readNextObject(parser);
 
 		//excludeme or exclude list
 		if(parser.nextToken() == JsonToken.VALUE_TRUE)

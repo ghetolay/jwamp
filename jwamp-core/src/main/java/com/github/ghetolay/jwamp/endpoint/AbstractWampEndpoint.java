@@ -13,7 +13,7 @@ import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.rpc.CallAction;
 import com.github.ghetolay.jwamp.session.WampLifeCycleListener;
 import com.github.ghetolay.jwamp.session.WampSession;
-import com.github.ghetolay.jwamp.session.WampSessionConfig;
+import com.github.ghetolay.jwamp.session.WampSessionContext;
 
 /**
  * 
@@ -41,7 +41,7 @@ public abstract class AbstractWampEndpoint extends Endpoint{
 	public void onClose(Session session, CloseReason closeReason) {
 		super.onClose(session, closeReason);
 		
-		WampSessionConfig wampSessionConfig = parameters.getSessionRegistry().getWampSessionConfigForWebSocketSession(session);
+		WampSessionContext wampSessionConfig = parameters.getSessionRegistry().getWampSessionConfigForWebSocketSession(session);
 		
 		if (wampSessionConfig != null){
 			parameters.getSessionRegistry().deregister(wampSessionConfig);
@@ -50,9 +50,9 @@ public abstract class AbstractWampEndpoint extends Endpoint{
 		}
 	}
 
-	protected WampSessionConfig createAndRegisterWampSessionConfig(final Session session, String wampSessionId){
+	protected WampSessionContext createAndRegisterWampSessionConfig(final Session session, String wampSessionId){
 		
-		WampSessionConfig wampSessionConfig = parameters.getWampSessionConfigFactory().createConfig(session, parameters, wampSessionId);
+		WampSessionContext wampSessionConfig = parameters.getWampSessionContextFactory().createContext(session, parameters, wampSessionId);
 		
 		parameters.getSessionRegistry().register(wampSessionConfig);
 		

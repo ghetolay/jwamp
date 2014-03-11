@@ -13,7 +13,7 @@ import com.github.ghetolay.jwamp.message.WampMessageHandler;
  * @author Kevin
  *
  */
-public interface WampSessionConfig {
+public interface WampSessionContext {
 
 	public WampSession getWampSession();
 
