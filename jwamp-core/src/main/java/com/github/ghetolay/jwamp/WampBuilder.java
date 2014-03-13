@@ -24,15 +24,13 @@ import com.github.ghetolay.jwamp.event.EventAction;
 import com.github.ghetolay.jwamp.message.WampMessageDecoder;
 import com.github.ghetolay.jwamp.message.WampMessageEncoder;
 import com.github.ghetolay.jwamp.rpc.CallAction;
-import com.github.ghetolay.jwamp.rpc.CallIdTimeoutKey;
-import com.github.ghetolay.jwamp.rpc.CallResultListener;
+import com.github.ghetolay.jwamp.rpc.RPCTimeoutManager;
 import com.github.ghetolay.jwamp.session.DefaultWampSessionContextFactory;
 import com.github.ghetolay.jwamp.session.SessionRegistry;
 import com.github.ghetolay.jwamp.session.WampLifeCycleListener;
 import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.session.WampSessionContextFactory;
 import com.github.ghetolay.jwamp.utils.ResultListener;
-import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.WaitResponse;
 
 public class WampBuilder {
@@ -49,7 +47,7 @@ public class WampBuilder {
 	private final List<WampLifeCycleListener> lifecycleListeners = new ArrayList<WampLifeCycleListener>();
 	private final List<Class<? extends Encoder>> encoders = createEncoderClassList(WampMessageEncoder.Text.class);
 	private final List<Class<? extends Decoder>> decoders = createDecoderClassList(WampMessageDecoder.Text.class);
-	private final TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager = new TimeoutHashMap<CallIdTimeoutKey, CallResultListener>();
+	private final RPCTimeoutManager rpcTimeoutManager = new RPCTimeoutManager();
 
 	/**
 	 * Return the name of the WebSocket subprotocol.

@@ -14,6 +14,7 @@
 
 	<properties>
 		<jetty-version>9.1.0.v20131115</jetty-version>
+		<slf4j-version>1.6.5</slf4j-version>
 	</properties>
 
 	<licenses>
@@ -28,7 +29,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.6.5</version>
+			<version>${slf4j-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.websocket</groupId>
@@ -48,29 +49,26 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.jboss.arquillian.junit</groupId>
-			<artifactId>arquillian-junit-container</artifactId>
+			<groupId>org.eclipse.jetty.websocket</groupId>
+			<artifactId>javax-websocket-server-impl</artifactId>
+			<version>${jetty-version}</version>
 			<scope>test</scope>
-			
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>3.1</version>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-webapp</artifactId>
+			<version>${jetty-version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>${slf4j-version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.jboss.arquillian</groupId>
-				<artifactId>arquillian-bom</artifactId>
-				<version>1.1.2.Final</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -141,96 +139,7 @@
 			</activation>
 		</profile>
 		
-		<profile>
-			<id>tyrus-to-jetty</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-					<version>1.7.5</version>
-				</dependency>
-				<dependency>
-					<groupId>org.jboss.arquillian.container</groupId>
-					<artifactId>arquillian-jetty-embedded-9</artifactId>
-					<version>1.0.0.CR2</version>
-					<scope>test</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.eclipse.jetty.websocket</groupId>
-					<artifactId>javax-websocket-server-impl</artifactId>
-					<version>${jetty-version}</version>
-					<scope>test</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.eclipse.jetty</groupId>
-					<artifactId>jetty-webapp</artifactId>
-					<version>${jetty-version}</version>
-					<scope>test</scope>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>wildfly</id>
-			<dependencies>
-				<!--  
-				<dependency>
-					<groupId>org.glassfish.tyrus</groupId>
-					<artifactId>tyrus-client</artifactId>
-					<version>1.3.1</version>
-				</dependency>
-				-->
-				<dependency>
-					<groupId>org.wildfly</groupId>
-					<artifactId>wildfly-arquillian-container-embedded</artifactId>
-					<version>8.0.0.Beta1</version>
-				</dependency>
-				<dependency>
-					<groupId>org.wildfly</groupId>
-					<artifactId>wildfly-embedded</artifactId>
-					<version>8.0.0.Beta1</version>
-				</dependency>
-			</dependencies>
-		</profile>
-
-		<profile>
-			<id>glassfish</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.jboss.arquillian.container</groupId>
-					<artifactId>arquillian-glassfish-embedded-3.1</artifactId>
-					<version>1.0.0.CR4</version>
-					<scope>test</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.glassfish.main.extras</groupId>
-					<artifactId>glassfish-embedded-all</artifactId>
-					<version>4.0</version>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>jetty-to-glassfish</id>
-			<dependencies>
-				<dependency>
-					<groupId>org.eclipse.jetty.websocket</groupId> 
-					<artifactId>javax-websocket-client-impl</artifactId> 
-					<version>${jetty-version}</version> 
-				</dependency>
-				<dependency>
-					<groupId>org.jboss.arquillian.container</groupId>
-					<artifactId>arquillian-glassfish-embedded-3.1</artifactId>
-					<version>1.0.0.CR4</version>
-					<scope>test</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.glassfish.main.extras</groupId>
-					<artifactId>glassfish-embedded-all</artifactId>
-					<version>4.0</version>
-				</dependency>
-			</dependencies>
-		</profile>
-	</profiles>
+    </profiles>
 					
 	<scm>
 		<connection>scm:git:git@github.com:ghetolay/jwamp.git</connection>

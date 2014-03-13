@@ -29,8 +29,8 @@ import javax.websocket.EncodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.MessageSender;
+import com.github.ghetolay.jwamp.message.MessageType;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampCallResultMessage;
@@ -39,7 +39,6 @@ import com.github.ghetolay.jwamp.message.WampMessageHandler;
 import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.utils.ObjectHolder;
 import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
-import com.github.ghetolay.jwamp.utils.TimeoutHashMap;
 import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 
 public class DefaultRPCSender implements RPCSender, WampMessageHandler{
@@ -47,7 +46,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	private static final Logger log = LoggerFactory.getLogger(DefaultRPCSender.class);
 
 	//TODO: this is now set up to where we could share the same instance across all DefaultRPCSender instances - if we do that, we can reintroduce the cleaner thread concept (this would result in a single cleaner thread for the entire application)
-	private TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager = new TimeoutHashMap<CallIdTimeoutKey, CallResultListener>();
+	private final RPCTimeoutManager rpcTimeoutManager;
 	
 	private final TimeoutListener<CallIdTimeoutKey, CallResultListener> myTimeoutListener = new TimeoutListener<CallIdTimeoutKey, CallResultListener>(){
 		public void timedOut(CallIdTimeoutKey key, CallResultListener value) {
@@ -59,7 +58,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	private final String sessionId;
 	private final Random rand = new Random();
 
-	public DefaultRPCSender(TimeoutHashMap<CallIdTimeoutKey, CallResultListener> rpcTimeoutManager, MessageSender remoteMessageSender, String sessionId){
+	public DefaultRPCSender(RPCTimeoutManager rpcTimeoutManager, MessageSender remoteMessageSender, String sessionId){
 		this.rpcTimeoutManager = rpcTimeoutManager;
 		this.remoteMessageSender = remoteMessageSender;
 		this.sessionId = sessionId;
@@ -76,9 +75,6 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 
 	}
 	
-	private CallIdTimeoutKey getTimeoutKey(String callId){
-		return new CallIdTimeoutKey(sessionId, callId);
-	}
 	
 	public String callAsynchronously(URI procURI, long timeout, CallResultListener listener, Object... args) throws IOException, EncodeException{
 		if(timeout < 0)
@@ -91,7 +87,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 		WampCallMessage msg = WampCallMessage.create(callId, procURI, jsonArgs);
 			
 		if(listener != null)
-			rpcTimeoutManager.put(getTimeoutKey(callId), listener, timeout, myTimeoutListener);
+			rpcTimeoutManager.registerCall(sessionId, callId, listener, timeout, myTimeoutListener);
 
 		remoteMessageSender.sendToRemote(msg);
 			
@@ -121,7 +117,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	}
 	
 	private void onMessage(WampSession session, WampCallResultMessage msg){
-		CallResultListener listener = rpcTimeoutManager.remove(getTimeoutKey(msg.getCallId()));
+		CallResultListener listener = rpcTimeoutManager.remove(sessionId, msg.getCallId());
 		if (listener != null){
 			listener.onSuccess(msg);
 		} else {
@@ -131,7 +127,7 @@ public class DefaultRPCSender implements RPCSender, WampMessageHandler{
 	}
 	
 	private void onMessage(WampSession session, WampCallErrorMessage msg){
-		CallResultListener listener = rpcTimeoutManager.remove(getTimeoutKey(msg.getCallId()));
+		CallResultListener listener = rpcTimeoutManager.remove(sessionId, msg.getCallId());
 		if (listener != null){
 			listener.onError(msg);
 		} else {

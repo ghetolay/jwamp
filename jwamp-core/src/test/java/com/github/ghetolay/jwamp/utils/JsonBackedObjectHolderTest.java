@@ -21,17 +21,16 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.github.ghetolay.jwamp.utils.ObjectHolder;
-import com.github.ghetolay.jwamp.utils.ObjectHolderFactory;
 
 /**
  * @author Kevin
  *
  */
-public class JsonBackedObjectTest {
+public class JsonBackedObjectHolderTest {
 	private final JsonFactory fac = new MappingJsonFactory();
 
 	private final String inString = "in";
+	@SuppressWarnings("serial")
 	private final Map<String, String> inMap = Collections.unmodifiableMap(new HashMap<String, String>(){
 		{
 			put("key1", "val1");
