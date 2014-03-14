@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.ContainerProvider;
@@ -30,8 +31,9 @@ import com.github.ghetolay.jwamp.session.SessionRegistry;
 import com.github.ghetolay.jwamp.session.WampLifeCycleListener;
 import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.session.WampSessionContextFactory;
+import com.github.ghetolay.jwamp.utils.Promise;
 import com.github.ghetolay.jwamp.utils.ResultListener;
-import com.github.ghetolay.jwamp.utils.WaitResponse;
+import com.github.ghetolay.jwamp.utils.PromiseResultListener;
 
 public class WampBuilder {
 	
@@ -162,20 +164,22 @@ public class WampBuilder {
 		}
 		
 		public WampSession connectToServer(URI serverUri) throws InterruptedException, DeploymentException, IOException{
+			Promise<WampSession> sessionPromise = new Promise<WampSession>();
 			
-			WaitResponse<WampSession> openListener = new WaitResponse<>(connectionTimeout);
+			PromiseResultListener<WampSession> openListener = new PromiseResultListener<>(sessionPromise);
 			
 			WampClientEndPoint endPoint = createEndPoint(openListener);
 			
 			Session webSocketSession = ContainerProvider.getWebSocketContainer().connectToServer(endPoint, createEndpointConfig(), serverUri);
 
-			WampSession session = openListener.call();
-			if (session == null){
+			try{
+				WampSession session = sessionPromise.get(connectionTimeout);
+				return session;
+			} catch (TimeoutException e){
 				webSocketSession.close();
 				throw new IOException("Unable to connect to " + serverUri);
 			}
 			
-			return session;
 		}
 
 	}

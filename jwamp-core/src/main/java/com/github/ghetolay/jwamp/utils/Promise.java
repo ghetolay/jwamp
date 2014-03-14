@@ -16,44 +16,23 @@
 package com.github.ghetolay.jwamp.utils;
 
 
-import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
 
 /**
- * A {@link ResultListener} that blocks until the result is returned
+ * A promise to provide some value in the future.  Users call get() to retrieve the value.
  *
  * @param <T> the type of the result
  */
-public class WaitResponse<T> implements Callable<T>, ResultListener<T>{
+public class Promise<T> {
 
-	private T result;
-	private long waitfor = 0;
-	
-	/**
-	 * Creates a WaitResponse that will wait indefinitely for the result 
-	 */
-	public WaitResponse(){}
-	
-	/**
-	 * Creates a WaitResponse with the specified timeout duration
-	 * @param timeout
-	 */
-	public WaitResponse(long timeout){
-		this.waitfor = timeout;
-	}
-	
-	/**
-	 * Part of the {@link ResultListener} interface - called by the framework when the result is available
-	 */
-	public void onResult(T result) {
-		setResult(result);
-	}
+	private T value;
 	
 	/**
 	 * Sets the result and notifies any waiting threads that it is available
 	 * @param result
 	 */
-	private synchronized void setResult(T result) {
-		this.result = result;
+	public synchronized void setValue(T value) {
+		this.value = value;
 		this.notifyAll();
 	}
 
@@ -61,9 +40,10 @@ public class WaitResponse<T> implements Callable<T>, ResultListener<T>{
 	 * Blocks until the result is available, or the timeout has elapsed.
 	 * @return the result value, or null if a timeout happened
 	 */
-	public synchronized T call() throws InterruptedException {
-		wait(waitfor);		
-		return result;
+	public synchronized T get(long waitfor) throws InterruptedException, TimeoutException {
+		wait(waitfor);
+		if (value == null) throw new TimeoutException();
+		return value;
 	}
 	
 }

@@ -82,7 +82,7 @@ public class PubSubMessageHandler implements WampMessageHandler {
 	}
 
 	private void onMessage(WampSession session, WampPublishMessage msg){
-		// TODO: we can do better than this if we want - instead of looping through all sessionConfigs (if eligile isn't specified), somehow make a global event subscription manager that tracks which sessions are registered for which event URLs and query that for the list of sessions to notify
+		// TODO: we can do better than this if we want - instead of looping through all sessionConfigs (if eligible isn't specified), somehow make a global event subscription manager that tracks which sessions are registered for which event URLs and query that for the list of sessions to notify
 		Collection<WampSessionContext> configsToNotify = msg.isEligibleSpecified() ? sessionRegistry.getSessionConfigs(msg.getEligible()) : sessionRegistry.getSessionConfigs();
 
 		WampEventMessage eventMessage = WampEventMessage.createFromPublishMessage(msg);
@@ -92,9 +92,9 @@ public class PubSubMessageHandler implements WampMessageHandler {
 			String sourceSessionId = session.getWampSessionId();
 			
 			if (targetSessionId.equals(sourceSessionId) && msg.isExcludeMe())
-				return;
+				continue;
 			if (msg.isExcludeSpecified() && msg.getExclude().contains(targetSessionId))
-				return;
+				continue;
 
 			if (sessionConfig.getEventSubscriptionRegistry().isSubscribed(eventMessage.getTopicURI())){
 				sessionConfig.getRemoteMessageSender().sendToRemote(eventMessage);

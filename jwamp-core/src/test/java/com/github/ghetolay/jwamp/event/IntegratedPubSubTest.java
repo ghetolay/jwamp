@@ -6,6 +6,8 @@ package com.github.ghetolay.jwamp.event;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
+import java.util.Arrays;
+import java.util.concurrent.TimeoutException;
 
 import javax.websocket.CloseReason;
 import javax.websocket.CloseReason.CloseCodes;
@@ -29,8 +31,8 @@ import org.slf4j.LoggerFactory;
 import com.github.ghetolay.jwamp.WampBuilder;
 import com.github.ghetolay.jwamp.message.WampEventMessage;
 import com.github.ghetolay.jwamp.session.WampSession;
+import com.github.ghetolay.jwamp.utils.Promise;
 import com.github.ghetolay.jwamp.utils.URIBuilder;
-import com.github.ghetolay.jwamp.utils.WaitResponse;
 import com.github.ghetolay.testutils.EchoAction;
 
 /**
@@ -42,8 +44,16 @@ public class IntegratedPubSubTest {
 	private static final Logger log = LoggerFactory.getLogger(IntegratedPubSubTest.class);
 	
 	static Server server;
-	static WampSession serverSession;
 	static URI serverUri;
+	
+	TestEventAction actionA = new TestEventAction();
+	TestEventAction actionB = new TestEventAction();
+	TestEventAction actionC = new TestEventAction();
+	WampSession sessionA;
+	WampSession sessionB;
+	WampSession sessionC;;
+	
+	private static final CloseReason endOfTestReason = new CloseReason(CloseCodes.GOING_AWAY, "End of test");
 	
 	/**
 	 * @throws java.lang.Exception
@@ -98,6 +108,29 @@ public class IntegratedPubSubTest {
 
 	@Before
 	public void setUp() throws Exception {
+		if (sessionA != null) sessionA.close(endOfTestReason);
+		if (sessionB != null) sessionB.close(endOfTestReason);
+		if (sessionC != null) sessionC.close(endOfTestReason);
+		
+		actionA.reset();
+		actionB.reset();
+		actionC.reset();
+
+		sessionA = WampBuilder.create()
+				.withEventSubscription(TestEventAction.testUri, actionA)
+				.forClient()
+				.connectToServer(serverUri);
+		
+		sessionB = WampBuilder.create()
+				.withEventSubscription(TestEventAction.testUri, actionB)
+				.forClient()
+				.connectToServer(serverUri);
+		
+		sessionC = WampBuilder.create()
+				.withEventSubscription(TestEventAction.testUri, actionC)
+				.forClient()
+				.connectToServer(serverUri);
+		
 	}
 
 	@After
@@ -105,32 +138,87 @@ public class IntegratedPubSubTest {
 	}
 
 	@Test
-	public void testPubSub() throws Throwable {
-		TestEventAction action1 = new TestEventAction();
+	public void testSimplePublish() throws Throwable {
+		String testValue = "A test value";
 		
-		WampSession clientSession = WampBuilder.create()
-				.withEventSubscription(TestEventAction.testUri, action1)
-				.forClient()
-				.connectToServer(serverUri);
-		
-		clientSession.getEventPublisher().publishEvent(TestEventAction.testUri, "A test value");
+		sessionA.getEventPublisher().publishEvent(TestEventAction.testUri, testValue);
 
-		assertEquals("A test value", action1.response.call());
+		assertEquals(testValue, actionA.getResult());
 		
-		clientSession.close(new CloseReason(CloseCodes.GOING_AWAY, "test finished"));
 	}
 
+	@Test
+	public void testFullBroadcast() throws Throwable {
+
+		String testValue = "A test value";
+		
+		sessionA.getEventPublisher().publishEvent(TestEventAction.testUri, testValue);
+
+		assertEquals(testValue, actionA.getResult());
+		assertEquals(testValue, actionB.getResult());
+		assertEquals(testValue, actionC.getResult());
+	}
+	
+	@Test
+	public void testExplicitExclude() throws Throwable {
+
+		String testValue = "A test value";
+		
+		sessionA.getEventPublisher().publishEvent(TestEventAction.testUri, testValue, Arrays.asList(sessionB.getWampSessionId()));
+
+		assertEquals(testValue, actionA.getResult());
+		assertEquals(null, actionB.getResult());
+		assertEquals(testValue, actionC.getResult());
+	}
+
+	@Test
+	public void testExcludeMe() throws Throwable {
+
+		String testValue = "A test value";
+		
+		sessionA.getEventPublisher().publishEvent(TestEventAction.testUri, testValue, true);
+
+		assertEquals(null, actionA.getResult());
+		assertEquals(testValue, actionB.getResult());
+		assertEquals(testValue, actionC.getResult());
+	}	
+
+	@Test
+	public void testEligible() throws Throwable {
+
+		String testValue = "A test value";
+		
+		sessionA.getEventPublisher().publishEvent(TestEventAction.testUri, testValue, Arrays.<String>asList(),Arrays.asList(sessionB.getWampSessionId()));
+
+		assertEquals(null, actionA.getResult());
+		assertEquals(testValue, actionB.getResult());
+		assertEquals(null, actionC.getResult());
+	}	
+	
+	
+	
 	private static class TestEventAction implements EventAction {
 
 		static public final URI testUri = URIBuilder.newURI("event://testevent");		
 		
-		WaitResponse<String> response = new WaitResponse<String>();
+		Promise<String> response = new Promise<String>();
 		
 		@Override
 		public void handleEvent(WampSession session, WampEventMessage msg) {
-			response.onResult(msg.getEvent().getAs(String.class));
+			response.setValue(msg.getEvent().getAs(String.class));
 		}
 		
+		public String getResult() throws InterruptedException{
+			try {
+				return response.get(100);
+			} catch (TimeoutException e) {
+				return null;
+			}
+		}
+		
+		public void reset(){
+			response = new Promise<String>();
+		}
 	}
 	
 }
