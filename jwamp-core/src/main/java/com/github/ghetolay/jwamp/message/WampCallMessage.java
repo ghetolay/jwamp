@@ -19,7 +19,6 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.ghetolay.jwamp.utils.ObjectHolder;
 
 

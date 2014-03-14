@@ -3,8 +3,7 @@
  */
 package com.github.ghetolay.jwamp.utils;
 
-import static org.junit.Assert.*;
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,14 +34,14 @@ public class TimeoutHashMapTest {
 		TimeoutHashMap<String, String> map = new TimeoutHashMap<String, String>();
 		map.put("A", "AA", 5);
 		map.put("B", "BB", 15);
-		Assert.assertEquals("AA", map.get("A"));
-		Assert.assertEquals("BB", map.get("B"));
+		assertEquals("AA", map.get("A"));
+		assertEquals("BB", map.get("B"));
 		Thread.sleep(10);
-		Assert.assertEquals(null, map.get("A"));
-		Assert.assertEquals("BB", map.get("B"));
+		assertEquals(null, map.get("A"));
+		assertEquals("BB", map.get("B"));
 		Thread.sleep(5);
-		Assert.assertEquals(null, map.get("A"));
-		Assert.assertEquals(null, map.get("B"));
+		assertEquals(null, map.get("A"));
+		assertEquals(null, map.get("B"));
 		
 	}
 

@@ -18,18 +18,11 @@ package com.github.ghetolay.jwamp.message;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URI;
 
-import javax.websocket.DecodeException;
-
 import org.junit.Test;
-
-import com.github.ghetolay.jwamp.message.MessageType;
-import com.github.ghetolay.jwamp.message.WampMessage;
-import com.github.ghetolay.jwamp.message.WampPrefixMessage;
 
 
 

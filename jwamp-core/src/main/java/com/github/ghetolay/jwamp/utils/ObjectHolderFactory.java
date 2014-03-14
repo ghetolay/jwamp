@@ -70,6 +70,7 @@ public class ObjectHolderFactory {
 			return clazz.cast(val);
 		}
 		
+		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getAs(TypeReference<T> typeReference){
 			return (T)val;

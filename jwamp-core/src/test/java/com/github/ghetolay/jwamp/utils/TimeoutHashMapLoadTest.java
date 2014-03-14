@@ -15,7 +15,7 @@ import com.github.ghetolay.jwamp.utils.TimeoutHashMap.TimeoutListener;
 public class TimeoutHashMapLoadTest {
 
 	public static void main(String[] args) {
-		final TimeoutHashMap map = new TimeoutHashMap();
+		final TimeoutHashMap<String, String> map = new TimeoutHashMap<String, String>();
 		
 		for(int i = 0; i < 10; i++){
 			AbuseThread t = new AbuseThread(map);
@@ -47,7 +47,7 @@ public class TimeoutHashMapLoadTest {
 			
 		};
 		
-		public AbuseThread(TimeoutHashMap map) {
+		public AbuseThread(TimeoutHashMap<String, String> map) {
 			this.map = map;
 			r = new Random();
 		}
