@@ -26,11 +26,11 @@ import com.github.ghetolay.jwamp.utils.URIBuilder;
  * @author ghetolay
  *
  */
-public class CallException extends Throwable {
+public class CallException extends Exception {
 
 	private static final long serialVersionUID = -6836214026673216476L;
 
-	public static final URI generic = URIBuilder.newURI("ws://wamp.ws/error#generic");
+	public static final URI generic = URIBuilder.uri("ws://wamp.ws/error#generic");
 	
 	private URI errorURI;
 	private Object details;

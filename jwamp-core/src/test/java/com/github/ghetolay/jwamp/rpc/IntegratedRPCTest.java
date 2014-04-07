@@ -82,7 +82,7 @@ public class IntegratedRPCTest {
 			log.error(e.getMessage(), e);
 		}
 		
-		serverUri = URIBuilder.newURI("ws://localhost:" + connector.getLocalPort() + "/test");
+		serverUri = URIBuilder.uri("ws://localhost:" + connector.getLocalPort() + "/test");
 	}
 
 	@AfterClass

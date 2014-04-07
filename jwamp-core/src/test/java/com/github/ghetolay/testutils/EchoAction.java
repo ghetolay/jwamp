@@ -27,7 +27,7 @@ import com.github.ghetolay.jwamp.utils.URIBuilder;
 
 public class EchoAction implements CallAction{
 
-	public static URI uri = URIBuilder.newURI("http://example.com/echo");
+	public static URI uri = URIBuilder.uri("http://example.com/echo");
 	
 	@Override
 	public WampCallResultMessage handleCall(WampSession session, WampCallMessage msg) throws CallException {

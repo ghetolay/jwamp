@@ -3,14 +3,15 @@ package com.github.ghetolay.jwamp.utils;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-//TODO: KD - do we need this?  See BuiltInURIs class...
-public class URIBuilder {
+public final class URIBuilder {
+	private URIBuilder(){}
 	
-	public static URI newURI(String uri){
+	public static URI uri(String uriStr){
 		try {
-			return new URI(uri);
+			return new URI(uriStr);
 		} catch (URISyntaxException e) {
-			return null;
+			throw new RuntimeException("Failed to create URI for '" + uriStr + "'", e);
 		}
 	}
+
 }

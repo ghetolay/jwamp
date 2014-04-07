@@ -93,7 +93,7 @@ public class IntegratedPubSubTest {
 			log.error(e.getMessage(), e);
 		}
 		
-		serverUri = URIBuilder.newURI("ws://localhost:" + connector.getLocalPort() + "/test");
+		serverUri = URIBuilder.uri("ws://localhost:" + connector.getLocalPort() + "/test");
 	}
 
 	@AfterClass
@@ -199,7 +199,7 @@ public class IntegratedPubSubTest {
 	
 	private static class TestEventAction implements EventAction {
 
-		static public final URI testUri = URIBuilder.newURI("event://testevent");		
+		static public final URI testUri = URIBuilder.uri("event://testevent");		
 		
 		Promise<String> response = new Promise<String>();
 		
