@@ -31,6 +31,7 @@ import com.github.ghetolay.jwamp.session.WampSession;
 import com.github.ghetolay.jwamp.utils.ObjectHolder;
 import com.github.ghetolay.jwamp.utils.URIBuilder;
 import com.github.ghetolay.testutils.EchoAction;
+import com.github.ghetolay.testutils.ExceptionAction;
 
 /**
  * @author Kevin
@@ -64,6 +65,7 @@ public class IntegratedRPCTest {
 		try {
 			ServerEndpointConfig c = WampBuilder.create()
 					.withCallAction(EchoAction.uri, new EchoAction())
+					.withCallAction(ExceptionAction.uri, new ExceptionAction())
 					.forServer("/test")
 					.createEndpointConfig();
 			
@@ -112,4 +114,9 @@ public class IntegratedRPCTest {
 		clientSession.close(new CloseReason(CloseCodes.GOING_AWAY, "test finished"));
 	}
 
+	@Test(expected=CallException.class)
+	public void testException() throws Throwable{
+		WampSession clientSession = WampBuilder.create().forClient().connectToServer(serverUri);
+		clientSession.getRpcSender().callSynchronously(ExceptionAction.uri, 5000, "A test");
+	}
 }

@@ -37,11 +37,13 @@ public class CallException extends Exception {
 	
 	public CallException(URI errorURI, String errorDesc) {
 		super(errorDesc);
+		this.errorURI = errorURI;
 	}
 	
 	public CallException(URI errorURI, String errorDesc, Object errorDetails){
 		super(errorDesc);
 		details = errorDetails;
+		this.details = errorDetails;
 	}
 	
 	public CallException(WampCallErrorMessage msg){
