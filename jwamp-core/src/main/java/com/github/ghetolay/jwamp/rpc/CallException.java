@@ -36,22 +36,17 @@ public class CallException extends Exception {
 	private Object details;
 	
 	public CallException(URI errorURI, String errorDesc) {
-		super(errorDesc);
-		this.errorURI = errorURI;
+		this(errorURI, errorDesc, null);
 	}
 	
 	public CallException(URI errorURI, String errorDesc, Object errorDetails){
 		super(errorDesc);
-		details = errorDetails;
+		this.errorURI = errorURI;
 		this.details = errorDetails;
 	}
 	
 	public CallException(WampCallErrorMessage msg){
-		this(msg.getErrorUri(), msg.getErrorDesc());
-		if (msg.isErrorDetailsPresent())
-			details = msg.getErrorDetails();
-		else
-			details = null;
+		this(msg.getErrorUri(), msg.getErrorDesc(), msg.isErrorDetailsPresent() ? msg.getErrorDetails() : null);
 	}
 
 	public URI getErrorURI(){
