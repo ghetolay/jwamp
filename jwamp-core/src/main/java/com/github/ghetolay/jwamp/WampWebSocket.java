@@ -29,10 +29,26 @@ import com.github.ghetolay.jwamp.message.WampCallResultMessage;
 import com.github.ghetolay.jwamp.rpc.CallException;
 import com.github.ghetolay.jwamp.rpc.WampRPCSender;
 import com.github.ghetolay.jwamp.utils.ResultListener;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.util.Base64;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 public class WampWebSocket {
 
-	private WampConnection connection;
+  public static final String URI_WAMP_BASE = "http://api.wamp.ws/";
+  public static final String URI_WAMP_ERROR = URI_WAMP_BASE + "error#";
+  public static final String URI_WAMP_PROCEDURE = URI_WAMP_BASE + "procedure#";
+  public static final String URI_WAMP_TOPIC = URI_WAMP_BASE + "topic#";
+  public static final String URI_WAMP_ERROR_GENERIC = URI_WAMP_ERROR + "generic";
+  public static final String URI_WAMP_ERROR_INTERNAL = URI_WAMP_ERROR + "internal";
+  private static final String HASH_ALGORITHM = "HmacSHA256";
+  public static final long DEFAULT_TIMEOUT = 5000;
+
+  private WampConnection connection;
 	
 	private WampRPCSender rpcSender;
 	private WampEventSubscriber eventSubscriber;
@@ -66,7 +82,7 @@ public class WampWebSocket {
 	}
 	
 	public WampArguments simpleCall(String procId, Object... args) throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException{
-		return getRPCSender().call(procId, 5000, args);
+		return getRPCSender().call(procId, DEFAULT_TIMEOUT, args);
 	}
 	
 	//TODO issue this method can be miss-call
@@ -126,5 +142,32 @@ public class WampWebSocket {
 	public void setGlobalEventListener(ResultListener<EventResult> listener){
 		getEventSubscriber().setGlobalListener(listener);
 	}
-	
+
+  public String authSignature(String authChallenge, String authSecret) throws SignatureException {
+    try {
+      Key sk = new SecretKeySpec(authSecret.getBytes(), HASH_ALGORITHM);
+      Mac mac = Mac.getInstance(sk.getAlgorithm());
+      mac.init(sk);
+      final byte[] hmac = mac.doFinal(authChallenge.getBytes());
+      //return Base64.encodeToString(hmac,Base64.NO_WRAP);
+      return Base64.getEncoder().encodeToString(hmac);
+    } catch (NoSuchAlgorithmException e) {
+      throw new SignatureException("error building signature, no such algorithm in device " + HASH_ALGORITHM);
+    } catch (InvalidKeyException e) {
+      throw new SignatureException("error building signature, invalid key " + HASH_ALGORITHM);
+    }
+  }
+
+  public void authenticate(String authKey, String authSecret)
+          throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException, SignatureException {
+    authenticate(authKey, authSecret, DEFAULT_TIMEOUT);
+  }
+
+  public void authenticate(String authKey, String authSecret, long timeout)
+          throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException, SignatureException {
+    WampArguments res = call(URI_WAMP_PROCEDURE + "authreq", timeout, authKey);
+    String challenge = res.nextObject().asString();
+    String sig = authSignature(challenge, authSecret);
+    call(URI_WAMP_PROCEDURE + "auth", timeout, sig);
+  }
 }
