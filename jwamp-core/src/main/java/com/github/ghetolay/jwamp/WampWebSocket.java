@@ -158,16 +158,16 @@ public class WampWebSocket {
     }
   }
 
-  public void authenticate(String auth)
+  public void authenticate(String authKey, String authSecret)
           throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException, SignatureException {
-    authenticate(auth, DEFAULT_TIMEOUT);
+    authenticate(authKey, authSecret, DEFAULT_TIMEOUT);
   }
 
-  public void authenticate(String auth, long timeout)
+  public void authenticate(String authKey, String authSecret, long timeout)
           throws IOException, TimeoutException, UnsupportedWampActionException, SerializationException, CallException, SignatureException {
-    WampArguments res = call(URI_WAMP_PROCEDURE + "authreq", timeout, auth);
+    WampArguments res = call(URI_WAMP_PROCEDURE + "authreq", timeout, authKey);
     String challenge = res.nextObject().asString();
-    String sig = authSignature(challenge, auth);
+    String sig = authSignature(challenge, authSecret);
     call(URI_WAMP_PROCEDURE + "auth", timeout, sig);
   }
 }
