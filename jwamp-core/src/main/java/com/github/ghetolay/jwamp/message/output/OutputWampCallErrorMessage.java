@@ -15,6 +15,9 @@
 */
 package com.github.ghetolay.jwamp.message.output;
 
+import java.net.URI;
+
+import com.github.ghetolay.jwamp.message.WampArguments;
 import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
 
 /**
@@ -23,24 +26,17 @@ import com.github.ghetolay.jwamp.message.WampCallErrorMessage;
  */
 public class OutputWampCallErrorMessage extends WampCallErrorMessage {
 	
-	public OutputWampCallErrorMessage(){}
+	private Object errDetails;
 	
-	public OutputWampCallErrorMessage(String... args){
+	public OutputWampCallErrorMessage(){
 		super();
-		
-		try{
-			callId = args[0];
-			errorUri = args[1];
-			errorDesc = args[2];
-			errorDetails = args[3];
-		}catch(IndexOutOfBoundsException e){}
 	}
 	
 	public void setCallId(String callId) {
 		this.callId = callId;
 	}
 	
-	public void setErrorUri(String errorUri) {
+	public void setErrorUri(URI errorUri) {
 		this.errorUri = errorUri;
 	}
 	
@@ -48,8 +44,17 @@ public class OutputWampCallErrorMessage extends WampCallErrorMessage {
 		this.errorDesc = errorDesc;
 	}
 
-	public void setErrorDetails(String errorDetails) {
-		this.errorDetails = errorDetails;
+	public void setErrorDetails(Object errorDetails) {
+		this.errDetails = errorDetails;
 	}
 	
+	//TODO AWFUUUULLL
+	public Object getOutputErrorDetails(){
+		return errDetails;
+	}
+	
+	@Override
+	public WampArguments getErrorDetails(){
+		throw new IllegalStateException("Use getOutputErrorDetails()");
+	}
 }

@@ -30,6 +30,9 @@ import com.github.ghetolay.jwamp.message.WampCallMessage;
 import com.github.ghetolay.jwamp.message.WampMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallErrorMessage;
 import com.github.ghetolay.jwamp.message.output.OutputWampCallResultMessage;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
 
 /**
  * @author ghetolay
@@ -89,11 +92,22 @@ public abstract class AbstractRPCManager implements WampMessageHandler{
 	}
 
 	private void sendError(String callId, String procId, CallException e) throws IOException, SerializationException{
-		conn.sendMessage( new OutputWampCallErrorMessage(callId, procId,e.getErrorDescription(), e.getErrorDetails()) );
+		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage();
+		errorMsg.setCallId(callId);
+		errorMsg.setErrorUri(e.getErrorURI());
+		errorMsg.setErrorDesc(e.getErrorDescription());
+		errorMsg.setErrorDetails(e.getErrorDetails());
+		conn.sendMessage( errorMsg );
 	}
 	
 	private void sendErrorFromException(String callId, String procId, Throwable e) throws IOException, SerializationException{
-		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage(callId, procId,e.getLocalizedMessage());
+		OutputWampCallErrorMessage errorMsg = new OutputWampCallErrorMessage();
+		errorMsg.setCallId(callId);
+    try {
+      errorMsg.setErrorUri(new URI(procId));
+    } catch (URISyntaxException ex) {
+    }
+		errorMsg.setErrorDesc(e.getLocalizedMessage());
 		if(!e.getMessage().equals(e.getLocalizedMessage()))
 			errorMsg.setErrorDetails(e.getMessage());
 

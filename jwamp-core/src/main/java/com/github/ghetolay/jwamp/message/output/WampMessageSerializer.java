@@ -57,7 +57,7 @@ public class WampMessageSerializer {
 				return callMsg((OutputWampCallMessage) msg, objectMapper);
 
 			case WampMessage.CALLERROR :
-				return callErrorMsg((OutputWampCallErrorMessage) msg);
+				return callErrorMsg((OutputWampCallErrorMessage) msg, objectMapper);
 
 			case WampMessage.CALLRESULT :
 				return callResultMsg((OutputWampCallResultMessage) msg, objectMapper);
@@ -87,20 +87,23 @@ public class WampMessageSerializer {
 		}
 	}
 
-	public static String callErrorMsg(OutputWampCallErrorMessage msg){
+	public static String callErrorMsg(OutputWampCallErrorMessage msg, ObjectMapper objectMapper) throws JsonMappingException, IOException{
 
 		StringBuffer result = startMsg(msg.getMessageType());
 
 		appendString(result, msg.getCallId());
 		result.append(',');
-		appendString(result, msg.getErrorUri());
+    if (msg.getErrorUri() != null)
+  		appendString(result, msg.getErrorUri().toString());
+    else
+  		result.append("\"\"");
 		result.append(',');
 		appendString(result, msg.getErrorDesc());
 
-		if(msg.getErrorDetails() != null && !msg.getErrorDetails().isEmpty()){
-			result.append(',');
-			appendString(result, msg.getErrorDetails());
-		}
+		//if(msg.getOutputErrorDetails() != null){
+  		ArgumentSerializer arg = new ArgumentSerializer(msg.getOutputErrorDetails());
+      arg.serialize(result, objectMapper);
+		//}
 
 		return endMsg(result);
 	}
