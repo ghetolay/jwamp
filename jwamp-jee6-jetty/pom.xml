@@ -13,7 +13,7 @@
   <url>https://github.com/ghetolay/jwamp</url>
 
   <properties>
-    <jetty-version>9.1.0.v20131115</jetty-version>
+    <jetty-version>9.1.4.v20140401</jetty-version>
   </properties>
 
   <licenses>

@@ -171,7 +171,8 @@ public class TestClient {
 			fail("No CallException thrown");
 		} catch(CallException ce){
 			assertEquals( "Test error" , ce.getErrorDescription() );
-			assertEquals( "details" , ce.getErrorDetails() );
+      WampArguments args = (WampArguments)ce.getErrorDetails();
+			assertEquals( "details" , args.nextObject().asString() );
 		}
 		
 	}

@@ -16,7 +16,10 @@
 package com.github.ghetolay.jwamp.message;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import javax.websocket.DecodeException;
 
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -83,18 +86,18 @@ public class WampMessageDeserializer {
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new BadMessageFormException("ErrorUri is required and must be a string");
-		result.errorUri = parser.getText();
+		try {
+			result.errorUri = new URI(parser.getText());
+		} catch (URISyntaxException e) {
+			throw new BadMessageFormException("ErrorUri is an Invalid URI");
+		}
 
 		if(parser.nextToken() != JsonToken.VALUE_STRING)
 			throw new BadMessageFormException("ErrorDescription is required and must be a string");
 		result.errorDesc = parser.getText();
 
-		JsonToken nextToken = parser.nextToken();
-		if(nextToken != JsonToken.END_ARRAY){
-			if(nextToken != JsonToken.VALUE_STRING)
-				throw new BadMessageFormException("ErrorDetails must be a string");
-			result.errorDetails = parser.getText();
-		}
+		parser.nextToken();
+    result.errorDetails = new JSONArguments(parser);
 
 		return result;
 	}

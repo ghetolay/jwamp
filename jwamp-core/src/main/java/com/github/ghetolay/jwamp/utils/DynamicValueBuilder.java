@@ -29,7 +29,7 @@ public class DynamicValueBuilder {
 		if(obj == null)
 			return null;
 		
-		if(obj instanceof BooleanValue)
+		if(obj instanceof Boolean)
 			return new BooleanValue((Boolean)obj);
 		
 		if(obj instanceof Integer)
