@@ -41,6 +41,9 @@ public class Promise<T> {
 	 * @return the result value, or null if a timeout happened
 	 */
 	public synchronized T get(long waitfor) throws InterruptedException, TimeoutException {
+		if (value != null)
+			return value;
+		
 		wait(waitfor);
 		if (value == null) throw new TimeoutException();
 		return value;
