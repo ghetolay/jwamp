@@ -1,7 +1,9 @@
+#---- **Project no more maintained** ----
+
 What's jwamp ?
 ==============
 
-JWamp is a java implementation of the WebSocket subprotocol [WAMP][wamp].  
+JWamp is a java implementation of the WebSocket subprotocol [WAMP V1][wamp].  
 Since on WebSocket there is no differences between client and server except for the initiation of the connection, the same API work for both client and server architecture.
 
 **This do not include a WebSocket implementation** but it's easy to adapt to any WebSocket implementation.  
@@ -175,5 +177,5 @@ see [here][test-readme].
   
 These are my first steps on open project so don't hesitate to send me your feedbacks or questions ! 
 
-[wamp]: http://wamp.ws/
+[wamp]: http://wamp.ws/spec/wamp1/
 [test-readme]: jwamp/tree/master/src/test/resources
